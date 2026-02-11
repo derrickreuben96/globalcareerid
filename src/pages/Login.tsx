@@ -22,6 +22,11 @@ const getRedirectPath = async (userId: string): Promise<string> => {
   return '/dashboard';
 };
 
+// Prefetch redirect path in parallel with auth to reduce post-login latency
+const prefetchRedirectPath = (userId: string) => {
+  return getRedirectPath(userId);
+};
+
 export default function Login() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
@@ -77,6 +82,9 @@ export default function Login() {
         return;
       }
 
+      // Start redirect path fetch immediately, in parallel with MFA check
+      const redirectPromise = prefetchRedirectPath(data.user!.id);
+
       // Check MFA factors
       const { data: factors } = await supabase.auth.mfa.listFactors();
       const hasVerifiedTOTP = factors?.totp?.some(f => f.status === 'verified');
@@ -85,9 +93,9 @@ export default function Login() {
         setShowMFA(true);
         setIsLoading(false);
       } else {
+        const path = await redirectPromise;
         toast.success('Welcome back!');
-        const path = await getRedirectPath(data.user!.id);
-        setTimeout(() => navigate(path), 0);
+        navigate(path);
       }
     } catch {
       toast.error('Login failed. Please try again.');
