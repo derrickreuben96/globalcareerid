@@ -11,6 +11,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { MFAVerification } from '@/components/auth/MFAVerification';
 
+const getRedirectPath = async (userId: string): Promise<string> => {
+  const { data } = await supabase
+    .from('profiles')
+    .select('account_type')
+    .eq('user_id', userId)
+    .maybeSingle();
+  
+  if (data?.account_type === 'organization') return '/employer';
+  return '/dashboard';
+};
+
 export default function Login() {
   const navigate = useNavigate();
   const { signIn } = useAuth();
@@ -75,8 +86,8 @@ export default function Login() {
         setIsLoading(false);
       } else {
         toast.success('Welcome back!');
-        // Use setTimeout to ensure state updates propagate before navigation
-        setTimeout(() => navigate('/dashboard'), 0);
+        const path = await getRedirectPath(data.user!.id);
+        setTimeout(() => navigate(path), 0);
       }
     } catch {
       toast.error('Login failed. Please try again.');
@@ -84,10 +95,12 @@ export default function Login() {
     }
   };
 
-  const handleMFASuccess = () => {
+  const handleMFASuccess = async () => {
     setShowMFA(false);
     toast.success('Welcome back!');
-    navigate('/dashboard');
+    const { data: { user } } = await supabase.auth.getUser();
+    const path = user ? await getRedirectPath(user.id) : '/dashboard';
+    navigate(path);
   };
 
   const handleMFACancel = async () => {
@@ -101,6 +114,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
+        // Google OAuth users go to /dashboard first, which will redirect org accounts to /employer
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
