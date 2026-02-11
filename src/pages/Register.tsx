@@ -79,6 +79,7 @@ export default function Register() {
       first_name: validation.data!.firstName,
       last_name: validation.data!.lastName,
       phone: validation.data!.phone || '',
+      account_type: 'career_individual',
     });
     setIsLoading(false);
 
@@ -113,10 +114,13 @@ export default function Register() {
 
     setIsLoading(true);
     
-    // Sign up the user first
+    // Sign up the user with organization account_type — the DB trigger handles
+    // creating organization_profiles and assigning the employer role automatically
     const { error: signUpError } = await signUp(validation.data!.email, validation.data!.password, {
       first_name: validation.data!.companyName,
       last_name: '',
+      account_type: 'organization',
+      company_name: validation.data!.companyName,
     });
 
     if (signUpError) {
@@ -125,30 +129,27 @@ export default function Register() {
       return;
     }
 
-    // Wait a moment for the trigger to create the profile
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Wait for the trigger to create the profile and organization_profiles
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Get the current user
+    // Get the current user and update org profile with additional details
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
-      // Create the employer record
-      const { error: employerError } = await supabase.from('employers').insert({
+      // Update the organization profile with registration details
+      await supabase.from('organization_profiles').update({
+        registration_number: validation.data!.registrationNumber,
+        country: validation.data!.country,
+        industry: validation.data!.industry,
+      }).eq('user_id', user.id);
+
+      // Also create legacy employers record for backward compatibility
+      await supabase.from('employers').insert({
         user_id: user.id,
         company_name: validation.data!.companyName,
         registration_number: validation.data!.registrationNumber,
         country: validation.data!.country,
         industry: validation.data!.industry,
-      });
-
-      if (employerError) {
-        // Silently log - user is still created
-      }
-
-      // Add employer role
-      await supabase.from('user_roles').insert({
-        user_id: user.id,
-        role: 'employer',
       });
     }
 
@@ -181,11 +182,11 @@ export default function Register() {
                 <TabsList className="grid w-full grid-cols-2 mb-8">
                   <TabsTrigger value="jobseeker" className="gap-2">
                     <UserCheck className="w-4 h-4" />
-                    Job Seeker
+                    Career Individual
                   </TabsTrigger>
                   <TabsTrigger value="employer" className="gap-2">
                     <Building2 className="w-4 h-4" />
-                    Employer
+                    Organization
                   </TabsTrigger>
                 </TabsList>
 

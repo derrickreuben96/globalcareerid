@@ -234,8 +234,66 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_profiles: {
+        Row: {
+          address: string | null
+          company_name: string
+          country: string | null
+          created_at: string
+          id: string
+          industry: string | null
+          is_verified: boolean
+          logo_url: string | null
+          organization_id: string
+          phone: string | null
+          registration_number: string | null
+          updated_at: string
+          user_id: string
+          verification_notes: string | null
+          verification_status: string
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          company_name: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          is_verified?: boolean
+          logo_url?: string | null
+          organization_id?: string
+          phone?: string | null
+          registration_number?: string | null
+          updated_at?: string
+          user_id: string
+          verification_notes?: string | null
+          verification_status?: string
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          company_name?: string
+          country?: string | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          is_verified?: boolean
+          logo_url?: string | null
+          organization_id?: string
+          phone?: string | null
+          registration_number?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_notes?: string | null
+          verification_status?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          account_type: string
           availability: string | null
           bio: string | null
           citizenship: string | null
@@ -255,6 +313,7 @@ export type Database = {
           visibility: string | null
         }
         Insert: {
+          account_type?: string
           availability?: string | null
           bio?: string | null
           citizenship?: string | null
@@ -274,6 +333,7 @@ export type Database = {
           visibility?: string | null
         }
         Update: {
+          account_type?: string
           availability?: string | null
           bio?: string | null
           citizenship?: string | null
