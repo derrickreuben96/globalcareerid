@@ -211,10 +211,23 @@ export default function Dashboard() {
     navigate('/');
   };
 
-  if (authLoading || !profile) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">Unable to load your profile. Please try signing in again.</p>
+          <Button variant="outline" onClick={() => { signOut(); navigate('/login'); }}>
+            Back to Login
+          </Button>
+        </div>
       </div>
     );
   }
