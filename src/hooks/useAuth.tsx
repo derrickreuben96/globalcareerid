@@ -43,47 +43,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    // Fetch profile and roles in parallel for faster loading
-    const [profileResult, rolesResult] = await Promise.all([
-      supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-      supabase.from('user_roles').select('role').eq('user_id', userId)
-    ]);
-    
-    setProfile(profileResult.data);
-    setRoles(rolesResult.data?.map(r => r.role) || []);
+    try {
+      const [profileResult, rolesResult] = await Promise.all([
+        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId)
+      ]);
+      
+      setProfile(profileResult.data);
+      setRoles(rolesResult.data?.map(r => r.role) || []);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setProfile(null);
+      setRoles([]);
+    }
   };
 
   useEffect(() => {
     let mounted = true;
-    
-    // Check current session first for faster initial load
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      }
-      setIsLoading(false);
-    });
 
-    // Set up auth state listener for subsequent changes
+    // Set up auth state listener FIRST for ongoing changes (does NOT control isLoading)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         if (!mounted) return;
         setSession(session);
         setUser(session?.user ?? null);
-        
+
         if (session?.user) {
-          // Fetch profile immediately without setTimeout for faster response
+          // Fire and forget for ongoing changes
           fetchProfile(session.user.id);
         } else {
           setProfile(null);
           setRoles([]);
         }
-        setIsLoading(false);
       }
     );
+
+    // INITIAL load - await profile fetch before setting loading false
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!mounted) return;
+
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
 
     return () => {
       mounted = false;
