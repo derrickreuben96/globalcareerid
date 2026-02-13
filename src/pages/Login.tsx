@@ -94,6 +94,7 @@ export default function Login() {
         setIsLoading(false);
       } else {
         const path = await redirectPromise;
+        setIsLoading(false);
         toast.success('Welcome back!');
         navigate(path);
       }

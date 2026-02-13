@@ -81,7 +81,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/login');
+      navigate('/');
     } else if (!authLoading && profile?.account_type === 'organization') {
       navigate('/employer');
     }
