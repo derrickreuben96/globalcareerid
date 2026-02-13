@@ -88,17 +88,22 @@ export default function Register() {
       return;
     }
 
-    // Update profile with country and citizenship after signup
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user && (jobSeekerForm.country || jobSeekerForm.citizenship)) {
-      await supabase.from('profiles').update({
-        country: jobSeekerForm.country || null,
-        citizenship: jobSeekerForm.citizenship || null,
-      }).eq('user_id', user.id);
+    // Check if user is auto-confirmed or needs email verification
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      // Auto-confirmed, update profile and redirect
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser && (jobSeekerForm.country || jobSeekerForm.citizenship)) {
+        await supabase.from('profiles').update({
+          country: jobSeekerForm.country || null,
+          citizenship: jobSeekerForm.citizenship || null,
+        }).eq('user_id', currentUser.id);
+      }
+      toast.success('Account created! Redirecting to your dashboard...');
+      navigate('/dashboard');
+    } else {
+      toast.success('Account created! Please check your email to verify your account before signing in.');
     }
-
-    toast.success('Account created! Redirecting to your dashboard...');
-    navigate('/dashboard');
   };
 
   const handleEmployerSubmit = async (e: React.FormEvent) => {
@@ -129,33 +134,36 @@ export default function Register() {
       return;
     }
 
-    // Wait for the trigger to create the profile and organization_profiles
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Check if user is auto-confirmed or needs email verification
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      // Wait for the trigger to create the profile and organization_profiles
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Get the current user and update org profile with additional details
-    const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from('organization_profiles').update({
+          registration_number: validation.data!.registrationNumber,
+          country: validation.data!.country,
+          industry: validation.data!.industry,
+        }).eq('user_id', user.id);
 
-    if (user) {
-      // Update the organization profile with registration details
-      await supabase.from('organization_profiles').update({
-        registration_number: validation.data!.registrationNumber,
-        country: validation.data!.country,
-        industry: validation.data!.industry,
-      }).eq('user_id', user.id);
+        await supabase.from('employers').insert({
+          user_id: user.id,
+          company_name: validation.data!.companyName,
+          registration_number: validation.data!.registrationNumber,
+          country: validation.data!.country,
+          industry: validation.data!.industry,
+        });
+      }
 
-      // Also create legacy employers record for backward compatibility
-      await supabase.from('employers').insert({
-        user_id: user.id,
-        company_name: validation.data!.companyName,
-        registration_number: validation.data!.registrationNumber,
-        country: validation.data!.country,
-        industry: validation.data!.industry,
-      });
+      setIsLoading(false);
+      toast.success('Company registration submitted! Verification typically takes 24-48 hours.');
+      navigate('/employer');
+    } else {
+      setIsLoading(false);
+      toast.success('Account created! Please check your email to verify your account before signing in.');
     }
-
-    setIsLoading(false);
-    toast.success('Company registration submitted! Verification typically takes 24-48 hours.');
-    navigate('/employer');
   };
 
   return (
