@@ -12,13 +12,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { MFAVerification } from '@/components/auth/MFAVerification';
 
 const getRedirectPath = async (userId: string): Promise<string> => {
-  const { data } = await supabase
-    .from('profiles')
-    .select('account_type')
-    .eq('user_id', userId)
-    .maybeSingle();
+  // Check roles and account type in parallel
+  const [profileRes, rolesRes] = await Promise.all([
+    supabase.from('profiles').select('account_type').eq('user_id', userId).maybeSingle(),
+    supabase.from('user_roles').select('role').eq('user_id', userId),
+  ]);
   
-  if (data?.account_type === 'organization') return '/employer';
+  const roles = rolesRes.data?.map(r => r.role) || [];
+  if (roles.includes('admin')) return '/admin';
+  if (profileRes.data?.account_type === 'organization' || roles.includes('employer')) return '/employer';
   return '/dashboard';
 };
 

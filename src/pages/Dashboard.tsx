@@ -82,10 +82,14 @@ export default function Dashboard() {
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/');
-    } else if (!authLoading && profile?.account_type === 'organization') {
-      navigate('/employer');
+    } else if (!authLoading && user) {
+      if (roles.includes('admin')) {
+        navigate('/admin');
+      } else if (profile?.account_type === 'organization') {
+        navigate('/employer');
+      }
     }
-  }, [user, authLoading, profile, navigate]);
+  }, [user, authLoading, profile, roles, navigate]);
 
   useEffect(() => {
     if (profile) {

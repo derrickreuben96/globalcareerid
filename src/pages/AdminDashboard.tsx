@@ -140,7 +140,19 @@ export default function AdminDashboard() {
     navigate("/");
   };
 
-  if (authLoading || isLoading) {
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user || !roles.includes("admin")) {
+    return null; // Will redirect via useEffect
+  }
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
