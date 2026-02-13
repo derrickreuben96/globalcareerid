@@ -87,6 +87,13 @@ export function AdminEmployerVerification({ employers, onRefresh }: Props) {
     if (!selectedEmployer) return;
     setProcessing(true);
 
+    // Get the employer's user_id first for syncing
+    const { data: employerRecord } = await supabase
+      .from("employers")
+      .select("user_id")
+      .eq("id", selectedEmployer.id)
+      .single();
+
     const { error } = await supabase
       .from("employers")
       .update({
@@ -102,16 +109,20 @@ export function AdminEmployerVerification({ employers, onRefresh }: Props) {
       return;
     }
 
-    if (approved) {
-      const { data: employer } = await supabase
-        .from("employers")
-        .select("user_id")
-        .eq("id", selectedEmployer.id)
-        .single();
+    // Sync verification status to organization_profiles if one exists
+    if (employerRecord) {
+      await supabase
+        .from("organization_profiles")
+        .update({
+          is_verified: approved,
+          verification_status: approved ? "approved" : "rejected",
+          verification_notes: verificationNotes,
+        })
+        .eq("user_id", employerRecord.user_id);
 
-      if (employer) {
+      if (approved) {
         await supabase.from("user_roles").upsert({
-          user_id: employer.user_id,
+          user_id: employerRecord.user_id,
           role: "employer" as const,
         });
       }

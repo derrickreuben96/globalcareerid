@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { countries, industries } from '@/lib/countries';
-import { UserCheck, Building2, ArrowRight, Shield, Mail, Lock, User, Phone, Briefcase, MapPin, Loader2, Globe } from 'lucide-react';
+import { UserCheck, Building2, ArrowRight, Shield, Mail, Lock, User, Phone, Briefcase, MapPin, Loader2, Globe, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -62,6 +62,23 @@ export default function Register() {
     password: '',
     confirmPassword: '',
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo must be under 2MB');
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
 
   const handleJobSeekerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,10 +159,27 @@ export default function Register() {
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Upload logo if provided
+        let logoUrl: string | null = null;
+        if (logoFile) {
+          const ext = logoFile.name.split('.').pop();
+          const path = `${user.id}/logo.${ext}`;
+          const { error: uploadError } = await supabase.storage
+            .from('company-logos')
+            .upload(path, logoFile, { upsert: true });
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage
+              .from('company-logos')
+              .getPublicUrl(path);
+            logoUrl = urlData.publicUrl;
+          }
+        }
+
         await supabase.from('organization_profiles').update({
           registration_number: validation.data!.registrationNumber,
           country: validation.data!.country,
           industry: validation.data!.industry,
+          ...(logoUrl && { logo_url: logoUrl }),
         }).eq('user_id', user.id);
 
         await supabase.from('employers').insert({
@@ -154,6 +188,7 @@ export default function Register() {
           registration_number: validation.data!.registrationNumber,
           country: validation.data!.country,
           industry: validation.data!.industry,
+          ...(logoUrl && { logo_url: logoUrl }),
         });
       }
 
@@ -393,6 +428,35 @@ export default function Register() {
                           required
                           disabled={isLoading}
                         />
+                      </div>
+                    </div>
+
+                    {/* Company Logo Upload */}
+                    <div className="space-y-2">
+                      <Label>Company Logo (optional)</Label>
+                      <div className="flex items-center gap-4">
+                        <label
+                          htmlFor="companyLogo"
+                          className="flex items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors overflow-hidden bg-muted/30"
+                        >
+                          {logoPreview ? (
+                            <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <ImagePlus className="w-6 h-6 text-muted-foreground" />
+                          )}
+                          <input
+                            id="companyLogo"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={handleLogoChange}
+                            disabled={isLoading}
+                          />
+                        </label>
+                        <div className="text-sm text-muted-foreground">
+                          <p>Upload your company logo</p>
+                          <p className="text-xs">PNG, JPG up to 2MB</p>
+                        </div>
                       </div>
                     </div>
 
