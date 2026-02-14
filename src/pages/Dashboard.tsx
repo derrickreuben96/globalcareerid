@@ -212,7 +212,7 @@ export default function Dashboard() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
+    window.location.href = '/';
   };
 
   if (authLoading) {

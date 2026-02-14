@@ -223,7 +223,7 @@ export default function EmployerDashboard() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/');
+    window.location.href = '/';
   };
 
   if (authLoading || isLoading) {
