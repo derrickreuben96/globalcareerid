@@ -31,7 +31,9 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoImage} alt="Global Career ID" className="h-10 w-auto" />
+            <div className="h-10 w-10 rounded-lg bg-[#0A66C2] flex items-center justify-center p-1">
+              <img src={logoImage} alt="Global Career ID" className="h-full w-auto" />
+            </div>
             <span className="font-display font-bold text-xl text-foreground">Global Career ID</span>
           </Link>
 

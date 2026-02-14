@@ -75,7 +75,7 @@ export default function Contact() {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-display font-bold text-foreground mb-4">Contact Us</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Have questions about WorkID? We're here to help. Reach out to our team and we'll respond as quickly as possible.
+              Have questions about Global Career ID? We're here to help. Reach out to our team and we'll respond as quickly as possible.
             </p>
           </div>
 
@@ -165,8 +165,8 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Email Us</h3>
                       <p className="text-muted-foreground mb-2">For general inquiries and support</p>
-                      <a href="mailto:support@workid.com" className="text-primary hover:underline">
-                        support@workid.com
+                      <a href="mailto:support@globalcareerid.com" className="text-primary hover:underline">
+                        support@globalcareerid.com
                       </a>
                     </div>
                   </div>
@@ -200,7 +200,7 @@ export default function Contact() {
                       <h3 className="font-semibold text-foreground mb-1">Visit Us</h3>
                       <p className="text-muted-foreground mb-2">Our headquarters</p>
                       <p className="text-foreground">
-                        WorkID HQ<br />
+                        Global Career ID HQ<br />
                         Business District<br />
                         Nairobi, Kenya
                       </p>

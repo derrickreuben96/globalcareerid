@@ -24,8 +24,8 @@ export function ProfileIdCard({ profileId, name, isVerified = false }: ProfileId
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `WorkID Profile - ${name}`,
-          text: `Verify my professional profile on WorkID`,
+          title: `Global Career ID Profile - ${name}`,
+          text: `Verify my professional profile on Global Career ID`,
           url: verifyUrl,
         });
       } catch (err) {
@@ -54,7 +54,7 @@ export function ProfileIdCard({ profileId, name, isVerified = false }: ProfileId
       ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
       
       const link = document.createElement('a');
-      link.download = `workid-${profileId}.png`;
+      link.download = `globalcareerid-${profileId}.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
       toast.success('QR code downloaded');

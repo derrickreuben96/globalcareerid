@@ -14,20 +14,20 @@ const faqCategories = [
     title: 'General Questions',
     faqs: [
       {
-        question: 'What is WorkID?',
-        answer: 'WorkID is a centralized employment verification platform where work experience is verified by employers, not written by applicants. It creates a trusted, tamper-proof record of your professional history that you can share with potential employers and recruiters instantly.'
+        question: 'What is Global Career ID?',
+        answer: 'Global Career ID is a centralized employment verification platform where work experience is verified by employers, not written by applicants. It creates a trusted, tamper-proof record of your professional history that you can share with potential employers and recruiters instantly.'
       },
       {
-        question: 'How is WorkID different from LinkedIn?',
-        answer: 'Unlike LinkedIn where users self-report their work history, WorkID only allows verified employers to add employment records. This means every entry on your WorkID profile is authenticated and trustworthy, eliminating the risk of resume fraud.'
+        question: 'How is Global Career ID different from LinkedIn?',
+        answer: 'Unlike LinkedIn where users self-report their work history, Global Career ID only allows verified employers to add employment records. This means every entry on your profile is authenticated and trustworthy, eliminating the risk of resume fraud.'
       },
       {
-        question: 'Is WorkID free to use?',
-        answer: 'Yes! WorkID is completely free for job seekers. You can create a profile, share your verified work history, and manage your professional identity at no cost. Employers may have subscription plans for advanced features.'
+        question: 'Is Global Career ID free to use?',
+        answer: 'Yes! Global Career ID is completely free for job seekers. You can create a profile, share your verified work history, and manage your professional identity at no cost. Employers may have subscription plans for advanced features.'
       },
       {
         question: 'What is a Profile ID?',
-        answer: 'Your Profile ID is a unique identifier (like TW-2026-ABC12) that represents your WorkID profile. You can share this ID or QR code with anyone who needs to verify your employment history. It\'s your digital professional passport.'
+        answer: 'Your Profile ID is a unique identifier (like TW-2026-ABC12) that represents your Global Career ID profile. You can share this ID or QR code with anyone who needs to verify your employment history. It\'s your digital professional passport.'
       }
     ]
   },
@@ -35,7 +35,7 @@ const faqCategories = [
     title: 'For Job Seekers',
     faqs: [
       {
-        question: 'How do I create a WorkID profile?',
+        question: 'How do I create a Global Career ID profile?',
         answer: 'Simply click "Get Started" and sign up with your email. You\'ll receive a unique Profile ID immediately. Your profile will be populated with verified employment records as employers add them.'
       },
       {
@@ -68,7 +68,7 @@ const faqCategories = [
         answer: 'Typically 24-48 hours. We verify your business registration and contact details to ensure only legitimate employers can add employment records to the platform.'
       },
       {
-        question: 'How do I add an employee to WorkID?',
+        question: 'How do I add an employee to Global Career ID?',
         answer: 'Once verified, you can search for employees by their Profile ID or email. Enter the job details (title, start date, department) and submit. The record will appear on the employee\'s profile immediately.'
       },
       {
@@ -89,12 +89,12 @@ const faqCategories = [
         answer: 'We use industry-standard encryption and security measures. Your data is stored securely, and we never share personal information without your consent. Employment records can only be added by verified employers.'
       },
       {
-        question: 'Can I delete my WorkID account?',
+        question: 'Can I delete my Global Career ID account?',
         answer: 'Yes, you can request account deletion from your settings. Note that verified employment records may be retained for legal and audit purposes, but will no longer be publicly accessible.'
       },
       {
         question: 'Who can access my employment records?',
-        answer: 'Only people you share your Profile ID with (when your profile is public), verified employers who added records, and WorkID administrators (for dispute resolution) can access your employment history.'
+        answer: 'Only people you share your Profile ID with (when your profile is public), verified employers who added records, and Global Career ID administrators (for dispute resolution) can access your employment history.'
       }
     ]
   },
@@ -133,7 +133,7 @@ export default function FAQ() {
               Frequently Asked Questions
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Find answers to common questions about WorkID. Can't find what you're looking for? 
+              Find answers to common questions about Global Career ID. Can't find what you're looking for? 
               Contact our support team.
             </p>
           </div>
@@ -170,7 +170,7 @@ export default function FAQ() {
               Still have questions?
             </h3>
             <p className="text-muted-foreground mb-6">
-              Our team is here to help you get the most out of WorkID.
+              Our team is here to help you get the most out of Global Career ID.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild>
