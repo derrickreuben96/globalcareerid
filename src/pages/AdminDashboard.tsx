@@ -137,7 +137,7 @@ export default function AdminDashboard() {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    window.location.href = '/';
   };
 
   if (authLoading) {
