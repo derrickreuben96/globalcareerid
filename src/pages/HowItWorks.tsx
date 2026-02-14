@@ -18,7 +18,7 @@ const steps = [
   {
     number: '01',
     title: 'Create Your Profile',
-    description: 'Register with your email to get your unique WorkID Profile ID. This becomes your verified professional identity.',
+    description: 'Register with your email to get your unique Global Career ID Profile ID. This becomes your verified professional identity.',
     icon: UserCheck,
     details: [
       'Quick registration - takes less than 2 minutes',
@@ -88,7 +88,7 @@ export default function HowItWorks() {
         {/* Hero */}
         <section className="container mx-auto px-4 text-center mb-20">
           <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6">
-            How WorkID Works
+            How Global Career ID Works
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             A simple, fair process that puts verified truth at the center of hiring. 

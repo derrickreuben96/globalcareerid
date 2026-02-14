@@ -15,14 +15,14 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-display font-semibold text-foreground mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing or using WorkID, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform. These terms apply to all users, including job seekers, employers, and recruiters.
+                By accessing or using Global Career ID, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform. These terms apply to all users, including job seekers, employers, and recruiters.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-display font-semibold text-foreground mb-4">2. Description of Service</h2>
               <p className="text-muted-foreground leading-relaxed">
-                WorkID is a centralized employment verification platform that allows:
+                Global Career ID is a centralized employment verification platform that allows:
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-2 mt-4">
                 <li>Job seekers to maintain a verified professional profile</li>
@@ -74,7 +74,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-display font-semibold text-foreground mb-4">6. Limitation of Liability</h2>
               <p className="text-muted-foreground leading-relaxed">
-                WorkID provides employment verification services but does not guarantee employment outcomes. We are not liable for decisions made by employers or recruiters based on profile information. Users are responsible for the accuracy of information they provide.
+                Global Career ID provides employment verification services but does not guarantee employment outcomes. We are not liable for decisions made by employers or recruiters based on profile information. Users are responsible for the accuracy of information they provide.
               </p>
             </section>
 
@@ -88,7 +88,7 @@ export default function TermsOfService() {
             <section>
               <h2 className="text-2xl font-display font-semibold text-foreground mb-4">8. Changes to Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                We may update these terms from time to time. Users will be notified of significant changes via email or platform notification. Continued use of WorkID after changes constitutes acceptance of the new terms.
+                We may update these terms from time to time. Users will be notified of significant changes via email or platform notification. Continued use of Global Career ID after changes constitutes acceptance of the new terms.
               </p>
             </section>
 
@@ -98,8 +98,8 @@ export default function TermsOfService() {
                 For questions about these Terms of Service, contact us at:
               </p>
               <p className="text-foreground font-medium mt-2">
-                Email: legal@workid.com<br />
-                Address: WorkID HQ, Business District, Nairobi, Kenya
+                Email: legal@globalcareerid.com<br />
+                Address: Global Career ID HQ, Business District, Nairobi, Kenya
               </p>
             </section>
           </div>

@@ -269,7 +269,7 @@ export function AIChatWidget() {
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
-                placeholder="Ask about WorkID..."
+                placeholder="Ask about Global Career ID..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}

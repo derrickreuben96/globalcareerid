@@ -21,9 +21,9 @@ const helpCategories = [
   {
     icon: UserCheck,
     title: 'Getting Started',
-    description: 'Learn how to create your WorkID profile and get verified',
+    description: 'Learn how to create your Global Career ID profile and get verified',
     articles: [
-      'How to create a WorkID account',
+      'How to create a Global Career ID account',
       'Setting up your professional profile',
       'Understanding your Profile ID',
       'Sharing your profile with employers'
@@ -99,7 +99,7 @@ export default function HelpCenter() {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-display font-bold text-foreground mb-4">Help Center</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Find answers to your questions and learn how to make the most of WorkID.
+              Find answers to your questions and learn how to make the most of Global Career ID.
             </p>
             
             {/* Search */}

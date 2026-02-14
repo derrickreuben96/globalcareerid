@@ -216,7 +216,7 @@ export default function Register() {
                 Create Your Account
               </h1>
               <p className="mt-2 text-muted-foreground">
-                Join WorkID and build your verified professional identity
+                Join Global Career ID and build your verified professional identity
               </p>
             </div>
 

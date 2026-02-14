@@ -15,7 +15,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-2xl font-display font-semibold text-foreground mb-4">1. Introduction</h2>
               <p className="text-muted-foreground leading-relaxed">
-                WorkID ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform. Please read this policy carefully to understand our practices regarding your personal data.
+                Global Career ID ("we," "our," or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our platform. Please read this policy carefully to understand our practices regarding your personal data.
               </p>
             </section>
 
@@ -45,7 +45,7 @@ export default function PrivacyPolicy() {
             <section>
               <h2 className="text-2xl font-display font-semibold text-foreground mb-4">3. How We Use Your Information</h2>
               <ul className="list-disc list-inside text-muted-foreground space-y-2">
-                <li>To create and manage your WorkID profile</li>
+                <li>To create and manage your Global Career ID profile</li>
                 <li>To verify employment records with employers</li>
                 <li>To enable profile sharing with recruiters and employers</li>
                 <li>To process dispute resolutions</li>
@@ -90,8 +90,8 @@ export default function PrivacyPolicy() {
                 For any questions about this Privacy Policy, please contact us at:
               </p>
               <p className="text-foreground font-medium mt-2">
-                Email: privacy@workid.com<br />
-                Address: WorkID HQ, Business District, Nairobi, Kenya
+                Email: privacy@globalcareerid.com<br />
+                Address: Global Career ID HQ, Business District, Nairobi, Kenya
               </p>
             </section>
           </div>

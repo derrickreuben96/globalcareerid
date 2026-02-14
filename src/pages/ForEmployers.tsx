@@ -29,7 +29,7 @@ const benefits = [
   {
     icon: Clock,
     title: 'Reduce Hiring Time and Risk',
-    description: 'Stop wasting time on candidates with fake credentials. Every WorkID profile is authentic, so you can make confident hiring decisions faster.',
+    description: 'Stop wasting time on candidates with fake credentials. Every Global Career ID profile is authentic, so you can make confident hiring decisions faster.',
   }
 ];
 
@@ -106,7 +106,7 @@ export default function ForEmployers() {
         {/* Benefits */}
         <section className="container mx-auto px-4 mb-20">
           <h2 className="text-3xl font-display font-bold text-foreground text-center mb-12">
-            Why WorkID for Employers?
+            Why Global Career ID for Employers?
           </h2>
           
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
@@ -188,7 +188,7 @@ export default function ForEmployers() {
               Ready to Transform Your Hiring?
             </h2>
             <p className="text-lg text-primary-foreground/80 mb-8">
-              Join verified employers who trust WorkID for authentic candidate verification.
+              Join verified employers who trust Global Career ID for authentic candidate verification.
             </p>
             <Button 
               size="lg" 
