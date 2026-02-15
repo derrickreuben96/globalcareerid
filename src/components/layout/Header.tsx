@@ -2,8 +2,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X, Settings, Building2, User, ChevronDown, LogOut, Shield } from 'lucide-react';
 import logoImage from '@/assets/logo.png';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export function Header() {
@@ -13,6 +14,29 @@ export function Header() {
   
   const isAdmin = roles.includes('admin');
   const isEmployer = roles.includes('employer');
+
+  const [employerLogo, setEmployerLogo] = useState<string | null>(null);
+  const [employerName, setEmployerName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user || !isEmployer) {
+      setEmployerLogo(null);
+      setEmployerName(null);
+      return;
+    }
+    const fetchEmployerBranding = async () => {
+      const { data } = await supabase
+        .from('employers')
+        .select('logo_url, company_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data) {
+        setEmployerLogo(data.logo_url);
+        setEmployerName(data.company_name);
+      }
+    };
+    fetchEmployerBranding();
+  }, [user, isEmployer]);
   
   // Determine primary dashboard based on role priority
   const getDashboardLink = () => {
@@ -24,6 +48,39 @@ export function Header() {
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+
+  const renderAccountButton = () => {
+    if (isAdmin) {
+      return (
+        <>
+          <Shield className="w-4 h-4" />
+          {profile?.first_name || 'Account'}
+        </>
+      );
+    }
+    if (isEmployer && employerLogo) {
+      return (
+        <>
+          <img src={employerLogo} alt={employerName || 'Company'} className="w-6 h-6 rounded object-cover" />
+          {employerName || profile?.first_name || 'Account'}
+        </>
+      );
+    }
+    if (isEmployer) {
+      return (
+        <>
+          <Building2 className="w-4 h-4" />
+          {employerName || profile?.first_name || 'Account'}
+        </>
+      );
+    }
+    return (
+      <>
+        <User className="w-4 h-4" />
+        {profile?.first_name || 'Account'}
+      </>
+    );
   };
 
   return (
@@ -90,14 +147,7 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
-                    {isAdmin ? (
-                      <Shield className="w-4 h-4" />
-                    ) : isEmployer ? (
-                      <Building2 className="w-4 h-4" />
-                    ) : (
-                      <User className="w-4 h-4" />
-                    )}
-                    {profile?.first_name || 'Account'}
+                    {renderAccountButton()}
                     <ChevronDown className="w-3 h-3" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -116,7 +166,11 @@ export function Header() {
                   {isEmployer && (
                     <DropdownMenuItem asChild>
                       <Link to="/employer" className="cursor-pointer flex items-center gap-2">
-                        <Building2 className="w-4 h-4" />
+                        {employerLogo ? (
+                          <img src={employerLogo} alt="" className="w-4 h-4 rounded object-cover" />
+                        ) : (
+                          <Building2 className="w-4 h-4" />
+                        )}
                         <div>
                           <p className="font-medium">Employer Dashboard</p>
                           <p className="text-xs text-muted-foreground">Manage company</p>
@@ -207,6 +261,12 @@ export function Header() {
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
                 {user ? (
                   <>
+                    {isEmployer && employerLogo && (
+                      <div className="flex items-center gap-2 px-2 py-1">
+                        <img src={employerLogo} alt={employerName || ''} className="w-8 h-8 rounded-lg object-cover" />
+                        <span className="text-sm font-medium text-foreground">{employerName}</span>
+                      </div>
+                    )}
                     {isAdmin && (
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/admin" className="flex items-center gap-2">

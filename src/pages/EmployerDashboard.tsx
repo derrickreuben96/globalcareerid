@@ -41,6 +41,7 @@ import { TalentSearch } from '@/components/employer/TalentSearch';
 import { AuditLogViewer } from '@/components/employer/AuditLogViewer';
 import { BulkUpload } from '@/components/employer/BulkUpload';
 import { CompanyProfileEditor } from '@/components/employer/CompanyProfileEditor';
+import { EmployerAIChat } from '@/components/employer/EmployerAIChat';
 
 interface Employer {
   id: string;
@@ -269,7 +270,7 @@ export default function EmployerDashboard() {
                     {employer.is_verified && <VerifiedBadge />}
                   </div>
                   <p className="text-muted-foreground">
-                    {employer.industry} • {employer.country}
+                    {employer.industry || 'Industry not specified'} • {employer.country || 'Country not specified'}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Employer ID: {employer.employer_id}
@@ -655,6 +656,14 @@ export default function EmployerDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Employer AI Chat */}
+      <EmployerAIChat
+        employerId={employer.id}
+        companyName={employer.company_name}
+        employeeCount={employees.length}
+        isVerified={employer.is_verified}
+      />
 
       <Footer />
     </div>
