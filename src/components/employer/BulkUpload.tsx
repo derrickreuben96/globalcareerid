@@ -24,19 +24,30 @@ import {
   XCircle, 
   Loader2,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  UserPlus,
+  Link2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ParsedRow {
-  profileId: string;
-  jobTitle: string;
-  department: string;
-  employmentType: string;
+  fullName: string;
+  email: string;
+  roleTitle: string;
   startDate: string;
+  endDate: string;
+  department: string;
   status: 'pending' | 'valid' | 'invalid';
   error?: string;
-  userId?: string;
+}
+
+interface UploadResult {
+  email: string;
+  fullName: string;
+  roleTitle: string;
+  status: 'created' | 'attached' | 'error';
+  message: string;
+  profileId?: string;
 }
 
 interface BulkUploadProps {
@@ -47,12 +58,12 @@ interface BulkUploadProps {
 export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
-  const [isValidating, setIsValidating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [results, setResults] = useState<UploadResult[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadTemplate = () => {
-    const template = 'Profile ID,Job Title,Department,Employment Type,Start Date\nTW-2024-XXXXX,Software Engineer,Engineering,full_time,2024-01-15\nTW-2024-YYYYY,Product Manager,Product,full_time,2024-02-01';
+    const template = 'Full Name,Email,Role Title,Start Date,End Date,Department\nJane Doe,jane@example.com,Software Engineer,2024-01-15,,Engineering\nJohn Smith,john@example.com,Product Manager,2024-02-01,2024-12-31,Product';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -66,18 +77,36 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
     const lines = content.trim().split('\n');
     if (lines.length < 2) return [];
 
-    // Skip header row
     return lines.slice(1).map((line) => {
       const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
       return {
-        profileId: values[0]?.toUpperCase() || '',
-        jobTitle: values[1] || '',
-        department: values[2] || '',
-        employmentType: values[3] || 'full_time',
-        startDate: values[4] || '',
+        fullName: values[0] || '',
+        email: values[1] || '',
+        roleTitle: values[2] || '',
+        startDate: values[3] || '',
+        endDate: values[4] || '',
+        department: values[5] || '',
         status: 'pending' as const,
       };
-    }).filter((row) => row.profileId && row.jobTitle);
+    }).filter((row) => row.fullName && row.email && row.roleTitle);
+  };
+
+  const validateRows = (rows: ParsedRow[]): ParsedRow[] => {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    return rows.map((row) => {
+      if (!emailRegex.test(row.email)) {
+        return { ...row, status: 'invalid' as const, error: 'Invalid email' };
+      }
+      if (!dateRegex.test(row.startDate)) {
+        return { ...row, status: 'invalid' as const, error: 'Invalid start date (YYYY-MM-DD)' };
+      }
+      if (row.endDate && !dateRegex.test(row.endDate)) {
+        return { ...row, status: 'invalid' as const, error: 'Invalid end date (YYYY-MM-DD)' };
+      }
+      return { ...row, status: 'valid' as const };
+    });
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,53 +121,18 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
       return;
     }
 
-    setParsedRows(rows);
+    const validated = validateRows(rows);
+    setParsedRows(validated);
+    setResults(null);
     setIsOpen(true);
     
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  const validateRows = async () => {
-    setIsValidating(true);
-    
-    const validatedRows = await Promise.all(
-      parsedRows.map(async (row) => {
-        // Validate profile ID exists
-        const { data: profileData, error } = await supabase.rpc('get_public_profile_by_id', {
-          profile_id_param: row.profileId,
-        });
-
-        const profile = profileData?.[0];
-
-        if (error || !profile) {
-          return { ...row, status: 'invalid' as const, error: 'Profile ID not found' };
-        }
-
-        // Validate employment type
-        const validTypes = ['full_time', 'part_time', 'contract', 'internship'];
-        if (!validTypes.includes(row.employmentType)) {
-          return { ...row, status: 'invalid' as const, error: 'Invalid employment type' };
-        }
-
-        // Validate date format
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(row.startDate)) {
-          return { ...row, status: 'invalid' as const, error: 'Invalid date format (use YYYY-MM-DD)' };
-        }
-
-        return { ...row, status: 'valid' as const, userId: profile.user_id };
-      })
-    );
-
-    setParsedRows(validatedRows);
-    setIsValidating(false);
-  };
-
   const handleUpload = async () => {
-    const validRows = parsedRows.filter((r) => r.status === 'valid' && r.userId);
+    const validRows = parsedRows.filter((r) => r.status === 'valid');
     
     if (validRows.length === 0) {
       toast.error('No valid rows to upload');
@@ -147,26 +141,32 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
 
     setIsUploading(true);
 
-    const records = validRows.map((row) => ({
-      user_id: row.userId!,
-      employer_id: employerId,
-      job_title: row.jobTitle,
-      department: row.department || null,
-      employment_type: row.employmentType,
-      start_date: row.startDate,
-      status: 'pending',
-    }));
+    try {
+      const { data, error } = await supabase.functions.invoke('bulk-upload-employees', {
+        body: {
+          employerId,
+          rows: validRows.map((r) => ({
+            fullName: r.fullName,
+            email: r.email,
+            roleTitle: r.roleTitle,
+            startDate: r.startDate,
+            endDate: r.endDate || undefined,
+            department: r.department || undefined,
+          })),
+        },
+      });
 
-    const { error } = await supabase.from('employment_records').insert(records);
-
-    if (error) {
-      toast.error('Failed to upload records');
-      console.error('Bulk upload failed');
-    } else {
-      toast.success(`Successfully created ${validRows.length} employment records`);
-      setIsOpen(false);
-      setParsedRows([]);
-      onComplete();
+      if (error) {
+        toast.error('Bulk upload failed: ' + error.message);
+      } else {
+        setResults(data.results);
+        const { created, attached, errors } = data.summary;
+        toast.success(`Done! ${created} new profiles created, ${attached} attached to existing, ${errors} errors.`);
+        onComplete();
+      }
+    } catch (err) {
+      toast.error('Bulk upload failed');
+      console.error('Bulk upload error:', err);
     }
 
     setIsUploading(false);
@@ -204,97 +204,134 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5" />
-              Bulk Upload Preview
+              {results ? 'Upload Results' : 'Bulk Upload Preview'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="flex items-center gap-4 py-2">
-            <Badge variant="secondary">{parsedRows.length} rows</Badge>
-            {validCount > 0 && (
-              <Badge className="bg-verified/10 text-verified">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                {validCount} valid
-              </Badge>
-            )}
-            {invalidCount > 0 && (
-              <Badge variant="destructive">
-                <XCircle className="w-3 h-3 mr-1" />
-                {invalidCount} invalid
-              </Badge>
-            )}
-          </div>
+          {!results ? (
+            <>
+              <div className="flex items-center gap-4 py-2">
+                <Badge variant="secondary">{parsedRows.length} rows</Badge>
+                {validCount > 0 && (
+                  <Badge className="bg-verified/10 text-verified">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    {validCount} valid
+                  </Badge>
+                )}
+                {invalidCount > 0 && (
+                  <Badge variant="destructive">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    {invalidCount} invalid
+                  </Badge>
+                )}
+              </div>
 
-          <div className="flex-1 overflow-auto border border-border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Profile ID</TableHead>
-                  <TableHead>Job Title</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Start Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {parsedRows.map((row, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>
-                      {row.status === 'pending' && (
-                        <Badge variant="secondary">Pending</Badge>
-                      )}
-                      {row.status === 'valid' && (
-                        <Badge className="bg-verified/10 text-verified">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Valid
-                        </Badge>
-                      )}
-                      {row.status === 'invalid' && (
-                        <div className="flex items-center gap-1">
-                          <Badge variant="destructive">
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Invalid
-                          </Badge>
-                          {row.error && (
-                            <span className="text-xs text-destructive">{row.error}</span>
+              <div className="flex-1 overflow-auto border border-border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Full Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role Title</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
+                      <TableHead>Department</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {parsedRows.map((row, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          {row.status === 'valid' ? (
+                            <Badge className="bg-verified/10 text-verified">
+                              <CheckCircle className="w-3 h-3 mr-1" />Valid
+                            </Badge>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Badge variant="destructive">
+                                <XCircle className="w-3 h-3 mr-1" />Invalid
+                              </Badge>
+                              {row.error && <span className="text-xs text-destructive">{row.error}</span>}
+                            </div>
                           )}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{row.profileId}</TableCell>
-                    <TableCell>{row.jobTitle}</TableCell>
-                    <TableCell>{row.department || '-'}</TableCell>
-                    <TableCell>{row.employmentType.replace('_', '-')}</TableCell>
-                    <TableCell>{row.startDate}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                        </TableCell>
+                        <TableCell>{row.fullName}</TableCell>
+                        <TableCell className="text-sm">{row.email}</TableCell>
+                        <TableCell>{row.roleTitle}</TableCell>
+                        <TableCell>{row.startDate}</TableCell>
+                        <TableCell>{row.endDate || '-'}</TableCell>
+                        <TableCell>{row.department || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
-          {invalidCount > 0 && (
-            <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg">
-              <AlertTriangle className="w-4 h-4 text-warning" />
-              <p className="text-sm text-warning">
-                {invalidCount} row(s) have errors and will be skipped during upload.
-              </p>
+              {invalidCount > 0 && (
+                <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning/30 rounded-lg">
+                  <AlertTriangle className="w-4 h-4 text-warning" />
+                  <p className="text-sm text-warning">
+                    {invalidCount} row(s) have errors and will be skipped.
+                  </p>
+                </div>
+              )}
+
+              <div className="p-3 bg-muted/30 border border-border rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>How it works:</strong> Employees with existing Career IDs (matched by email) will have the new role attached. 
+                  New employees will get a Career ID created automatically.
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 overflow-auto border border-border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Result</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Details</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {results.map((r, idx) => (
+                    <TableRow key={idx}>
+                      <TableCell>
+                        {r.status === 'created' && (
+                          <Badge className="bg-verified/10 text-verified">
+                            <UserPlus className="w-3 h-3 mr-1" />New
+                          </Badge>
+                        )}
+                        {r.status === 'attached' && (
+                          <Badge variant="secondary">
+                            <Link2 className="w-3 h-3 mr-1" />Attached
+                          </Badge>
+                        )}
+                        {r.status === 'error' && (
+                          <Badge variant="destructive">
+                            <XCircle className="w-3 h-3 mr-1" />Error
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>{r.fullName}</TableCell>
+                      <TableCell className="text-sm">{r.email}</TableCell>
+                      <TableCell>{r.roleTitle}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{r.message}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
+            <Button variant="outline" onClick={() => { setIsOpen(false); setResults(null); }}>
+              {results ? 'Close' : 'Cancel'}
             </Button>
-            {parsedRows.some((r) => r.status === 'pending') ? (
-              <Button onClick={validateRows} disabled={isValidating}>
-                {isValidating ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle className="w-4 h-4" />
-                )}
-                Validate All
-              </Button>
-            ) : (
+            {!results && (
               <Button
                 onClick={handleUpload}
                 disabled={isUploading || validCount === 0}
