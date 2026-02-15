@@ -8,9 +8,7 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="h-9 w-9 rounded-lg bg-[#0A66C2] flex items-center justify-center p-1">
-                <img src={logoImage} alt="Global Career ID" className="h-full w-auto" />
-              </div>
+              <img src={logoImage} alt="Global Career ID" className="h-9 w-9 rounded-lg" />
               <span className="font-display font-bold text-xl">Global Career ID</span>
             </Link>
             <p className="text-primary-foreground/70 text-sm">One ID. Every role. Verified.</p>
