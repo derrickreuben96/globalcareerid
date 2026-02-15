@@ -416,7 +416,7 @@ export default function Register() {
                 <TabsContent value="employer">
                   <form onSubmit={handleEmployerSubmit} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName">Company Name</Label>
+                      <Label htmlFor="companyName">Company Name <span className="text-destructive">*</span></Label>
                       <div className="relative">
                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -433,7 +433,7 @@ export default function Register() {
 
                     {/* Company Logo Upload */}
                     <div className="space-y-2">
-                      <Label>Company Logo (optional)</Label>
+                      <Label>Company Logo</Label>
                       <div className="flex items-center gap-4">
                         <label
                           htmlFor="companyLogo"
@@ -462,7 +462,7 @@ export default function Register() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="registrationNumber">Registration Number</Label>
+                        <Label htmlFor="registrationNumber">Registration Number <span className="text-destructive">*</span></Label>
                         <Input
                           id="registrationNumber"
                           placeholder="Company reg #"
@@ -473,7 +473,7 @@ export default function Register() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
+                        <Label htmlFor="country">Country <span className="text-destructive">*</span></Label>
                         <AutocompleteInput
                           suggestions={countries}
                           placeholder="Start typing..."
@@ -486,7 +486,7 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="industry">Industry</Label>
+                      <Label htmlFor="industry">Industry <span className="text-destructive">*</span></Label>
                       <AutocompleteInput
                         suggestions={industries}
                         placeholder="Start typing: Technology, Finance..."
