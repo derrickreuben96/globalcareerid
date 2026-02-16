@@ -126,6 +126,12 @@ export default function Register() {
   const handleEmployerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate logo is provided
+    if (!logoFile) {
+      toast.error('Company logo is required');
+      return;
+    }
+
     // Validate form with zod schema
     const validation = validateForm(employerRegistrationSchema, employerForm);
     if (!validation.success) {
@@ -433,11 +439,11 @@ export default function Register() {
 
                     {/* Company Logo Upload */}
                     <div className="space-y-2">
-                      <Label>Company Logo</Label>
+                      <Label>Company Logo <span className="text-destructive">*</span></Label>
                       <div className="flex items-center gap-4">
                         <label
                           htmlFor="companyLogo"
-                          className="flex items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed border-border hover:border-primary/50 cursor-pointer transition-colors overflow-hidden bg-muted/30"
+                          className={`flex items-center justify-center w-20 h-20 rounded-xl border-2 border-dashed ${logoPreview ? 'border-primary' : 'border-border'} hover:border-primary/50 cursor-pointer transition-colors overflow-hidden bg-muted/30`}
                         >
                           {logoPreview ? (
                             <img src={logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
