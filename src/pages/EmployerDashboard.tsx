@@ -251,7 +251,11 @@ export default function EmployerDashboard() {
           <div className="glass-card rounded-2xl p-6 mb-8">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden">
+                <div 
+                  className={`w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center overflow-hidden ${!employer.logo_url ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}`}
+                  onClick={() => { if (!employer.logo_url) setActiveSection('profile'); }}
+                  title={!employer.logo_url ? 'Click to upload your company logo' : undefined}
+                >
                   {employer.logo_url ? (
                     <img 
                       src={employer.logo_url} 
@@ -259,7 +263,10 @@ export default function EmployerDashboard() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Building2 className="w-10 h-10 text-primary-foreground" />
+                    <div className="flex flex-col items-center gap-1">
+                      <Upload className="w-6 h-6 text-primary-foreground" />
+                      <span className="text-[10px] text-primary-foreground font-medium">Add Logo</span>
+                    </div>
                   )}
                 </div>
                 <div>
