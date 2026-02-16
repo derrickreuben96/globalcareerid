@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -41,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const initializedRef = useRef(false);
+  const currentUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = async (userId: string) => {
     try {
@@ -49,28 +51,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.from('user_roles').select('role').eq('user_id', userId)
       ]);
       
-      setProfile(profileResult.data);
-      setRoles(rolesResult.data?.map(r => r.role) || []);
+      // Only update state if this user is still the current user
+      if (currentUserIdRef.current === userId) {
+        setProfile(profileResult.data);
+        setRoles(rolesResult.data?.map(r => r.role) || []);
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
-      setProfile(null);
-      setRoles([]);
+      if (currentUserIdRef.current === userId) {
+        setProfile(null);
+        setRoles([]);
+      }
     }
   };
 
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener FIRST for ongoing changes (does NOT control isLoading)
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, newSession) => {
         if (!mounted) return;
-        setSession(session);
-        setUser(session?.user ?? null);
 
-        if (session?.user) {
-          // Fire and forget for ongoing changes
-          fetchProfile(session.user.id);
+        const newUserId = newSession?.user?.id ?? null;
+        const previousUserId = currentUserIdRef.current;
+        
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        currentUserIdRef.current = newUserId;
+
+        if (newUserId) {
+          // For sign-in events (new user or different user), set loading while fetching profile
+          const isNewSignIn = event === 'SIGNED_IN' && newUserId !== previousUserId;
+          
+          if (isNewSignIn && initializedRef.current) {
+            setIsLoading(true);
+          }
+          
+          await fetchProfile(newUserId);
+          
+          if (isNewSignIn && initializedRef.current && mounted) {
+            setIsLoading(false);
+          }
         } else {
           setProfile(null);
           setRoles([]);
@@ -78,22 +100,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // INITIAL load - await profile fetch before setting loading false
+    // INITIAL load
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         if (!mounted) return;
 
-        setSession(session);
-        setUser(session?.user ?? null);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        currentUserIdRef.current = currentSession?.user?.id ?? null;
 
-        if (session?.user) {
-          await fetchProfile(session.user.id);
+        if (currentSession?.user) {
+          await fetchProfile(currentSession.user.id);
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
       } finally {
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+          initializedRef.current = true;
+        }
       }
     };
 
@@ -126,6 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    currentUserIdRef.current = null;
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
