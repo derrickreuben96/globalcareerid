@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Bot, 
   Send, 
@@ -10,6 +12,7 @@ import {
   Users,
   FileText,
   TrendingUp,
+  MessageSquare
 } from 'lucide-react';
 
 interface EmployerAIChatProps {
@@ -23,8 +26,6 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 
 const quickActions = [
   { label: 'Draft job description', icon: FileText, prompt: 'Help me write a professional job description for a new role at our company.' },
@@ -48,110 +49,44 @@ export function EmployerAIChat({ employerId, companyName, employeeCount, isVerif
     if (!text.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: text.trim() };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
 
-    let assistantSoFar = '';
-
-    const upsertAssistant = (chunk: string) => {
-      assistantSoFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
-          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistantSoFar } : m));
-        }
-        return [...prev, { role: 'assistant', content: assistantSoFar }];
-      });
-    };
-
     try {
-      const resp = await fetch(CHAT_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: {
+          messages: [...messages, userMessage].map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          systemPrompt: `You are an AI assistant for ${companyName} on the Global Career ID platform. You help employers with:
+- Writing job descriptions and role requirements
+- HR policy guidance and templates
+- Employee onboarding best practices
+- Workforce management strategies
+- Understanding employment verification processes
+- Compliance and documentation advice
+
+Company context: ${companyName} currently has ${employeeCount} employee records on the platform. ${isVerified ? 'The company is verified.' : 'The company is pending verification.'}
+
+Be professional, concise, and actionable. Format responses with markdown when helpful.`,
         },
-        body: JSON.stringify({
-          messages: updatedMessages.map(m => ({ role: m.role, content: m.content })),
-        }),
       });
 
-      if (!resp.ok || !resp.body) {
-        throw new Error(`Request failed: ${resp.status}`);
-      }
+      if (error) throw error;
 
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = '';
-      let streamDone = false;
-
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf('\n')) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith('\r')) line = line.slice(0, -1);
-          if (line.startsWith(':') || line.trim() === '') continue;
-          if (!line.startsWith('data: ')) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === '[DONE]') {
-            streamDone = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) upsertAssistant(content);
-          } catch {
-            textBuffer = line + '\n' + textBuffer;
-            break;
-          }
-        }
-      }
-
-      // Final flush
-      if (textBuffer.trim()) {
-        for (let raw of textBuffer.split('\n')) {
-          if (!raw) continue;
-          if (raw.endsWith('\r')) raw = raw.slice(0, -1);
-          if (raw.startsWith(':') || raw.trim() === '') continue;
-          if (!raw.startsWith('data: ')) continue;
-          const jsonStr = raw.slice(6).trim();
-          if (jsonStr === '[DONE]') continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) upsertAssistant(content);
-          } catch { /* ignore */ }
-        }
-      }
-
-      // If no content was streamed, show fallback
-      if (!assistantSoFar) {
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: 'I apologize, I couldn\'t process that request. Please try again.',
-        }]);
-      }
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: data?.response || data?.message || 'I apologize, I couldn\'t process that request. Please try again.',
+      };
+      setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('AI Chat error:', error);
-      setMessages(prev => {
-        // Remove empty assistant message if any
-        const filtered = prev.filter((m, i) => !(i === prev.length - 1 && m.role === 'assistant' && !m.content));
-        return [...filtered, {
-          role: 'assistant',
-          content: 'I\'m having trouble connecting right now. Please try again in a moment.',
-        }];
-      });
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'I\'m having trouble connecting right now. Please try again in a moment.',
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -224,7 +159,7 @@ export function EmployerAIChat({ employerId, companyName, employeeCount, isVerif
             </div>
           ))
         )}
-        {isLoading && !messages.some((m, i) => i === messages.length - 1 && m.role === 'assistant' && m.content) && (
+        {isLoading && (
           <div className="flex justify-start">
             <div className="bg-muted rounded-xl px-3.5 py-2.5">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
