@@ -160,10 +160,16 @@ export default function Register() {
     // Check if user is auto-confirmed or needs email verification
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      // Wait for the trigger to create the profile and organization_profiles
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
       const { data: { user } } = await supabase.auth.getUser();
+      
+      // Wait for the DB trigger to create profile (poll instead of arbitrary delay)
+      if (user) {
+        for (let i = 0; i < 10; i++) {
+          const { data: p } = await supabase.from('profiles').select('id').eq('user_id', user.id).maybeSingle();
+          if (p) break;
+          await new Promise(r => setTimeout(r, 300));
+        }
+      }
       if (user) {
         // Upload logo if provided
         let logoUrl: string | null = null;
