@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -12,51 +12,80 @@ import { supabase } from '@/integrations/supabase/client';
 import { MFAVerification } from '@/components/auth/MFAVerification';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 
-const getRedirectPath = async (userId: string): Promise<string> => {
-  const [profileRes, rolesRes] = await Promise.all([
-    supabase.from('profiles').select('account_type').eq('user_id', userId).maybeSingle(),
-    supabase.from('user_roles').select('role').eq('user_id', userId),
-  ]);
-  
-  const roles = rolesRes.data?.map(r => r.role) || [];
-  if (roles.includes('admin')) return '/admin';
-  if (profileRes.data?.account_type === 'organization' || roles.includes('employer')) return '/employer';
-  return '/dashboard';
-};
-
-const getWelcomeInfo = async (userId: string): Promise<{ name: string; logoUrl?: string | null }> => {
-  const [profileRes, employerRes] = await Promise.all([
-    supabase.from('profiles').select('first_name, last_name, account_type').eq('user_id', userId).maybeSingle(),
-    supabase.from('employers').select('company_name, logo_url').eq('user_id', userId).maybeSingle(),
-  ]);
-  
-  if (profileRes.data?.account_type === 'organization' && employerRes.data) {
-    return { name: employerRes.data.company_name, logoUrl: employerRes.data.logo_url };
-  }
-  return { name: profileRes.data?.first_name || 'User' };
-};
-
-const prefetchRedirectPath = (userId: string) => {
-  return getRedirectPath(userId);
-};
-
 export default function Login() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { user, profile, roles, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null }>({ name: '' });
   const [pendingPath, setPendingPath] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  const loginAttemptRef = useRef(false);
+
+  // Reactive: when user signs in and profile loads, show welcome and redirect
+  useEffect(() => {
+    if (!loginAttemptRef.current || !user || !profile || authLoading) return;
+    
+    // Profile is loaded — determine redirect path
+    const path = roles.includes('admin') 
+      ? '/admin' 
+      : (profile.account_type === 'organization' || roles.includes('employer')) 
+        ? '/employer' 
+        : '/dashboard';
+
+    // Fetch welcome info (company logo for orgs)
+    const showWelcomeScreen = async () => {
+      let name = profile.first_name || 'User';
+      let logoUrl: string | null = null;
+
+      if (profile.account_type === 'organization') {
+        try {
+          const { data: employer } = await supabase
+            .from('employers')
+            .select('company_name, logo_url')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          if (employer) {
+            name = employer.company_name;
+            logoUrl = employer.logo_url;
+          }
+        } catch { /* use profile name as fallback */ }
+      }
+
+      setIsLoading(false);
+      setWelcomeInfo({ name, logoUrl });
+      setPendingPath(path);
+      setShowWelcome(true);
+      loginAttemptRef.current = false;
+    };
+
+    showWelcomeScreen();
+  }, [user, profile, roles, authLoading]);
+
+  // Safety timeout: if loading hangs for > 8 seconds, reset
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        setIsLoading(false);
+        loginAttemptRef.current = false;
+        // If user is already logged in, just redirect
+        if (user && profile) {
+          const path = roles.includes('admin') ? '/admin' 
+            : (profile.account_type === 'organization' || roles.includes('employer')) ? '/employer' 
+            : '/dashboard';
+          navigate(path);
+        }
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,9 +114,10 @@ export default function Login() {
     if (!form.email || !form.password) return;
 
     setIsLoading(true);
+    loginAttemptRef.current = true;
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
@@ -95,49 +125,26 @@ export default function Login() {
       if (error) {
         toast.error(error.message);
         setIsLoading(false);
-        return;
+        loginAttemptRef.current = false;
       }
-
-      // Start redirect path + welcome info fetch immediately, in parallel with MFA check
-      const redirectPromise = prefetchRedirectPath(data.user!.id);
-      const welcomePromise = getWelcomeInfo(data.user!.id);
-
-      // Check MFA factors
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const hasVerifiedTOTP = factors?.totp?.some(f => f.status === 'verified');
-
-      if (hasVerifiedTOTP) {
-        setShowMFA(true);
-        setIsLoading(false);
-      } else {
-        const [path, welcome] = await Promise.all([redirectPromise, welcomePromise]);
-        setIsLoading(false);
-        setWelcomeInfo(welcome);
-        setPendingPath(path);
-        setShowWelcome(true);
-      }
+      // If no error, the useAuth hook will detect the session change,
+      // load the profile, and the useEffect above will handle the redirect.
     } catch {
       toast.error('Login failed. Please try again.');
       setIsLoading(false);
+      loginAttemptRef.current = false;
     }
   };
 
   const handleMFASuccess = async () => {
     setShowMFA(false);
-    const { data: { user: mfaUser } } = await supabase.auth.getUser();
-    if (mfaUser) {
-      const [path, welcome] = await Promise.all([getRedirectPath(mfaUser.id), getWelcomeInfo(mfaUser.id)]);
-      setWelcomeInfo(welcome);
-      setPendingPath(path);
-      setShowWelcome(true);
-    } else {
-      navigate('/dashboard');
-    }
+    loginAttemptRef.current = true;
+    setIsLoading(true);
+    // The useEffect watching profile will handle the redirect
   };
 
   const handleMFACancel = async () => {
     setShowMFA(false);
-    // Sign out since MFA wasn't completed
     await supabase.auth.signOut();
   };
 
@@ -146,7 +153,6 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Google OAuth users go to /dashboard first, which will redirect org accounts to /employer
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
@@ -305,22 +311,10 @@ export default function Login() {
                   ) : (
                     <>
                       <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
+                        <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                        <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                        <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                        <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                       </svg>
                       Continue with Google
                     </>
