@@ -4,6 +4,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface UploadRow {
@@ -183,10 +184,16 @@ Deno.serve(async (req) => {
               createError?.message?.includes("already been registered") ||
               createError?.message?.includes("already exists")
             ) {
-              // User exists in auth but not in profiles — find them
-              const { data: authUsers } =
-                await adminClient.auth.admin.listUsers();
-              const existingAuthUser = authUsers?.users?.find(
+              // User exists in auth but not in profiles — find them by email
+              const { data: existingUsers, error: listError } =
+                await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
+              
+              if (listError) {
+                results.push({ email, fullName, roleTitle, status: "error", message: "Failed to look up existing user" });
+                continue;
+              }
+              
+              const existingAuthUser = existingUsers?.users?.find(
                 (u) => u.email === email
               );
               if (existingAuthUser) {

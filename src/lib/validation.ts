@@ -94,6 +94,8 @@ export const employerRegistrationSchema = z.object({
   registrationNumber: z.string().trim().min(1, 'Registration number is required').max(50, 'Too long'),
   country: z.string().trim().min(1, 'Country is required').max(100, 'Too long'),
   industry: z.string().trim().min(1, 'Industry is required').max(100, 'Too long'),
+  phone: z.string().trim().min(1, 'Company phone is required').max(30, 'Too long').regex(/^[+\d\s()-]+$/, 'Invalid phone number format'),
+  website: z.string().trim().min(1, 'Website is required').max(255, 'Too long'),
   email: emailSchema,
   password: passwordSchema,
   confirmPassword: z.string(),

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Bot, 
@@ -12,7 +11,6 @@ import {
   Users,
   FileText,
   TrendingUp,
-  MessageSquare
 } from 'lucide-react';
 
 interface EmployerAIChatProps {
@@ -49,18 +47,20 @@ export function EmployerAIChat({ employerId, companyName, employeeCount, isVerif
     if (!text.trim() || isLoading) return;
 
     const userMessage: Message = { role: 'user', content: text.trim() };
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput('');
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('ai-chat', {
-        body: {
-          messages: [...messages, userMessage].map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
-          systemPrompt: `You are an AI assistant for ${companyName} on the Global Career ID platform. You help employers with:
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Please sign in to use the AI assistant.' }]);
+        setIsLoading(false);
+        return;
+      }
+
+      const employerContext = `You are an AI assistant for ${companyName} on the Global Career ID platform. You help employers with:
 - Writing job descriptions and role requirements
 - HR policy guidance and templates
 - Employee onboarding best practices
@@ -70,17 +70,78 @@ export function EmployerAIChat({ employerId, companyName, employeeCount, isVerif
 
 Company context: ${companyName} currently has ${employeeCount} employee records on the platform. ${isVerified ? 'The company is verified.' : 'The company is pending verification.'}
 
-Be professional, concise, and actionable. Format responses with markdown when helpful.`,
+Be professional, concise, and actionable. Format responses with markdown when helpful.`;
+
+      // Build messages array with employer context as a system-like user message
+      const apiMessages = [
+        { role: 'user' as const, content: `[System context - do not repeat this]: ${employerContext}` },
+        { role: 'assistant' as const, content: 'Understood. I\'m ready to help with your HR and workforce needs. How can I assist you?' },
+        ...updatedMessages.map(m => ({ role: m.role, content: m.content })),
+      ];
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/ai-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
+        body: JSON.stringify({ messages: apiMessages }),
       });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'AI service error');
+      }
 
-      const assistantMessage: Message = {
-        role: 'assistant',
-        content: data?.response || data?.message || 'I apologize, I couldn\'t process that request. Please try again.',
-      };
-      setMessages(prev => [...prev, assistantMessage]);
+      // Process SSE streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = '';
+
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+      if (reader) {
+        let buffer = '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line.startsWith('data: ')) continue;
+            const data = line.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const delta = parsed.choices?.[0]?.delta?.content;
+              if (delta) {
+                assistantContent += delta;
+                setMessages(prev => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = { role: 'assistant', content: assistantContent };
+                  return updated;
+                });
+              }
+            } catch {
+              // skip malformed chunks
+            }
+          }
+        }
+      }
+
+      if (!assistantContent) {
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: 'assistant', content: 'I apologize, I couldn\'t process that request. Please try again.' };
+          return updated;
+        });
+      }
     } catch (error) {
       console.error('AI Chat error:', error);
       setMessages(prev => [...prev, {
@@ -159,7 +220,7 @@ Be professional, concise, and actionable. Format responses with markdown when he
             </div>
           ))
         )}
-        {isLoading && (
+        {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex justify-start">
             <div className="bg-muted rounded-xl px-3.5 py-2.5">
               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
