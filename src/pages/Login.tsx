@@ -10,9 +10,9 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { MFAVerification } from '@/components/auth/MFAVerification';
+import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 
 const getRedirectPath = async (userId: string): Promise<string> => {
-  // Check roles and account type in parallel
   const [profileRes, rolesRes] = await Promise.all([
     supabase.from('profiles').select('account_type').eq('user_id', userId).maybeSingle(),
     supabase.from('user_roles').select('role').eq('user_id', userId),
@@ -24,7 +24,18 @@ const getRedirectPath = async (userId: string): Promise<string> => {
   return '/dashboard';
 };
 
-// Prefetch redirect path in parallel with auth to reduce post-login latency
+const getWelcomeInfo = async (userId: string): Promise<{ name: string; logoUrl?: string | null }> => {
+  const [profileRes, employerRes] = await Promise.all([
+    supabase.from('profiles').select('first_name, last_name, account_type').eq('user_id', userId).maybeSingle(),
+    supabase.from('employers').select('company_name, logo_url').eq('user_id', userId).maybeSingle(),
+  ]);
+  
+  if (profileRes.data?.account_type === 'organization' && employerRes.data) {
+    return { name: employerRes.data.company_name, logoUrl: employerRes.data.logo_url };
+  }
+  return { name: profileRes.data?.first_name || 'User' };
+};
+
 const prefetchRedirectPath = (userId: string) => {
   return getRedirectPath(userId);
 };
@@ -42,6 +53,9 @@ export default function Login() {
   });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null }>({ name: '' });
+  const [pendingPath, setPendingPath] = useState('');
   const [isResetting, setIsResetting] = useState(false);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -84,8 +98,9 @@ export default function Login() {
         return;
       }
 
-      // Start redirect path fetch immediately, in parallel with MFA check
+      // Start redirect path + welcome info fetch immediately, in parallel with MFA check
       const redirectPromise = prefetchRedirectPath(data.user!.id);
+      const welcomePromise = getWelcomeInfo(data.user!.id);
 
       // Check MFA factors
       const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -95,10 +110,11 @@ export default function Login() {
         setShowMFA(true);
         setIsLoading(false);
       } else {
-        const path = await redirectPromise;
+        const [path, welcome] = await Promise.all([redirectPromise, welcomePromise]);
         setIsLoading(false);
-        toast.success('Welcome back!');
-        navigate(path);
+        setWelcomeInfo(welcome);
+        setPendingPath(path);
+        setShowWelcome(true);
       }
     } catch {
       toast.error('Login failed. Please try again.');
@@ -108,10 +124,15 @@ export default function Login() {
 
   const handleMFASuccess = async () => {
     setShowMFA(false);
-    toast.success('Welcome back!');
-    const { data: { user } } = await supabase.auth.getUser();
-    const path = user ? await getRedirectPath(user.id) : '/dashboard';
-    navigate(path);
+    const { data: { user: mfaUser } } = await supabase.auth.getUser();
+    if (mfaUser) {
+      const [path, welcome] = await Promise.all([getRedirectPath(mfaUser.id), getWelcomeInfo(mfaUser.id)]);
+      setWelcomeInfo(welcome);
+      setPendingPath(path);
+      setShowWelcome(true);
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleMFACancel = async () => {
@@ -328,6 +349,18 @@ export default function Login() {
         onSuccess={handleMFASuccess}
         onCancel={handleMFACancel}
       />
+
+      {/* Welcome Overlay */}
+      {showWelcome && (
+        <WelcomeOverlay
+          name={welcomeInfo.name}
+          logoUrl={welcomeInfo.logoUrl}
+          onComplete={() => {
+            setShowWelcome(false);
+            navigate(pendingPath);
+          }}
+        />
+      )}
     </div>
   );
 }

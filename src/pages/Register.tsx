@@ -58,6 +58,8 @@ export default function Register() {
     registrationNumber: '',
     country: '',
     industry: '',
+    phone: '',
+    website: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -191,6 +193,8 @@ export default function Register() {
           registration_number: validation.data!.registrationNumber,
           country: validation.data!.country,
           industry: validation.data!.industry,
+          phone: validation.data!.phone,
+          website: validation.data!.website,
           ...(logoUrl && { logo_url: logoUrl }),
         }).eq('user_id', user.id);
 
@@ -200,6 +204,8 @@ export default function Register() {
           registration_number: validation.data!.registrationNumber,
           country: validation.data!.country,
           industry: validation.data!.industry,
+          phone: validation.data!.phone,
+          website: validation.data!.website,
           ...(logoUrl && { logo_url: logoUrl }),
         });
       }
@@ -507,6 +513,41 @@ export default function Register() {
                         icon={<Briefcase className="w-4 h-4" />}
                         disabled={isLoading}
                       />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="companyPhone">Company Phone <span className="text-destructive">*</span></Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="companyPhone"
+                            type="tel"
+                            placeholder="+1 234 567 8900"
+                            className="pl-10"
+                            value={employerForm.phone}
+                            onChange={(e) => setEmployerForm({ ...employerForm, phone: e.target.value })}
+                            required
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="companyWebsite">Website <span className="text-destructive">*</span></Label>
+                        <div className="relative">
+                          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input
+                            id="companyWebsite"
+                            type="url"
+                            placeholder="https://company.com"
+                            className="pl-10"
+                            value={employerForm.website}
+                            onChange={(e) => setEmployerForm({ ...employerForm, website: e.target.value })}
+                            required
+                            disabled={isLoading}
+                          />
+                        </div>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
