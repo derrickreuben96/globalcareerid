@@ -67,7 +67,7 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadTemplate = () => {
-    const template = 'Full Name,Email,Role Title,Start Date,End Date,Department\nJane Doe,jane@example.com,Software Engineer,2024-01-15,,Engineering\nJohn Smith,john@example.com,Product Manager,2024-02-01,2024-12-31,Product';
+    const template = 'Full Name,Email,Role Title,Start Date,End Date,Department\nJane Doe,jane@example.com,Software Engineer,15-01-2024,,Engineering\nJohn Smith,john@example.com,Product Manager,01-02-2024,31-12-2024,Product';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -111,7 +111,7 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
   };
 
   const validateRows = (rows: ParsedRow[]): ParsedRow[] => {
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     return rows.map((row) => {
@@ -125,10 +125,10 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
         return { ...row, status: 'invalid' as const, error: 'Missing role title' };
       }
       if (!dateRegex.test(row.startDate)) {
-        return { ...row, status: 'invalid' as const, error: 'Invalid start date (YYYY-MM-DD)' };
+        return { ...row, status: 'invalid' as const, error: 'Invalid start date (DD-MM-YYYY)' };
       }
       if (row.endDate && !dateRegex.test(row.endDate)) {
-        return { ...row, status: 'invalid' as const, error: 'Invalid end date (YYYY-MM-DD)' };
+        return { ...row, status: 'invalid' as const, error: 'Invalid end date (DD-MM-YYYY)' };
       }
       return { ...row, status: 'valid' as const };
     });
@@ -212,14 +212,21 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
           },
           body: JSON.stringify({
             employerId,
-            rows: batch.map((r) => ({
-              fullName: r.fullName,
-              email: r.email,
-              roleTitle: r.roleTitle,
-              startDate: r.startDate,
-              endDate: r.endDate || undefined,
-              department: r.department || undefined,
-            })),
+            rows: batch.map((r) => {
+              // Convert DD-MM-YYYY to YYYY-MM-DD for database
+              const convertDate = (d: string) => {
+                const [day, month, year] = d.split('-');
+                return `${year}-${month}-${day}`;
+              };
+              return {
+                fullName: r.fullName,
+                email: r.email,
+                roleTitle: r.roleTitle,
+                startDate: convertDate(r.startDate),
+                endDate: r.endDate ? convertDate(r.endDate) : undefined,
+                department: r.department || undefined,
+              };
+            }),
           }),
         });
 
