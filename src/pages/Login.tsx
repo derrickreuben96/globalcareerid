@@ -25,13 +25,17 @@ const getRedirectPath = async (userId: string): Promise<string> => {
 };
 
 const getWelcomeInfo = async (userId: string): Promise<{ name: string; logoUrl?: string | null }> => {
-  const [profileRes, employerRes] = await Promise.all([
+  const [profileRes, employerRes, orgRes] = await Promise.all([
     supabase.from('profiles').select('first_name, last_name, account_type').eq('user_id', userId).maybeSingle(),
     supabase.from('employers').select('company_name, logo_url').eq('user_id', userId).maybeSingle(),
+    supabase.from('organization_profiles').select('company_name, logo_url').eq('user_id', userId).maybeSingle(),
   ]);
   
-  if (profileRes.data?.account_type === 'organization' && employerRes.data) {
-    return { name: employerRes.data.company_name, logoUrl: employerRes.data.logo_url };
+  if (profileRes.data?.account_type === 'organization') {
+    // Try employer first (has logo_url), then org profile
+    const logo = employerRes.data?.logo_url || orgRes.data?.logo_url;
+    const name = employerRes.data?.company_name || orgRes.data?.company_name || profileRes.data?.first_name || 'Organization';
+    return { name, logoUrl: logo };
   }
   return { name: profileRes.data?.first_name || 'User' };
 };
