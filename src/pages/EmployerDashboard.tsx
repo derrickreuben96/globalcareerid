@@ -113,7 +113,8 @@ export default function EmployerDashboard() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/');
+      window.location.href = '/login';
+      return;
     }
   }, [user, authLoading, navigate]);
 

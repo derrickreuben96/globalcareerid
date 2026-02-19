@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
-import { User, Session, AuthError } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
@@ -36,8 +36,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Safety timeout to never stay loading forever
-const MAX_LOADING_MS = 8000;
+const MAX_LOADING_MS = 10000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -49,15 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const initializedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
   const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Safety: never remain in loading state beyond MAX_LOADING_MS
-  const startLoadingSafety = () => {
-    clearLoadingSafety();
-    loadingTimeoutRef.current = setTimeout(() => {
-      console.warn('Auth: Force-ending loading state after timeout');
-      setIsLoading(false);
-    }, MAX_LOADING_MS);
-  };
+  const signingOutRef = useRef(false);
 
   const clearLoadingSafety = () => {
     if (loadingTimeoutRef.current) {
@@ -66,23 +57,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const fetchProfile = async (userId: string) => {
+  const startLoadingSafety = () => {
+    clearLoadingSafety();
+    loadingTimeoutRef.current = setTimeout(() => {
+      console.warn('Auth: Force-ending loading state after timeout');
+      setIsLoading(false);
+    }, MAX_LOADING_MS);
+  };
+
+  const fetchProfile = async (userId: string): Promise<boolean> => {
     try {
       const [profileResult, rolesResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('user_roles').select('role').eq('user_id', userId)
       ]);
 
-      if (currentUserIdRef.current !== userId) return;
+      if (currentUserIdRef.current !== userId) return false;
 
       if (profileResult.error) {
         console.error('Profile fetch error:', profileResult.error);
         setAuthError('Failed to load profile data');
+        return false;
       }
 
       setProfile(profileResult.data);
       setRoles(rolesResult.data?.map(r => r.role) || []);
       setAuthError(null);
+      return true;
     } catch (error) {
       console.error('Error fetching profile:', error);
       if (currentUserIdRef.current === userId) {
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoles([]);
         setAuthError('Network error loading profile');
       }
+      return false;
     }
   };
 
@@ -100,10 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        if (!mounted) return;
-
-        const newUserId = newSession?.user?.id ?? null;
-        const previousUserId = currentUserIdRef.current;
+        if (!mounted || signingOutRef.current) return;
 
         // Handle sign out
         if (event === 'SIGNED_OUT' || !newSession) {
@@ -122,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Handle expired/invalid token
         if (event === 'TOKEN_REFRESHED' && !newSession.access_token) {
-          console.warn('Auth: Token refresh failed, session invalid');
+          console.warn('Auth: Token refresh failed');
           currentUserIdRef.current = null;
           setSession(null);
           setUser(null);
@@ -134,21 +133,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        const newUserId = newSession?.user?.id ?? null;
+        const previousUserId = currentUserIdRef.current;
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
         currentUserIdRef.current = newUserId;
 
-        if (newUserId) {
-          const isNewSignIn = event === 'SIGNED_IN' && newUserId !== previousUserId;
-
-          if (isNewSignIn && initializedRef.current) {
+        // Only fetch profile on new sign-in (not on token refresh for same user)
+        if (newUserId && initializedRef.current) {
+          const isNewUser = newUserId !== previousUserId;
+          if (isNewUser) {
             setIsLoading(true);
             startLoadingSafety();
+            await fetchProfile(newUserId);
           }
-
-          await fetchProfile(newUserId);
-
-          if (mounted && initializedRef.current) {
+          if (mounted) {
             setIsLoading(false);
             clearLoadingSafety();
           }
@@ -159,46 +159,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // INITIAL load — validate persisted session
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        // Use getUser() as the single source of truth - it validates the JWT against the server
+        const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
 
         if (!mounted) return;
 
-        if (sessionError) {
-          console.error('Session validation error:', sessionError);
-          setAuthError('Failed to restore session');
+        if (userError || !validatedUser) {
+          // No valid session - clear everything
+          if (userError) {
+            console.warn('Auth: Session validation failed:', userError.message);
+          }
+          currentUserIdRef.current = null;
           setSession(null);
           setUser(null);
           setProfile(null);
           setRoles([]);
+          // Only set error if there was an actual error (not just no session)
+          setAuthError(userError ? 'Session expired. Please sign in again.' : null);
           return;
         }
 
-        if (currentSession) {
-          // Validate the session is still valid by calling getUser
-          const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
+        // We have a valid user - get the session for the token
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
 
-          if (!mounted) return;
+        if (!mounted) return;
 
-          if (userError || !validatedUser) {
-            console.warn('Auth: Persisted session is invalid, clearing');
-            await supabase.auth.signOut();
-            setSession(null);
-            setUser(null);
-            setProfile(null);
-            setRoles([]);
-            setAuthError(userError ? 'Session expired. Please sign in again.' : null);
-            return;
-          }
-
-          setSession(currentSession);
-          setUser(validatedUser);
-          currentUserIdRef.current = validatedUser.id;
-          await fetchProfile(validatedUser.id);
-        } else {
-          setSession(null);
-          setUser(null);
-          currentUserIdRef.current = null;
-        }
+        setSession(currentSession);
+        setUser(validatedUser);
+        currentUserIdRef.current = validatedUser.id;
+        await fetchProfile(validatedUser.id);
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
@@ -264,18 +253,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    // Prevent onAuthStateChange from interfering during sign out
+    signingOutRef.current = true;
     currentUserIdRef.current = null;
     setUser(null);
     setSession(null);
     setProfile(null);
     setRoles([]);
     setAuthError(null);
+    setIsLoading(false);
     try {
       await supabase.auth.signOut();
     } catch {
-      // Even if signOut fails server-side, we've already cleared local state
       console.warn('Server-side sign out may have failed, local state cleared');
     }
+    signingOutRef.current = false;
   };
 
   const refreshProfile = async () => {
