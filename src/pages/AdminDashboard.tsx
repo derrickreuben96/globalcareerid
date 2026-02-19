@@ -62,8 +62,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      navigate("/");
-      toast.error("Please sign in to access this page.");
+      window.location.href = '/login';
       return;
     }
     if (!roles.includes("admin")) {

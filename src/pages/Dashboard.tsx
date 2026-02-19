@@ -81,7 +81,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/');
+      window.location.href = '/login';
+      return;
     } else if (!authLoading && user) {
       if (roles.includes('admin')) {
         navigate('/admin');
@@ -231,7 +232,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">Unable to load your profile. Please try signing in again.</p>
-          <Button variant="outline" onClick={() => { signOut(); navigate('/login'); }}>
+          <Button variant="outline" onClick={async () => { await signOut(); window.location.href = '/login'; }}>
             Back to Login
           </Button>
         </div>
