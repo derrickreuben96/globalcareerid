@@ -73,7 +73,7 @@ interface EmploymentRecord {
 
 export default function EmployerDashboard() {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, signOut } = useAuth();
+  const { user, isLoading: authLoading, authStatus, signOut } = useAuth();
   const [employer, setEmployer] = useState<Employer | null>(null);
   const [employees, setEmployees] = useState<EmploymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,11 +112,12 @@ export default function EmployerDashboard() {
   };
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (authStatus === 'loading') return;
+    if (authStatus === 'unauthenticated') {
       window.location.href = '/login';
       return;
     }
-  }, [user, authLoading, navigate]);
+  }, [authStatus, navigate]);
 
   useEffect(() => {
     const fetchEmployerData = async () => {

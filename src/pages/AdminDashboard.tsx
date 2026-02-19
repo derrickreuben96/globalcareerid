@@ -50,7 +50,7 @@ interface Dispute {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, roles, isLoading: authLoading, signOut } = useAuth();
+  const { user, roles, isLoading: authLoading, authStatus, signOut } = useAuth();
   const [employers, setEmployers] = useState<Employer[]>([]);
   const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [userCount, setUserCount] = useState(0);
@@ -60,8 +60,8 @@ export default function AdminDashboard() {
 
   // Admin verification
   useEffect(() => {
-    if (authLoading) return;
-    if (!user) {
+    if (authStatus === 'loading') return;
+    if (authStatus === 'unauthenticated') {
       window.location.href = '/login';
       return;
     }
@@ -70,7 +70,7 @@ export default function AdminDashboard() {
       toast.error("Access denied. Admin privileges required.");
       return;
     }
-  }, [user, roles, authLoading, navigate]);
+  }, [authStatus, roles, navigate]);
 
   const fetchData = useCallback(async () => {
     if (!user || !roles.includes("admin")) return;

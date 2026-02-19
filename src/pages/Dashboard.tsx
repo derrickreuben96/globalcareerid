@@ -52,7 +52,7 @@ interface EmploymentRecord {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, profile, roles, isLoading: authLoading, signOut } = useAuth();
+  const { user, profile, roles, isLoading: authLoading, authStatus, signOut } = useAuth();
   const [records, setRecords] = useState<EmploymentRecord[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
@@ -80,17 +80,17 @@ export default function Dashboard() {
   }, [profile, authLoading, isJobSeeker, isAdmin, isEmployer]);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (authStatus === 'loading') return;
+    if (authStatus === 'unauthenticated') {
       window.location.href = '/login';
       return;
-    } else if (!authLoading && user) {
-      if (roles.includes('admin')) {
-        navigate('/admin');
-      } else if (profile?.account_type === 'organization') {
-        navigate('/employer');
-      }
     }
-  }, [user, authLoading, profile, roles, navigate]);
+    if (roles.includes('admin')) {
+      navigate('/admin');
+    } else if (profile?.account_type === 'organization') {
+      navigate('/employer');
+    }
+  }, [authStatus, user, profile, roles, navigate]);
 
   useEffect(() => {
     if (profile) {
