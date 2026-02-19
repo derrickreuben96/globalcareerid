@@ -21,15 +21,18 @@ interface Profile {
   updated_at: string;
 }
 
+type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   roles: string[];
   isLoading: boolean;
+  authStatus: AuthStatus;
   authError: string | null;
   signUp: (email: string, password: string, metadata?: Record<string, any>) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; data?: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -43,26 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
   const [authError, setAuthError] = useState<string | null>(null);
-  const initializedRef = useRef(false);
   const currentUserIdRef = useRef<string | null>(null);
-  const loadingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const signingOutRef = useRef(false);
+  const initCompleteRef = useRef(false);
 
-  const clearLoadingSafety = () => {
-    if (loadingTimeoutRef.current) {
-      clearTimeout(loadingTimeoutRef.current);
-      loadingTimeoutRef.current = null;
-    }
-  };
+  const isLoading = authStatus === 'loading';
 
-  const startLoadingSafety = () => {
-    clearLoadingSafety();
-    loadingTimeoutRef.current = setTimeout(() => {
-      console.warn('Auth: Force-ending loading state after timeout');
-      setIsLoading(false);
-    }, MAX_LOADING_MS);
+  const clearState = () => {
+    currentUserIdRef.current = null;
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setRoles([]);
   };
 
   const fetchProfile = async (userId: string): Promise<boolean> => {
@@ -98,110 +95,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    startLoadingSafety();
+    // Safety timeout — ALWAYS resolves auth state
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && authStatus === 'loading') {
+        console.warn('Auth: Force-ending loading state after timeout');
+        // If we have a user set but status still loading, mark authenticated
+        if (currentUserIdRef.current) {
+          setAuthStatus('authenticated');
+        } else {
+          setAuthStatus('unauthenticated');
+          setAuthError('Authentication timed out. Please try again.');
+        }
+      }
+    }, MAX_LOADING_MS);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!mounted || signingOutRef.current) return;
 
-        // Handle sign out
         if (event === 'SIGNED_OUT' || !newSession) {
-          currentUserIdRef.current = null;
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setRoles([]);
+          clearState();
           setAuthError(null);
-          if (initializedRef.current) {
-            setIsLoading(false);
-            clearLoadingSafety();
+          if (initCompleteRef.current) {
+            setAuthStatus('unauthenticated');
           }
           return;
         }
 
-        // Handle expired/invalid token
         if (event === 'TOKEN_REFRESHED' && !newSession.access_token) {
           console.warn('Auth: Token refresh failed');
-          currentUserIdRef.current = null;
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setRoles([]);
+          clearState();
           setAuthError('Session expired. Please sign in again.');
-          setIsLoading(false);
-          clearLoadingSafety();
+          setAuthStatus('unauthenticated');
           return;
         }
 
-        const newUserId = newSession?.user?.id ?? null;
+        const newUserId = newSession.user?.id ?? null;
         const previousUserId = currentUserIdRef.current;
 
         setSession(newSession);
-        setUser(newSession?.user ?? null);
+        setUser(newSession.user ?? null);
         currentUserIdRef.current = newUserId;
 
-        // Only fetch profile on new sign-in (not on token refresh for same user)
-        if (newUserId && initializedRef.current) {
-          const isNewUser = newUserId !== previousUserId;
-          if (isNewUser) {
-            setIsLoading(true);
-            startLoadingSafety();
-            await fetchProfile(newUserId);
-          }
-          if (mounted) {
-            setIsLoading(false);
-            clearLoadingSafety();
-          }
+        // After init, handle new sign-ins (not token refreshes for same user)
+        if (newUserId && initCompleteRef.current && newUserId !== previousUserId) {
+          setAuthStatus('loading');
+          await fetchProfile(newUserId);
+          if (mounted) setAuthStatus('authenticated');
         }
       }
     );
 
-    // INITIAL load — validate persisted session
     const initializeAuth = async () => {
       try {
-        // Use getUser() as the single source of truth - it validates the JWT against the server
         const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
 
         if (!mounted) return;
 
         if (userError || !validatedUser) {
-          // No valid session - clear everything
           if (userError) {
             console.warn('Auth: Session validation failed:', userError.message);
           }
-          currentUserIdRef.current = null;
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setRoles([]);
-          // Only set error if there was an actual error (not just no session)
+          clearState();
           setAuthError(userError ? 'Session expired. Please sign in again.' : null);
+          setAuthStatus('unauthenticated');
           return;
         }
 
-        // We have a valid user - get the session for the token
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-
         if (!mounted) return;
 
         setSession(currentSession);
         setUser(validatedUser);
         currentUserIdRef.current = validatedUser.id;
         await fetchProfile(validatedUser.id);
+
+        if (mounted) {
+          setAuthStatus('authenticated');
+        }
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          clearState();
           setAuthError('Network error during authentication');
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setRoles([]);
+          setAuthStatus('unauthenticated');
         }
       } finally {
         if (mounted) {
-          setIsLoading(false);
-          clearLoadingSafety();
-          initializedRef.current = true;
+          initCompleteRef.current = true;
         }
       }
     };
@@ -210,7 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
-      clearLoadingSafety();
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -237,14 +218,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     setAuthError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       if (error) {
         setAuthError(error.message);
+        return { error: error as Error | null, data: null };
       }
-      return { error: error as Error | null };
+      return { error: null, data };
     } catch (err) {
       const error = err as Error;
       setAuthError('Network error. Please check your connection.');
@@ -253,15 +235,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    // Prevent onAuthStateChange from interfering during sign out
     signingOutRef.current = true;
-    currentUserIdRef.current = null;
-    setUser(null);
-    setSession(null);
-    setProfile(null);
-    setRoles([]);
+    clearState();
     setAuthError(null);
-    setIsLoading(false);
+    setAuthStatus('unauthenticated');
     try {
       await supabase.auth.signOut();
     } catch {
@@ -284,6 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         roles,
         isLoading,
+        authStatus,
         authError,
         signUp,
         signIn,
