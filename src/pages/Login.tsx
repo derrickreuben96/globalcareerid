@@ -89,38 +89,63 @@ export default function Login() {
     if (!form.email || !form.password) return;
 
     setIsLoading(true);
-    
+    console.log('[Login] Start: credentials submitted');
+
+    // 10-second safety timeout — guarantees spinner stops
+    const loginTimeout = setTimeout(() => {
+      console.error('[Login] Timeout: 10s elapsed, force-stopping spinner');
+      setIsLoading(false);
+      toast.error('Login timed out. Please try again.');
+    }, 10000);
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
 
+      console.log('[Login] Credential validation complete', { success: !error, userId: data?.user?.id });
+
       if (error) {
+        clearTimeout(loginTimeout);
         toast.error(error.message);
         setIsLoading(false);
         return;
       }
 
+      if (!data?.user) {
+        clearTimeout(loginTimeout);
+        toast.error('Login failed: no user returned.');
+        setIsLoading(false);
+        return;
+      }
+
       // Start redirect path + welcome info fetch immediately, in parallel with MFA check
-      const redirectPromise = prefetchRedirectPath(data.user!.id);
-      const welcomePromise = getWelcomeInfo(data.user!.id);
+      const redirectPromise = prefetchRedirectPath(data.user.id);
+      const welcomePromise = getWelcomeInfo(data.user.id);
 
       // Check MFA factors
+      console.log('[Login] Checking MFA factors...');
       const { data: factors } = await supabase.auth.mfa.listFactors();
       const hasVerifiedTOTP = factors?.totp?.some(f => f.status === 'verified');
+      console.log('[Login] MFA check complete', { hasVerifiedTOTP });
 
       if (hasVerifiedTOTP) {
+        clearTimeout(loginTimeout);
         setShowMFA(true);
         setIsLoading(false);
       } else {
         const [path, welcome] = await Promise.all([redirectPromise, welcomePromise]);
+        clearTimeout(loginTimeout);
+        console.log('[Login] Session confirmed, redirecting to', path);
         setIsLoading(false);
         setWelcomeInfo(welcome);
         setPendingPath(path);
         setShowWelcome(true);
       }
-    } catch {
+    } catch (err) {
+      clearTimeout(loginTimeout);
+      console.error('[Login] Unhandled error:', err);
       toast.error('Login failed. Please try again.');
       setIsLoading(false);
     }
