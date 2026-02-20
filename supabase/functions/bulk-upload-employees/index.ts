@@ -7,65 +7,6 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-async function sendCareerIdEmail(
-  email: string,
-  fullName: string,
-  profileId: string,
-  companyName: string,
-  roleTitle: string,
-) {
-  const resendKey = Deno.env.get("RESEND_API_KEY");
-  if (!resendKey) {
-    console.warn("RESEND_API_KEY not set — skipping welcome email for", email);
-    return;
-  }
-
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <h2 style="color: #1a1a2e;">Welcome to Global Career ID</h2>
-      <p>Hi <strong>${fullName}</strong>,</p>
-      <p><strong>${companyName}</strong> has added you as a <strong>${roleTitle}</strong> on the Global Career ID platform.</p>
-      <div style="background: #f0f4ff; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center;">
-        <p style="margin: 0 0 8px; color: #666; font-size: 14px;">Your Career ID</p>
-        <p style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 2px; color: #1a1a2e;">${profileId}</p>
-      </div>
-      <p>Your Career ID is your unique, portable professional identity. Use it to:</p>
-      <ul>
-        <li>Share your verified employment history with recruiters</li>
-        <li>Build a trusted professional profile</li>
-        <li>Claim and manage your account</li>
-      </ul>
-      <p>To claim your account and set your password, visit the platform and use the <strong>Forgot Password</strong> option with this email address.</p>
-      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-      <p style="color: #999; font-size: 12px;">This is an automated message from Global Career ID.</p>
-    </div>
-  `;
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${resendKey}`,
-      },
-      body: JSON.stringify({
-        from: "Global Career ID <onboarding@resend.dev>",
-        to: [email],
-        subject: `Your Career ID from ${companyName}`,
-        html,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      console.error("Failed to send email to", email, body);
-    } else {
-      console.log("Welcome email sent to", email);
-    }
-  } catch (err) {
-    console.error("Email send error for", email, err);
-  }
-}
-
 interface UploadRow {
   fullName: string;
   email: string;
@@ -136,7 +77,7 @@ Deno.serve(async (req) => {
     // Verify caller owns this employer record
     const { data: employer } = await userClient
       .from("employers")
-      .select("id, is_verified, company_name")
+      .select("id, is_verified")
       .eq("id", employerId)
       .eq("user_id", user.id)
       .single();
@@ -354,22 +295,16 @@ Deno.serve(async (req) => {
             message: insertError.message,
           });
         } else {
-          const isNew = !existingProfile;
           results.push({
             email,
             fullName,
             roleTitle,
-            status: isNew ? "created" : "attached",
+            status: existingProfile ? "attached" : "created",
             profileId: targetProfileId!,
-            message: isNew
-              ? `New Career ID ${targetProfileId!} created`
-              : `Attached to existing Career ID ${targetProfileId}`,
+            message: existingProfile
+              ? `Attached to existing Career ID ${targetProfileId}`
+              : `New Career ID ${targetProfileId!} created`,
           });
-
-          // Send welcome email with Career ID to newly created employees
-          if (isNew && targetProfileId && targetProfileId !== "PENDING") {
-            sendCareerIdEmail(email, fullName, targetProfileId, employer.company_name, roleTitle);
-          }
         }
       } catch (rowError) {
         results.push({
