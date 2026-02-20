@@ -10,7 +10,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, roles, profile, signOut } = useAuth();
+  const { user, roles, profile, signOut, authStatus } = useAuth();
+  
+  // Never show authenticated UI until backend confirms the session
+  const isSessionConfirmed = authStatus === 'authenticated' && !!user;
   
   const isAdmin = roles.includes('admin');
   const isEmployer = roles.includes('employer');
@@ -143,7 +146,7 @@ export function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            {user ? (
+            {isSessionConfirmed ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -259,7 +262,7 @@ export function Header() {
                 </Link>
               )}
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
-                {user ? (
+                {isSessionConfirmed ? (
                   <>
                     {isEmployer && employerLogo && (
                       <div className="flex items-center gap-2 px-2 py-1">
