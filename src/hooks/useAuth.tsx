@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -41,6 +41,32 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const MAX_LOADING_MS = 10000;
 
+/**
+ * Forcefully clears ALL client-side auth artifacts.
+ * Called on sign-out and when backend rejects the session.
+ */
+function purgeClientSession() {
+  // Remove all supabase auth keys from localStorage
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+
+  // Also clear sessionStorage just in case
+  const sessionKeysToRemove: string[] = [];
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const key = sessionStorage.key(i);
+    if (key && (key.startsWith('sb-') || key.includes('supabase'))) {
+      sessionKeysToRemove.push(key);
+    }
+  }
+  sessionKeysToRemove.forEach(k => sessionStorage.removeItem(k));
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -54,15 +80,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isLoading = authStatus === 'loading';
 
-  const clearState = () => {
+  const clearState = useCallback(() => {
     currentUserIdRef.current = null;
     setSession(null);
     setUser(null);
     setProfile(null);
     setRoles([]);
-  };
+  }, []);
 
-  const fetchProfile = async (userId: string): Promise<boolean> => {
+  const fetchProfile = useCallback(async (userId: string): Promise<boolean> => {
     try {
       const [profileResult, rolesResult] = await Promise.all([
         supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
@@ -90,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return false;
     }
-  };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -99,12 +125,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const safetyTimeout = setTimeout(() => {
       if (mounted && authStatus === 'loading') {
         console.warn('Auth: Force-ending loading state after timeout');
-        // If we have a user set but status still loading, mark authenticated
         if (currentUserIdRef.current) {
           setAuthStatus('authenticated');
         } else {
-          setAuthStatus('unauthenticated');
+          purgeClientSession();
+          clearState();
           setAuthError('Authentication timed out. Please try again.');
+          setAuthStatus('unauthenticated');
         }
       }
     }, MAX_LOADING_MS);
@@ -124,6 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === 'TOKEN_REFRESHED' && !newSession.access_token) {
           console.warn('Auth: Token refresh failed');
+          purgeClientSession();
           clearState();
           setAuthError('Session expired. Please sign in again.');
           setAuthStatus('unauthenticated');
@@ -148,20 +176,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       try {
+        // ALWAYS validate session against the backend — never trust local storage alone
         const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
 
         if (!mounted) return;
 
         if (userError || !validatedUser) {
           if (userError) {
-            console.warn('Auth: Session validation failed:', userError.message);
+            console.warn('Auth: Backend session validation failed:', userError.message);
           }
+          // Backend says no valid session → purge any stale client tokens
+          purgeClientSession();
           clearState();
           setAuthError(userError ? 'Session expired. Please sign in again.' : null);
           setAuthStatus('unauthenticated');
           return;
         }
 
+        // Backend confirmed user — now get the session object
         const { data: { session: currentSession } } = await supabase.auth.getSession();
         if (!mounted) return;
 
@@ -176,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          purgeClientSession();
           clearState();
           setAuthError('Network error during authentication');
           setAuthStatus('unauthenticated');
@@ -196,7 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string, metadata?: Record<string, any>) => {
+  const signUp = useCallback(async (email: string, password: string, metadata?: Record<string, any>) => {
     setAuthError(null);
     try {
       const { error } = await supabase.auth.signUp({
@@ -213,9 +246,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthError(error.message);
       return { error };
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     setAuthError(null);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -232,26 +265,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthError('Network error. Please check your connection.');
       return { error };
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     signingOutRef.current = true;
+
+    // 1. Clear React state immediately
     clearState();
     setAuthError(null);
     setAuthStatus('unauthenticated');
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      console.warn('Server-side sign out may have failed, local state cleared');
-    }
-    signingOutRef.current = false;
-  };
 
-  const refreshProfile = async () => {
+    // 2. Tell the backend to revoke the session (scope: 'global' signs out ALL devices)
+    try {
+      await supabase.auth.signOut({ scope: 'global' });
+    } catch {
+      console.warn('Server-side sign out may have failed');
+    }
+
+    // 3. Purge every client-side token so nothing lingers
+    purgeClientSession();
+
+    signingOutRef.current = false;
+
+    // 4. Hard redirect to flush all in-memory state (React tree, query cache, etc.)
+    window.location.href = '/login';
+  }, [clearState]);
+
+  const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user.id);
     }
-  };
+  }, [user, fetchProfile]);
 
   return (
     <AuthContext.Provider
