@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "npm:resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,49 @@ interface ResultRow {
   profileId?: string;
 }
 
+interface EmailTask {
+  to: string;
+  fullName: string;
+  profileId: string;
+  roleTitle: string;
+  companyName: string;
+}
+
+function buildWelcomeEmail(task: EmailTask, appUrl: string): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background-color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
+    <h1 style="color:#111827;font-size:22px;margin:0 0 24px;">Welcome to TrueWork</h1>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Hi ${task.fullName},
+    </p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      <strong>${task.companyName}</strong> has added you as <strong>${task.roleTitle}</strong> on TrueWork.
+      Your unique Career ID has been created:
+    </p>
+    <div style="background:#f3f4f6;border-radius:8px;padding:16px 24px;text-align:center;margin:0 0 24px;">
+      <span style="font-size:24px;font-weight:700;letter-spacing:2px;color:#111827;">${task.profileId}</span>
+    </div>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;">
+      Your Career ID is your permanent professional identity. It links all verified employment records across your career.
+    </p>
+    <p style="color:#374151;font-size:15px;line-height:1.6;margin:0 0 24px;">
+      To claim your account and view your profile, use the <strong>"Forgot Password"</strong> option on the login page with your email address to set a password.
+    </p>
+    <a href="${appUrl}/login" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;">
+      Claim Your Account
+    </a>
+    <p style="color:#9ca3af;font-size:13px;line-height:1.5;margin:32px 0 0;">
+      If you didn't expect this email, you can safely ignore it. Your data is secure.
+    </p>
+  </div>
+</body>
+</html>`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -42,6 +86,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     // Verify the caller is an authenticated employer
     const userClient = createClient(supabaseUrl, anonKey, {
@@ -77,7 +122,7 @@ Deno.serve(async (req) => {
     // Verify caller owns this employer record
     const { data: employer } = await userClient
       .from("employers")
-      .select("id, is_verified")
+      .select("id, is_verified, company_name")
       .eq("id", employerId)
       .eq("user_id", user.id)
       .single();
@@ -108,6 +153,7 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
     const results: ResultRow[] = [];
+    const emailTasks: EmailTask[] = [];
 
     for (const row of rows) {
       try {
@@ -151,25 +197,24 @@ Deno.serve(async (req) => {
 
         let targetUserId: string;
         let targetProfileId: string;
+        let isNewUser = false;
 
         if (existingProfile) {
-          // Existing Career ID found — attach employment record
           targetUserId = existingProfile.user_id;
           targetProfileId = existingProfile.profile_id;
         } else {
-          // No existing profile — create new auth user (which triggers handle_new_user)
+          // No existing profile — create new auth user
           const nameParts = fullName.split(" ");
           const firstName = nameParts[0] || "User";
           const lastName = nameParts.slice(1).join(" ") || "";
 
-          // Create auth user with a random password (they'll need to claim via email)
           const tempPassword =
             crypto.randomUUID() + "!" + Math.random().toString(36).slice(2);
           const { data: newUser, error: createError } =
             await adminClient.auth.admin.createUser({
               email,
               password: tempPassword,
-              email_confirm: true, // auto-confirm so records can be attached
+              email_confirm: true,
               user_metadata: {
                 first_name: firstName,
                 last_name: lastName,
@@ -179,25 +224,22 @@ Deno.serve(async (req) => {
             });
 
           if (createError || !newUser?.user) {
-            // Could be a duplicate in auth but not in profiles
             if (
               createError?.message?.includes("already been registered") ||
               createError?.message?.includes("already exists")
             ) {
-              // User exists in auth but not in profiles — find them by email
               const { data: existingUsers, error: listError } =
                 await adminClient.auth.admin.listUsers({ page: 1, perPage: 1000 });
-              
+
               if (listError) {
                 results.push({ email, fullName, roleTitle, status: "error", message: "Failed to look up existing user" });
                 continue;
               }
-              
+
               const existingAuthUser = existingUsers?.users?.find(
                 (u) => u.email === email
               );
               if (existingAuthUser) {
-                // Get their profile
                 const { data: prof } = await adminClient
                   .from("profiles")
                   .select("user_id, profile_id")
@@ -208,37 +250,28 @@ Deno.serve(async (req) => {
                   targetProfileId = prof.profile_id;
                 } else {
                   results.push({
-                    email,
-                    fullName,
-                    roleTitle,
-                    status: "error",
-                    message:
-                      "User exists in auth but profile not found. Contact support.",
+                    email, fullName, roleTitle, status: "error",
+                    message: "User exists in auth but profile not found. Contact support.",
                   });
                   continue;
                 }
               } else {
                 results.push({
-                  email,
-                  fullName,
-                  roleTitle,
-                  status: "error",
+                  email, fullName, roleTitle, status: "error",
                   message: "Failed to resolve existing user",
                 });
                 continue;
               }
             } else {
               results.push({
-                email,
-                fullName,
-                roleTitle,
-                status: "error",
+                email, fullName, roleTitle, status: "error",
                 message: createError?.message || "Failed to create user",
               });
               continue;
             }
           } else {
             targetUserId = newUser.user.id;
+            isNewUser = true;
             // Wait briefly for trigger to create profile
             await new Promise((r) => setTimeout(r, 500));
             const { data: newProfile } = await adminClient
@@ -250,7 +283,7 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Check if this exact role already exists to prevent duplicates
+        // Check for duplicate employment record
         const { data: existingRecord } = await adminClient
           .from("employment_records")
           .select("id")
@@ -262,9 +295,7 @@ Deno.serve(async (req) => {
 
         if (existingRecord) {
           results.push({
-            email,
-            fullName,
-            roleTitle,
+            email, fullName, roleTitle,
             status: "attached",
             profileId: targetProfileId!,
             message: "Employment record already exists — skipped",
@@ -287,24 +318,27 @@ Deno.serve(async (req) => {
           });
 
         if (insertError) {
-          results.push({
-            email,
-            fullName,
-            roleTitle,
-            status: "error",
-            message: insertError.message,
-          });
+          results.push({ email, fullName, roleTitle, status: "error", message: insertError.message });
         } else {
           results.push({
-            email,
-            fullName,
-            roleTitle,
+            email, fullName, roleTitle,
             status: existingProfile ? "attached" : "created",
             profileId: targetProfileId!,
             message: existingProfile
               ? `Attached to existing Career ID ${targetProfileId}`
               : `New Career ID ${targetProfileId!} created`,
           });
+
+          // Queue email for newly created users
+          if (isNewUser && targetProfileId && targetProfileId !== "PENDING") {
+            emailTasks.push({
+              to: email,
+              fullName,
+              profileId: targetProfileId!,
+              roleTitle,
+              companyName: employer.company_name,
+            });
+          }
         }
       } catch (rowError) {
         results.push({
@@ -317,12 +351,40 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Send welcome emails in parallel (best-effort, don't fail the upload)
+    if (resendApiKey && emailTasks.length > 0) {
+      const resend = new Resend(resendApiKey);
+      const appUrl = supabaseUrl.replace(".supabase.co", "").includes("//")
+        ? "https://truework.app" // fallback
+        : "https://truework.app";
+
+      // Determine app URL from origin header or fallback
+      const originUrl = req.headers.get("origin") || "https://truework.app";
+
+      await Promise.allSettled(
+        emailTasks.map((task) =>
+          resend.emails.send({
+            from: "TrueWork <noreply@resend.dev>",
+            to: [task.to],
+            subject: `Your Career ID: ${task.profileId} — Welcome to TrueWork`,
+            html: buildWelcomeEmail(task, originUrl),
+          }).then((res) => {
+            if (res.error) console.error(`Email to ${task.to} failed:`, res.error);
+            else console.log(`Welcome email sent to ${task.to}`);
+          })
+        )
+      );
+    }
+
     const created = results.filter((r) => r.status === "created").length;
     const attached = results.filter((r) => r.status === "attached").length;
     const errors = results.filter((r) => r.status === "error").length;
 
     return new Response(
-      JSON.stringify({ results, summary: { created, attached, errors } }),
+      JSON.stringify({
+        results,
+        summary: { created, attached, errors, emailsSent: emailTasks.length },
+      }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
