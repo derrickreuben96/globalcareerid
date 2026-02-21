@@ -82,6 +82,8 @@ export function CompanyProfileEditor({ employer, userEmail, userId, onUpdate }: 
     website: employer.website || '',
     phone: employer.phone || '',
     address: employer.address || '',
+    industry: employer.industry || '',
+    country: employer.country || '',
   });
 
   const handleSave = async () => {
@@ -93,6 +95,8 @@ export function CompanyProfileEditor({ employer, userEmail, userId, onUpdate }: 
           website: formData.website.trim() || null,
           phone: formData.phone.trim() || null,
           address: formData.address.trim() || null,
+          industry: formData.industry.trim() || null,
+          country: formData.country.trim() || null,
         })
         .eq('id', employer.id);
 
@@ -103,6 +107,8 @@ export function CompanyProfileEditor({ employer, userEmail, userId, onUpdate }: 
         website: formData.website.trim() || null,
         phone: formData.phone.trim() || null,
         address: formData.address.trim() || null,
+        industry: formData.industry.trim() || null,
+        country: formData.country.trim() || null,
       });
 
       toast.success('Company profile updated');
@@ -119,6 +125,8 @@ export function CompanyProfileEditor({ employer, userEmail, userId, onUpdate }: 
       website: employer.website || '',
       phone: employer.phone || '',
       address: employer.address || '',
+      industry: employer.industry || '',
+      country: employer.country || '',
     });
     setIsEditing(false);
   };
@@ -351,21 +359,39 @@ export function CompanyProfileEditor({ employer, userEmail, userId, onUpdate }: 
             </div>
           </div>
 
-          {/* Industry - Read only */}
+          {/* Industry - Editable */}
           <div className="flex items-start gap-3">
             <Briefcase className="w-5 h-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
               <Label className="text-muted-foreground text-sm">Industry</Label>
-              <p className="font-medium text-foreground">{employer.industry || 'Not specified'}</p>
+              {isEditing ? (
+                <Input
+                  value={formData.industry}
+                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                  placeholder="e.g. Technology, Healthcare, Finance"
+                  className="mt-1"
+                />
+              ) : (
+                <p className="font-medium text-foreground">{employer.industry || 'Not specified'}</p>
+              )}
             </div>
           </div>
 
-          {/* Country - Read only */}
+          {/* Country - Editable */}
           <div className="flex items-start gap-3">
             <MapPin className="w-5 h-5 text-muted-foreground mt-0.5" />
             <div className="flex-1">
               <Label className="text-muted-foreground text-sm">Country</Label>
-              <p className="font-medium text-foreground">{employer.country || 'Not specified'}</p>
+              {isEditing ? (
+                <Input
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  placeholder="e.g. United States, United Kingdom"
+                  className="mt-1"
+                />
+              ) : (
+                <p className="font-medium text-foreground">{employer.country || 'Not specified'}</p>
+              )}
             </div>
           </div>
         </div>
