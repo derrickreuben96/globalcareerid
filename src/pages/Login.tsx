@@ -31,8 +31,9 @@ const getWelcomeInfo = async (userId: string): Promise<{ name: string; logoUrl?:
     supabase.from('organization_profiles').select('company_name, logo_url').eq('user_id', userId).maybeSingle(),
   ]);
   
-  if (profileRes.data?.account_type === 'organization') {
-    // Try employer first (has logo_url), then org profile
+  const isOrg = profileRes.data?.account_type === 'organization' || !!employerRes.data || !!orgRes.data;
+  
+  if (isOrg) {
     const logo = employerRes.data?.logo_url || orgRes.data?.logo_url;
     const name = employerRes.data?.company_name || orgRes.data?.company_name || profileRes.data?.first_name || 'Organization';
     return { name, logoUrl: logo };
