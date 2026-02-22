@@ -423,6 +423,136 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_documents: {
+        Row: {
+          created_at: string
+          file_name: string | null
+          file_url: string
+          id: string
+          review_status: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          work_history_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name?: string | null
+          file_url: string
+          id?: string
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          work_history_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          review_status?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          work_history_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_documents_work_history_id_fkey"
+            columns: ["work_history_id"]
+            isOneToOne: false
+            referencedRelation: "work_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      verification_requests: {
+        Row: {
+          created_at: string
+          employer_email: string
+          expires_at: string
+          id: string
+          status: string
+          token: string
+          work_history_id: string
+        }
+        Insert: {
+          created_at?: string
+          employer_email: string
+          expires_at: string
+          id?: string
+          status?: string
+          token: string
+          work_history_id: string
+        }
+        Update: {
+          created_at?: string
+          employer_email?: string
+          expires_at?: string
+          id?: string
+          status?: string
+          token?: string
+          work_history_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "verification_requests_work_history_id_fkey"
+            columns: ["work_history_id"]
+            isOneToOne: false
+            referencedRelation: "work_history"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_history: {
+        Row: {
+          company_name: string
+          created_at: string
+          department: string | null
+          employment_type: string | null
+          end_date: string | null
+          id: string
+          role: string
+          start_date: string
+          updated_at: string
+          user_id: string
+          verification_method: string | null
+          verification_requested_at: string | null
+          verification_status: string
+          verified_at: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          department?: string | null
+          employment_type?: string | null
+          end_date?: string | null
+          id?: string
+          role: string
+          start_date: string
+          updated_at?: string
+          user_id: string
+          verification_method?: string | null
+          verification_requested_at?: string | null
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          department?: string | null
+          employment_type?: string | null
+          end_date?: string | null
+          id?: string
+          role?: string
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+          verification_method?: string | null
+          verification_requested_at?: string | null
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

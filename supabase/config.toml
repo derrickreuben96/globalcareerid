@@ -2,3 +2,9 @@ project_id = "zlqkegqcgrggqldsbvem"
 
 [functions.admin-ai-assist]
 verify_jwt = false
+
+[functions.request-employer-verification]
+verify_jwt = false
+
+[functions.verify-employment]
+verify_jwt = false
