@@ -308,7 +308,22 @@ export default function EmployerDashboard() {
             </div>
           </div>
 
-          {!employer.is_verified && (
+          {!employer.is_verified && employer.verification_status === 'rejected' && (
+            <div className="glass-card rounded-2xl p-6 mb-8 border-destructive/50 bg-destructive/5">
+              <div className="flex items-start gap-4">
+                <XCircle className="w-6 h-6 text-destructive" />
+                <div>
+                  <h3 className="font-semibold text-foreground">Verification Rejected</h3>
+                  <p className="text-muted-foreground">
+                    Your company verification was not approved. Please review and update your company profile, 
+                    then contact support to resubmit for verification.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!employer.is_verified && employer.verification_status !== 'rejected' && (
             <div className="glass-card rounded-2xl p-6 mb-8 border-warning/50 bg-warning/5">
               <div className="flex items-start gap-4">
                 <Clock className="w-6 h-6 text-warning" />
