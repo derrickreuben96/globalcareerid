@@ -52,7 +52,7 @@ interface EmploymentRecord {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, profile, roles, isLoading: authLoading, authStatus, signOut } = useAuth();
+  const { user, profile, roles, isLoading: authLoading, authStatus, signOut, refreshProfile } = useAuth();
   const [records, setRecords] = useState<EmploymentRecord[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
@@ -61,6 +61,17 @@ export default function Dashboard() {
   const [disputeReason, setDisputeReason] = useState('');
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Auto-retry profile fetch if authenticated but profile is null (trigger delay)
+  useEffect(() => {
+    if (authStatus === 'authenticated' && !profile && user) {
+      const retryTimer = setInterval(() => {
+        refreshProfile();
+      }, 2000);
+      const timeout = setTimeout(() => clearInterval(retryTimer), 15000);
+      return () => { clearInterval(retryTimer); clearTimeout(timeout); };
+    }
+  }, [authStatus, profile, user, refreshProfile]);
 
   // Check user roles
   const isEmployer = roles.includes('employer');
@@ -72,7 +83,6 @@ export default function Dashboard() {
     if (profile && !authLoading && isJobSeeker && !isAdmin && !isEmployer) {
       const isNewUser = (!profile.skills || profile.skills.length === 0) && !profile.bio;
       if (isNewUser) {
-        // Small delay to let the page load first
         const timer = setTimeout(() => setShowOnboarding(true), 1000);
         return () => clearTimeout(timer);
       }
@@ -259,9 +269,11 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-muted-foreground">Unable to load your profile. Please try signing in again.</p>
-          <Button variant="outline" onClick={async () => { await signOut(); window.location.href = '/login'; }}>
-            Back to Login
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Setting up your profile...</p>
+          <p className="text-xs text-muted-foreground">This may take a moment</p>
+          <Button variant="outline" size="sm" onClick={() => refreshProfile()}>
+            Retry
           </Button>
         </div>
       </div>
