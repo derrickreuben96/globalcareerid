@@ -128,6 +128,18 @@ export function AdminEmployerVerification({ employers, onRefresh }: Props) {
       }
     }
 
+    // Send verification email on approval
+    if (approved) {
+      try {
+        await supabase.functions.invoke("notify-employer-verified", {
+          body: { employer_id: selectedEmployer.id },
+        });
+      } catch (emailErr) {
+        console.warn("Verification email failed to send:", emailErr);
+        // Don't block the approval flow if email fails
+      }
+    }
+
     toast.success(approved ? "Employer verified" : "Employer rejected");
     setSelectedEmployer(null);
     setVerificationNotes("");
