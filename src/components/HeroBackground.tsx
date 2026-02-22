@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react';
+import heroVideo from '@/assets/hero-office-video.mp4';
+import heroImage1 from '@/assets/hero-diverse-team-1.jpg';
+import heroImage2 from '@/assets/hero-diverse-team-2.jpg';
+import heroImage3 from '@/assets/hero-diverse-team-3.jpg';
 
-const officeImages = [
-  'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80',
-  'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1920&q=80',
-];
+const officeImages = [heroImage1, heroImage2, heroImage3];
 
 export function HeroBackground() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [nextIndex, setNextIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -30,10 +28,24 @@ export function HeroBackground() {
 
   return (
     <div className="absolute inset-0 z-0">
+      {/* Background Video */}
+      <video
+        autoPlay
+        muted
+        loop
+        playsInline
+        onLoadedData={() => setVideoLoaded(true)}
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+          videoLoaded ? 'opacity-30' : 'opacity-0'
+        }`}
+      >
+        <source src={heroVideo} type="video/mp4" />
+      </video>
+
       {/* Current Image */}
       <div
         className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-          isTransitioning ? 'opacity-0' : 'opacity-100'
+          isTransitioning ? 'opacity-0' : 'opacity-40'
         }`}
         style={{ backgroundImage: `url(${officeImages[currentIndex]})` }}
       />
@@ -41,7 +53,7 @@ export function HeroBackground() {
       {/* Next Image (preloaded) */}
       <div
         className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-          isTransitioning ? 'opacity-100' : 'opacity-0'
+          isTransitioning ? 'opacity-40' : 'opacity-0'
         }`}
         style={{ backgroundImage: `url(${officeImages[nextIndex]})` }}
       />

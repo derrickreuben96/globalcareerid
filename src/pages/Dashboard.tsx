@@ -163,6 +163,20 @@ export default function Dashboard() {
       .eq('user_id', user.id);
     
     toast.success('Skill added');
+    
+    // Send profile update email
+    if (profile) {
+      try {
+        await supabase.functions.invoke("notify-profile-update", {
+          body: {
+            email: profile.email,
+            first_name: profile.first_name,
+            update_type: "skills_updated",
+            details: updatedSkills.join(", "),
+          },
+        });
+      } catch (e) { console.warn("Profile update email failed:", e); }
+    }
   };
 
   const removeSkill = async (skill: string) => {
@@ -177,6 +191,20 @@ export default function Dashboard() {
       .eq('user_id', user.id);
     
     toast.success('Skill removed');
+    
+    // Send profile update email
+    if (profile) {
+      try {
+        await supabase.functions.invoke("notify-profile-update", {
+          body: {
+            email: profile.email,
+            first_name: profile.first_name,
+            update_type: "skills_updated",
+            details: updatedSkills.join(", "),
+          },
+        });
+      } catch (e) { console.warn("Profile update email failed:", e); }
+    }
   };
 
   const handleDispute = (recordId: string) => {
