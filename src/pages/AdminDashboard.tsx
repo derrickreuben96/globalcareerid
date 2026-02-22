@@ -10,6 +10,7 @@ import { AdminEmployerVerification } from "@/components/admin/AdminEmployerVerif
 import { AdminDisputeResolution } from "@/components/admin/AdminDisputeResolution";
 import { AdminAIChat } from "@/components/admin/AdminAIChat";
 import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
+import { AdminDocumentReview } from "@/components/admin/AdminDocumentReview";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -198,6 +199,8 @@ export default function AdminDashboard() {
             }}
           />
         );
+      case "documents":
+        return <AdminDocumentReview />;
       case "activity":
         return <AdminActivityLog />;
       default:

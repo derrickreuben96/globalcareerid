@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ProfileIdCard } from '@/components/ProfileIdCard';
 import { EmploymentTimeline } from '@/components/EmploymentTimeline';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
+import { WorkHistory } from '@/components/dashboard/WorkHistory';
 import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
 import { ProfileVisibilityToggle } from '@/components/dashboard/ProfileVisibilityToggle';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
@@ -31,7 +32,8 @@ import {
   X,
   AlertTriangle,
   Loader2,
-  LogOut
+  LogOut,
+  Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { skillSchema, disputeReasonSchema, validateField } from '@/lib/validation';
@@ -354,6 +356,12 @@ export default function Dashboard() {
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="timeline" className="gap-2">
                       <Briefcase className="w-4 h-4" />
+                      Employer Records
+                    </TabsTrigger>
+                  )}
+                  {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="work-history" className="gap-2">
+                      <Building2 className="w-4 h-4" />
                       Work History
                     </TabsTrigger>
                   )}
@@ -406,6 +414,12 @@ export default function Dashboard() {
                         </div>
                       )}
                     </div>
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="work-history">
+                    <WorkHistory />
                   </TabsContent>
                 )}
 
