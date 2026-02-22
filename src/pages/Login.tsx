@@ -125,10 +125,22 @@ export default function Login() {
       const redirectPromise = prefetchRedirectPath(data.user.id);
       const welcomePromise = getWelcomeInfo(data.user.id);
 
-      // Check MFA factors
+      // Check MFA factors with a safety timeout to prevent hanging
       console.log('[Login] Checking MFA factors...');
-      const { data: factors } = await supabase.auth.mfa.listFactors();
-      const hasVerifiedTOTP = factors?.totp?.some(f => f.status === 'verified');
+      let hasVerifiedTOTP = false;
+      try {
+        const mfaResult = await Promise.race([
+          supabase.auth.mfa.listFactors(),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000)),
+        ]);
+        if (mfaResult && 'data' in mfaResult) {
+          hasVerifiedTOTP = mfaResult.data?.totp?.some(f => f.status === 'verified') ?? false;
+        } else {
+          console.warn('[Login] MFA check timed out after 3s, assuming no MFA');
+        }
+      } catch (mfaErr) {
+        console.warn('[Login] MFA check failed, assuming no MFA:', mfaErr);
+      }
       console.log('[Login] MFA check complete', { hasVerifiedTOTP });
 
       if (hasVerifiedTOTP) {
