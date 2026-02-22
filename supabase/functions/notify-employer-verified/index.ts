@@ -47,18 +47,27 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Fetch user profile to get email
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("email, first_name, last_name")
       .eq("user_id", employer.user_id)
       .single();
 
-    if (profileError || !profile) {
-      console.error("Error fetching profile:", profileError);
-      return new Response(
-        JSON.stringify({ error: "User profile not found" }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    // Fallback: get email from auth.users if no profile exists
+    let email = profile?.email;
+    let firstName = profile?.first_name || "";
+
+    if (!email) {
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(employer.user_id);
+      if (authError || !authUser?.user?.email) {
+        console.error("Error fetching auth user:", authError);
+        return new Response(
+          JSON.stringify({ error: "User email not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      email = authUser.user.email;
+      firstName = authUser.user.user_metadata?.first_name || "there";
     }
 
     let subject: string;
@@ -82,7 +91,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px;">Your organization has been verified</p>
           </div>
           <div style="padding: 32px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-            <p style="color: #1a1a1a; font-size: 16px;">Hello ${profile.first_name},</p>
+            <p style="color: #1a1a1a; font-size: 16px;">Hello ${firstName},</p>
             <p style="color: #334155; font-size: 14px; line-height: 1.6;">
               We are pleased to inform you that <strong>${employer.company_name}</strong> has been successfully verified on TrueWork ID. 
               You now have full access to employer features including adding employment records for your employees.
@@ -125,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: #fca5a5; margin: 8px 0 0 0; font-size: 14px;">Your organization verification was not approved</p>
           </div>
           <div style="padding: 32px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-            <p style="color: #1a1a1a; font-size: 16px;">Hello ${profile.first_name},</p>
+            <p style="color: #1a1a1a; font-size: 16px;">Hello ${firstName},</p>
             <p style="color: #334155; font-size: 14px; line-height: 1.6;">
               We regret to inform you that the verification request for <strong>${employer.company_name}</strong> on TrueWork ID has not been approved at this time.
             </p>
@@ -162,7 +171,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "TrueWork ID <onboarding@resend.dev>",
-      to: [profile.email],
+      to: [email],
       subject,
       html: htmlContent,
     });
