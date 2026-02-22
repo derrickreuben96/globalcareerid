@@ -110,10 +110,9 @@ export default function Careers() {
     name: '',
     email: '',
     phone: '',
-    linkedin: '',
+    profileId: '',
     portfolio: '',
     coverLetter: '',
-    resumeUrl: ''
   });
 
   const handleApply = async (e: React.FormEvent) => {
@@ -135,10 +134,9 @@ export default function Careers() {
       name: '',
       email: '',
       phone: '',
-      linkedin: '',
+      profileId: '',
       portfolio: '',
       coverLetter: '',
-      resumeUrl: ''
     });
     setIsSubmitting(false);
   };
@@ -321,13 +319,15 @@ export default function Careers() {
                                   />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label htmlFor="linkedin">LinkedIn Profile</Label>
+                                  <Label htmlFor="profileId">Global Career ID *</Label>
                                   <Input
-                                    id="linkedin"
-                                    placeholder="linkedin.com/in/yourprofile"
-                                    value={applicationForm.linkedin}
-                                    onChange={(e) => setApplicationForm({...applicationForm, linkedin: e.target.value})}
+                                    id="profileId"
+                                    placeholder="TW-2026-ABC12"
+                                    value={applicationForm.profileId}
+                                    onChange={(e) => setApplicationForm({...applicationForm, profileId: e.target.value})}
+                                    required
                                   />
+                                  <p className="text-xs text-muted-foreground">Your verified profile replaces the need for a traditional CV/resume</p>
                                 </div>
                               </div>
 
@@ -381,18 +381,31 @@ export default function Careers() {
               Don't See the Right Role?
             </h2>
             <p className="text-lg text-primary-foreground/80 max-w-2xl mx-auto mb-8">
-              We're always looking for talented people. Send us your resume and we'll keep you in mind for future opportunities.
+              We're always looking for talented people. Create your verified Global Career ID profile and reach out — no resume needed.
             </p>
-            <Button 
-              size="lg" 
-              className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
-              asChild
-            >
-              <a href="mailto:careers@globalcareerid.com">
-                <Mail className="w-5 h-5" />
-                Send Your Resume
-              </a>
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button 
+                size="lg" 
+                className="bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                asChild
+              >
+                <a href="/register">
+                  <Users className="w-5 h-5" />
+                  Create Your Profile
+                </a>
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10"
+                asChild
+              >
+                <a href="mailto:careers@globalcareerid.com">
+                  <Mail className="w-5 h-5" />
+                  Contact Us
+                </a>
+              </Button>
+            </div>
           </div>
         </section>
       </main>
