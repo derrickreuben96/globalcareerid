@@ -118,6 +118,16 @@ export default function Register() {
           citizenship: jobSeekerForm.citizenship || null,
         }).eq('user_id', currentUser.id);
       }
+      // Send welcome email
+      try {
+        await supabase.functions.invoke("notify-welcome", {
+          body: {
+            email: jobSeekerForm.email,
+            first_name: jobSeekerForm.firstName,
+            account_type: "career_individual",
+          },
+        });
+      } catch (e) { console.warn("Welcome email failed:", e); }
       toast.success('Account created! Redirecting to your dashboard...');
       navigate('/dashboard');
     } else {
@@ -210,6 +220,16 @@ export default function Register() {
         });
       }
 
+      // Send welcome email for organization
+      try {
+        await supabase.functions.invoke("notify-welcome", {
+          body: {
+            email: employerForm.email,
+            first_name: employerForm.companyName,
+            account_type: "organization",
+          },
+        });
+      } catch (e) { console.warn("Welcome email failed:", e); }
       setIsLoading(false);
       toast.success('Company registration submitted! Verification typically takes 24-48 hours.');
       navigate('/employer');
