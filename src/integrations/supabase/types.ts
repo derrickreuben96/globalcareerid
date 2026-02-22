@@ -609,6 +609,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_employed_by: {
+        Args: { employer_id_param: string; user_id_param: string }
+        Returns: boolean
+      }
       log_security_event: {
         Args: {
           event_type_param: string
