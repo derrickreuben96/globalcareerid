@@ -41,12 +41,11 @@ const handler = async (req: Request): Promise<Response> => {
     });
   }
 
-  const { data: isAdmin } = await supabase.rpc("has_role", {
-    _user_id: user.id,
-    _role: "admin",
-  });
+  // Verify caller is admin or employer
+  const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+  const { data: isEmployer } = await supabase.rpc("has_role", { _user_id: user.id, _role: "employer" });
 
-  if (!isAdmin) {
+  if (!isAdmin && !isEmployer) {
     return new Response(JSON.stringify({ error: "Forbidden" }), {
       status: 403,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

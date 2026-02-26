@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/NotificationBell';
 import { Menu, X, Settings, Building2, User, ChevronDown, LogOut, Shield } from 'lucide-react';
 import logoImage from '@/assets/logo.png';
 import { useState, useEffect } from 'react';
@@ -146,6 +147,7 @@ export function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            {isSessionConfirmed && <NotificationBell />}
             {isSessionConfirmed ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

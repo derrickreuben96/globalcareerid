@@ -131,6 +131,7 @@ export default function Dashboard() {
         start_date,
         end_date,
         status,
+        employer_id,
         employer:employers(company_name, is_verified)
       `)
       .eq('user_id', user.id)
@@ -435,7 +436,7 @@ export default function Dashboard() {
                               start_date: r.start_date,
                               end_date: r.end_date,
                               status: r.status,
-                              employer_id: '',
+                              employer_id: (r as any).employer_id || '',
                               employer: { company_name: r.employer?.company_name || 'Unknown' },
                             }))} 
                           />
