@@ -42,6 +42,7 @@ import { AuditLogViewer } from '@/components/employer/AuditLogViewer';
 import { BulkUpload } from '@/components/employer/BulkUpload';
 import { CompanyProfileEditor } from '@/components/employer/CompanyProfileEditor';
 import { EmployerAIChat } from '@/components/employer/EmployerAIChat';
+import { EmployerExperienceRequests } from '@/components/employer/EmployerExperienceRequests';
 
 interface Employer {
   id: string;
@@ -85,7 +86,7 @@ export default function EmployerDashboard() {
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
-  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit'>('employees');
+  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests'>('employees');
   
   const [newEmployee, setNewEmployee] = useState({
     profileId: '',
@@ -393,6 +394,14 @@ export default function EmployerDashboard() {
               Company Profile
             </Button>
             <Button 
+              variant={activeSection === 'requests' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('requests')}
+              className="gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              Update Requests
+            </Button>
+            <Button 
               variant={activeSection === 'audit' ? 'default' : 'outline'}
               onClick={() => setActiveSection('audit')}
               className="gap-2"
@@ -561,6 +570,12 @@ export default function EmployerDashboard() {
                 userId={user?.id || ''}
                 onUpdate={(updated) => setEmployer(updated)} 
               />
+            </div>
+          )}
+
+          {activeSection === 'requests' && (
+            <div className="glass-card rounded-2xl p-6">
+              <EmployerExperienceRequests employerId={employer.id} />
             </div>
           )}
 
