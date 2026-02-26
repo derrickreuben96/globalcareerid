@@ -8,6 +8,7 @@ import {
   LogOut,
   Activity,
   FileText,
+  Edit,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -36,6 +37,7 @@ const navItems = [
   { title: "User Management", url: "users", icon: Users },
   { title: "Employer Verification", url: "employers", icon: Building2 },
   { title: "Dispute Resolution", url: "disputes", icon: AlertTriangle },
+  { title: "Experience Requests", url: "experience-requests", icon: Edit },
   { title: "Document Reviews", url: "documents", icon: FileText },
   { title: "AI Assistant", url: "ai-chat", icon: MessageSquareText },
   { title: "Activity Log", url: "activity", icon: Activity },

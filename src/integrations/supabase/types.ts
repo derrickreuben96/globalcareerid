@@ -50,6 +50,53 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_upload_logs: {
+        Row: {
+          attached_count: number
+          created_at: string
+          created_count: number
+          employer_id: string
+          error_count: number
+          file_name: string | null
+          id: string
+          results: Json | null
+          total_rows: number
+          uploaded_by: string
+        }
+        Insert: {
+          attached_count?: number
+          created_at?: string
+          created_count?: number
+          employer_id: string
+          error_count?: number
+          file_name?: string | null
+          id?: string
+          results?: Json | null
+          total_rows?: number
+          uploaded_by: string
+        }
+        Update: {
+          attached_count?: number
+          created_at?: string
+          created_count?: number
+          employer_id?: string
+          error_count?: number
+          file_name?: string | null
+          id?: string
+          results?: Json | null
+          total_rows?: number
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_upload_logs_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disputes: {
         Row: {
           admin_notes: string | null
@@ -204,6 +251,63 @@ export type Database = {
           },
         ]
       }
+      experience_update_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          employer_id: string
+          employment_record_id: string
+          id: string
+          requested_changes: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          employer_id: string
+          employment_record_id: string
+          id?: string
+          requested_changes: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          employer_id?: string
+          employment_record_id?: string
+          id?: string
+          requested_changes?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experience_update_requests_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experience_update_requests_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -305,7 +409,10 @@ export type Database = {
           id: string
           last_name: string
           location: string | null
+          national_id: string | null
+          passport_number: string | null
           phone: string | null
+          profile_complete: boolean
           profile_id: string
           skills: string[] | null
           updated_at: string
@@ -325,7 +432,10 @@ export type Database = {
           id?: string
           last_name: string
           location?: string | null
+          national_id?: string | null
+          passport_number?: string | null
           phone?: string | null
+          profile_complete?: boolean
           profile_id: string
           skills?: string[] | null
           updated_at?: string
@@ -345,7 +455,10 @@ export type Database = {
           id?: string
           last_name?: string
           location?: string | null
+          national_id?: string | null
+          passport_number?: string | null
           phone?: string | null
+          profile_complete?: boolean
           profile_id?: string
           skills?: string[] | null
           updated_at?: string

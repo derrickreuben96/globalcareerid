@@ -16,6 +16,9 @@ interface Profile {
   visibility: string;
   country: string | null;
   citizenship: string | null;
+  national_id: string | null;
+  passport_number: string | null;
+  profile_complete: boolean;
   account_type: string;
   created_at: string;
   updated_at: string;

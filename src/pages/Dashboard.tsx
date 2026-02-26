@@ -8,6 +8,8 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { WorkHistory } from '@/components/dashboard/WorkHistory';
 import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
 import { ProfileVisibilityToggle } from '@/components/dashboard/ProfileVisibilityToggle';
+import { MissingFieldsPrompt } from '@/components/dashboard/MissingFieldsPrompt';
+import { ExperienceUpdateRequest } from '@/components/dashboard/ExperienceUpdateRequest';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
 import { NotificationSettings } from '@/components/dashboard/NotificationSettings';
 import { TwoFactorSettings } from '@/components/dashboard/TwoFactorSettings';
@@ -63,6 +65,7 @@ export default function Dashboard() {
   const [disputeReason, setDisputeReason] = useState('');
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showMissingFields, setShowMissingFields] = useState(false);
 
   // Auto-retry profile fetch if authenticated but profile is null (trigger delay)
   useEffect(() => {
@@ -86,6 +89,11 @@ export default function Dashboard() {
       const isNewUser = (!profile.skills || profile.skills.length === 0) && !profile.bio;
       if (isNewUser) {
         const timer = setTimeout(() => setShowOnboarding(true), 1000);
+        return () => clearTimeout(timer);
+      }
+      // Check for missing mandatory fields (national_id is mandatory)
+      if (!profile.national_id) {
+        const timer = setTimeout(() => setShowMissingFields(true), 1500);
         return () => clearTimeout(timer);
       }
     }
@@ -413,6 +421,26 @@ export default function Dashboard() {
                           <p className="text-sm">Records will appear here when employers add them.</p>
                         </div>
                       )}
+                      
+                      {/* Experience Update Requests */}
+                      {records.length > 0 && (
+                        <div className="mt-6 pt-6 border-t border-border">
+                          <ExperienceUpdateRequest 
+                            userId={user!.id} 
+                            records={records.map(r => ({
+                              id: r.id,
+                              job_title: r.job_title,
+                              department: r.department,
+                              employment_type: r.employment_type,
+                              start_date: r.start_date,
+                              end_date: r.end_date,
+                              status: r.status,
+                              employer_id: '',
+                              employer: { company_name: r.employer?.company_name || 'Unknown' },
+                            }))} 
+                          />
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 )}
@@ -447,16 +475,44 @@ export default function Dashboard() {
                           </div>
                           <div>
                             <Label className="text-muted-foreground">Phone</Label>
-                            <p className="font-medium text-foreground">{profile.phone || 'Not provided'}</p>
+                            <p className={`font-medium ${profile.phone ? 'text-foreground' : 'text-warning'}`}>
+                              {profile.phone || '⚠ Not provided'}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">National ID</Label>
+                            <p className={`font-medium ${profile.national_id ? 'text-foreground' : 'text-warning'}`}>
+                              {profile.national_id || '⚠ Required'}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Passport Number</Label>
+                            <p className="font-medium text-foreground">{profile.passport_number || 'Not provided'}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">Country of Residence</Label>
-                            <p className="font-medium text-foreground">{profile.country || 'Not provided'}</p>
+                            <p className={`font-medium ${profile.country ? 'text-foreground' : 'text-warning'}`}>
+                              {profile.country || '⚠ Not provided'}
+                            </p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">Citizenship</Label>
-                            <p className="font-medium text-foreground">{profile.citizenship || 'Not provided'}</p>
+                            <p className={`font-medium ${profile.citizenship ? 'text-foreground' : 'text-warning'}`}>
+                              {profile.citizenship || '⚠ Not provided'}
+                            </p>
                           </div>
+                          {!profile.national_id && (
+                            <div className="md:col-span-2">
+                              <Button 
+                                variant="outline" 
+                                className="border-warning text-warning hover:bg-warning/10"
+                                onClick={() => setShowMissingFields(true)}
+                              >
+                                <AlertTriangle className="w-4 h-4" />
+                                Complete Missing Fields
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -664,6 +720,23 @@ export default function Dashboard() {
           onClose={() => setShowOnboarding(false)}
           userId={user!.id}
           firstName={profile.first_name}
+        />
+      )}
+
+      {/* Missing Fields Prompt */}
+      {isJobSeeker && !isAdmin && !isEmployer && profile && (
+        <MissingFieldsPrompt
+          isOpen={showMissingFields}
+          onClose={() => setShowMissingFields(false)}
+          userId={user!.id}
+          profile={{
+            national_id: profile.national_id,
+            passport_number: profile.passport_number,
+            phone: profile.phone,
+            country: profile.country,
+            citizenship: profile.citizenship,
+          }}
+          onUpdate={refreshProfile}
         />
       )}
 

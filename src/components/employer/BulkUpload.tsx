@@ -33,6 +33,8 @@ import { toast } from 'sonner';
 interface ParsedRow {
   fullName: string;
   email: string;
+  nationalId: string;
+  passportNumber: string;
   roleTitle: string;
   startDate: string;
   endDate: string;
@@ -56,7 +58,7 @@ interface BulkUploadProps {
 }
 
 const BATCH_SIZE = 50;
-const REQUIRED_HEADERS = ['full name', 'email', 'role title', 'start date'];
+const REQUIRED_HEADERS = ['full name', 'email', 'national id', 'role title', 'start date'];
 
 export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -67,7 +69,7 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const downloadTemplate = () => {
-    const template = 'Full Name,Email,Role Title,Start Date,End Date,Department\nJane Doe,jane@example.com,Software Engineer,15-01-2024,,Engineering\nJohn Smith,john@example.com,Product Manager,01-02-2024,31-12-2024,Product';
+    const template = 'Full Name,Email,National ID,Passport Number,Role Title,Start Date,End Date,Department\nJane Doe,jane@example.com,NID123456,,Software Engineer,15-01-2024,,Engineering\nJohn Smith,john@example.com,NID789012,P1234567,Product Manager,01-02-2024,31-12-2024,Product';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -86,7 +88,7 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
     
     for (const required of REQUIRED_HEADERS) {
       if (!headers.some(h => h.includes(required))) {
-        return { valid: false, error: `Missing required column: "${required}". Expected columns: Full Name, Email, Role Title, Start Date, End Date, Department` };
+        return { valid: false, error: `Missing required column: "${required}". Expected columns: Full Name, Email, National ID, Passport Number, Role Title, Start Date, End Date, Department` };
       }
     }
 
@@ -101,10 +103,12 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
       return {
         fullName: values[0] || '',
         email: values[1] || '',
-        roleTitle: values[2] || '',
-        startDate: values[3] || '',
-        endDate: values[4] || '',
-        department: values[5] || '',
+        nationalId: values[2] || '',
+        passportNumber: values[3] || '',
+        roleTitle: values[4] || '',
+        startDate: values[5] || '',
+        endDate: values[6] || '',
+        department: values[7] || '',
         status: 'pending' as const,
       };
     }).filter((row) => row.fullName || row.email || row.roleTitle);
@@ -120,6 +124,9 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
       }
       if (!emailRegex.test(row.email)) {
         return { ...row, status: 'invalid' as const, error: 'Invalid email' };
+      }
+      if (!row.nationalId.trim()) {
+        return { ...row, status: 'invalid' as const, error: 'Missing National ID' };
       }
       if (!row.roleTitle.trim()) {
         return { ...row, status: 'invalid' as const, error: 'Missing role title' };
@@ -221,6 +228,8 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
               return {
                 fullName: r.fullName,
                 email: r.email,
+                nationalId: r.nationalId,
+                passportNumber: r.passportNumber || undefined,
                 roleTitle: r.roleTitle,
                 startDate: convertDate(r.startDate),
                 endDate: r.endDate ? convertDate(r.endDate) : undefined,
@@ -344,6 +353,7 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
                       <TableHead>Status</TableHead>
                       <TableHead>Full Name</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>National ID</TableHead>
                       <TableHead>Role Title</TableHead>
                       <TableHead>Start Date</TableHead>
                       <TableHead>End Date</TableHead>
@@ -369,6 +379,7 @@ export function BulkUpload({ employerId, onComplete }: BulkUploadProps) {
                         </TableCell>
                         <TableCell>{row.fullName}</TableCell>
                         <TableCell className="text-sm">{row.email}</TableCell>
+                        <TableCell className="text-sm">{row.nationalId}</TableCell>
                         <TableCell>{row.roleTitle}</TableCell>
                         <TableCell>{row.startDate}</TableCell>
                         <TableCell>{row.endDate || '-'}</TableCell>

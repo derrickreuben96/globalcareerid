@@ -49,6 +49,8 @@ export default function Register() {
     phone: '',
     country: '',
     citizenship: '',
+    nationalId: '',
+    passportNumber: '',
     password: '',
     confirmPassword: '',
   });
@@ -112,11 +114,17 @@ export default function Register() {
     if (session) {
       // Auto-confirmed, update profile and redirect
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-      if (currentUser && (jobSeekerForm.country || jobSeekerForm.citizenship)) {
-        await supabase.from('profiles').update({
-          country: jobSeekerForm.country || null,
-          citizenship: jobSeekerForm.citizenship || null,
-        }).eq('user_id', currentUser.id);
+      if (currentUser) {
+        const updates: Record<string, any> = {};
+        if (jobSeekerForm.country) updates.country = jobSeekerForm.country;
+        if (jobSeekerForm.citizenship) updates.citizenship = jobSeekerForm.citizenship;
+        if (jobSeekerForm.nationalId.trim()) updates.national_id = jobSeekerForm.nationalId.trim();
+        if (jobSeekerForm.passportNumber.trim()) updates.passport_number = jobSeekerForm.passportNumber.trim();
+        if (jobSeekerForm.nationalId.trim()) updates.profile_complete = true;
+        
+        if (Object.keys(updates).length > 0) {
+          await supabase.from('profiles').update(updates).eq('user_id', currentUser.id);
+        }
       }
       // Send welcome email
       try {
@@ -399,6 +407,30 @@ export default function Register() {
                           value={jobSeekerForm.citizenship}
                           onValueChange={(v) => setJobSeekerForm({ ...jobSeekerForm, citizenship: v })}
                           icon={<Globe className="w-4 h-4" />}
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="nationalId">National ID <span className="text-destructive">*</span></Label>
+                        <Input
+                          id="nationalId"
+                          placeholder="National ID number"
+                          value={jobSeekerForm.nationalId}
+                          onChange={(e) => setJobSeekerForm({ ...jobSeekerForm, nationalId: e.target.value })}
+                          required
+                          disabled={isLoading}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="passportNumber">Passport Number</Label>
+                        <Input
+                          id="passportNumber"
+                          placeholder="Optional"
+                          value={jobSeekerForm.passportNumber}
+                          onChange={(e) => setJobSeekerForm({ ...jobSeekerForm, passportNumber: e.target.value })}
                           disabled={isLoading}
                         />
                       </div>
