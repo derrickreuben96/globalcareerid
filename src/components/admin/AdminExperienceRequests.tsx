@@ -108,7 +108,7 @@ export function AdminExperienceRequests() {
       // If approved, apply the changes to the employment record
       if (action === 'approved') {
         const changes = { ...selectedRequest.requested_changes };
-        delete changes.reason; // Don't apply the reason as a field
+        delete changes.reason;
         
         if (Object.keys(changes).length > 0) {
           const { error: recordError } = await supabase
@@ -121,6 +121,24 @@ export function AdminExperienceRequests() {
             return;
           }
         }
+      }
+
+      // Send email notification to the employee
+      try {
+        const session = await supabase.auth.getSession();
+        await supabase.functions.invoke('notify-experience-decision', {
+          body: {
+            request_id: selectedRequest.id,
+            decision: action,
+            admin_notes: adminNotes.trim() || null,
+          },
+          headers: {
+            Authorization: `Bearer ${session.data.session?.access_token}`,
+          },
+        });
+      } catch (notifError) {
+        console.error('Failed to send notification email:', notifError);
+        // Don't block the flow if email fails
       }
 
       toast.success(`Request ${action}`);
