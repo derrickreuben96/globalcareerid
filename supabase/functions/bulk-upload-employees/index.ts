@@ -11,6 +11,8 @@ const corsHeaders = {
 interface UploadRow {
   fullName: string;
   email: string;
+  nationalId: string;
+  passportNumber?: string;
   roleTitle: string;
   startDate: string;
   endDate?: string;
@@ -159,18 +161,20 @@ Deno.serve(async (req) => {
       try {
         const email = row.email?.trim().toLowerCase();
         const fullName = row.fullName?.trim();
+        const nationalId = row.nationalId?.trim();
+        const passportNumber = row.passportNumber?.trim() || null;
         const roleTitle = row.roleTitle?.trim();
         const startDate = row.startDate?.trim();
         const endDate = row.endDate?.trim() || null;
         const department = row.department?.trim() || null;
 
-        if (!email || !fullName || !roleTitle || !startDate) {
+        if (!email || !fullName || !nationalId || !roleTitle || !startDate) {
           results.push({
             email: email || "",
             fullName: fullName || "",
             roleTitle: roleTitle || "",
             status: "error",
-            message: "Missing required fields (name, email, role, start date)",
+            message: "Missing required fields (name, email, national ID, role, start date)",
           });
           continue;
         }
@@ -188,12 +192,27 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Step A: Check for existing profile by email
-        const { data: existingProfile } = await adminClient
+        // Step A: Check for existing profile by National ID first, then email
+        let existingProfile: any = null;
+        
+        // Primary dedup: National ID
+        const { data: profileByNatId } = await adminClient
           .from("profiles")
           .select("user_id, profile_id, first_name, last_name")
-          .eq("email", email)
+          .eq("national_id", nationalId)
           .maybeSingle();
+        
+        if (profileByNatId) {
+          existingProfile = profileByNatId;
+        } else {
+          // Secondary dedup: Email
+          const { data: profileByEmail } = await adminClient
+            .from("profiles")
+            .select("user_id, profile_id, first_name, last_name")
+            .eq("email", email)
+            .maybeSingle();
+          existingProfile = profileByEmail;
+        }
 
         let targetUserId: string;
         let targetProfileId: string;
@@ -202,6 +221,24 @@ Deno.serve(async (req) => {
         if (existingProfile) {
           targetUserId = existingProfile.user_id;
           targetProfileId = existingProfile.profile_id;
+          
+          // Delta detection: update national_id/passport if missing on existing profile
+          const updateFields: Record<string, any> = {};
+          const { data: currentProf } = await adminClient
+            .from("profiles")
+            .select("national_id, passport_number")
+            .eq("user_id", existingProfile.user_id)
+            .maybeSingle();
+          if (currentProf && !currentProf.national_id && nationalId) {
+            updateFields.national_id = nationalId;
+            updateFields.profile_complete = true;
+          }
+          if (currentProf && !currentProf.passport_number && passportNumber) {
+            updateFields.passport_number = passportNumber;
+          }
+          if (Object.keys(updateFields).length > 0) {
+            await adminClient.from("profiles").update(updateFields).eq("user_id", existingProfile.user_id);
+          }
         } else {
           // No existing profile — create new auth user
           const nameParts = fullName.split(" ");
@@ -280,6 +317,18 @@ Deno.serve(async (req) => {
               .eq("user_id", targetUserId)
               .maybeSingle();
             targetProfileId = newProfile?.profile_id || "PENDING";
+            
+            // Update profile with national_id and passport_number
+            if (newProfile) {
+              await adminClient
+                .from("profiles")
+                .update({
+                  national_id: nationalId,
+                  passport_number: passportNumber,
+                  profile_complete: true,
+                })
+                .eq("user_id", targetUserId);
+            }
           }
         }
 
