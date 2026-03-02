@@ -460,6 +460,12 @@ export default function Dashboard() {
                   </TabsContent>
                 )}
 
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="referral-letters">
+                    <ReferralLettersViewer />
+                  </TabsContent>
+                )}
+
                 <TabsContent value="profile">
                   <div className="glass-card rounded-2xl p-6">
                     <h2 className="text-xl font-display font-semibold text-foreground mb-6">
