@@ -6,11 +6,12 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { departments } from '@/lib/countries';
@@ -34,7 +35,10 @@ import {
   Mail,
   Settings,
   Upload,
-  Edit
+  Edit,
+  FileText,
+  Sparkles,
+  PenLine
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TalentSearch } from '@/components/employer/TalentSearch';
@@ -83,6 +87,14 @@ export default function EmployerDashboard() {
   const [selectedRecord, setSelectedRecord] = useState<string | null>(null);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [isAddingEmployee, setIsAddingEmployee] = useState(false);
+  
+  // Referral letter states
+  const [referralStep, setReferralStep] = useState<'end' | 'ask' | 'write'>('end');
+  const [referralMode, setReferralMode] = useState<'ai' | 'manual' | null>(null);
+  const [referralContent, setReferralContent] = useState('');
+  const [referralNotes, setReferralNotes] = useState('');
+  const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
+  const [isSavingLetter, setIsSavingLetter] = useState(false);
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
@@ -215,14 +227,88 @@ export default function EmployerDashboard() {
     }
 
     toast.success('Employment record closed successfully');
-    setEndEmploymentOpen(false);
-    setSelectedRecord(null);
 
     setEmployees(employees.map(e => 
       e.record_id === selectedRecord 
         ? { ...e, end_date: endDate, status: 'ended' }
         : e
     ));
+
+    // Move to referral letter prompt
+    setReferralStep('ask');
+  };
+
+  const getSelectedEmployee = () => {
+    return employees.find(e => e.record_id === selectedRecord);
+  };
+
+  const handleGenerateAILetter = async () => {
+    const emp = getSelectedEmployee();
+    if (!emp || !employer) return;
+
+    setIsGeneratingLetter(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-referral-letter', {
+        body: {
+          employeeName: `${emp.first_name} ${emp.last_name}`,
+          jobTitle: emp.job_title,
+          department: emp.department,
+          companyName: employer.company_name,
+          startDate: new Date(emp.start_date).toLocaleDateString(),
+          endDate: new Date(endDate).toLocaleDateString(),
+          additionalNotes: referralNotes,
+        },
+      });
+
+      if (error) throw error;
+      setReferralContent(data.letter || '');
+      setReferralMode('ai');
+      setReferralStep('write');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to generate letter. You can write one manually.');
+      setReferralMode('manual');
+      setReferralStep('write');
+    } finally {
+      setIsGeneratingLetter(false);
+    }
+  };
+
+  const handleSaveReferralLetter = async () => {
+    const emp = getSelectedEmployee();
+    if (!emp || !employer || !referralContent.trim()) {
+      toast.error('Please write the referral letter content');
+      return;
+    }
+
+    setIsSavingLetter(true);
+    try {
+      const { error } = await supabase.from('referral_letters').insert({
+        employment_record_id: selectedRecord!,
+        employer_id: employer.id,
+        employee_user_id: emp.user_id,
+        content: referralContent.trim(),
+        generated_by: referralMode || 'manual',
+      });
+
+      if (error) throw error;
+      toast.success('Referral letter saved successfully');
+      closeEndEmploymentDialog();
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to save referral letter');
+    } finally {
+      setIsSavingLetter(false);
+    }
+  };
+
+  const closeEndEmploymentDialog = () => {
+    setEndEmploymentOpen(false);
+    setSelectedRecord(null);
+    setReferralStep('end');
+    setReferralMode(null);
+    setReferralContent('');
+    setReferralNotes('');
   };
 
   const handleSignOut = async () => {
@@ -669,33 +755,151 @@ export default function EmployerDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* End Employment Dialog */}
-      <Dialog open={endEmploymentOpen} onOpenChange={setEndEmploymentOpen}>
-        <DialogContent>
+      {/* End Employment & Referral Letter Dialog */}
+      <Dialog open={endEmploymentOpen} onOpenChange={(open) => {
+        if (!open) closeEndEmploymentDialog();
+      }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>End Employment</DialogTitle>
+            <DialogTitle>
+              {referralStep === 'end' && 'End Employment'}
+              {referralStep === 'ask' && 'Write a Referral Letter?'}
+              {referralStep === 'write' && 'Referral Letter'}
+            </DialogTitle>
+            {referralStep === 'ask' && (
+              <DialogDescription>
+                Employment has been ended. Would you like to write a referral letter for this employee?
+              </DialogDescription>
+            )}
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              This will mark the employment record as ended. This action cannot be undone.
-            </p>
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEndEmploymentOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEndEmployment}>
-              Confirm End Employment
-            </Button>
-          </DialogFooter>
+
+          {/* Step 1: End employment */}
+          {referralStep === 'end' && (
+            <>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  This will mark the employment record as ended. This action cannot be undone.
+                </p>
+                <div className="space-y-2">
+                  <Label>End Date</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={closeEndEmploymentDialog}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEndEmployment}>
+                  Confirm End Employment
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 2: Ask about referral letter */}
+          {referralStep === 'ask' && (
+            <>
+              <div className="space-y-4 py-4">
+                {getSelectedEmployee() && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="font-medium text-foreground">
+                      {getSelectedEmployee()!.first_name} {getSelectedEmployee()!.last_name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {getSelectedEmployee()!.job_title}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Additional notes for the AI (optional)</Label>
+                  <Textarea
+                    value={referralNotes}
+                    onChange={(e) => setReferralNotes(e.target.value)}
+                    placeholder="e.g. Excellent team player, led key projects, strong leadership skills..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={closeEndEmploymentDialog}>
+                  Skip
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setReferralMode('manual');
+                    setReferralStep('write');
+                  }}
+                  className="gap-2"
+                >
+                  <PenLine className="w-4 h-4" />
+                  Write Manually
+                </Button>
+                <Button
+                  onClick={handleGenerateAILetter}
+                  disabled={isGeneratingLetter}
+                  className="gap-2"
+                >
+                  {isGeneratingLetter ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  {isGeneratingLetter ? 'Generating...' : 'Generate with AI'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 3: Write/Edit referral letter */}
+          {referralStep === 'write' && (
+            <>
+              <div className="space-y-4 py-2">
+                {getSelectedEmployee() && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <FileText className="w-4 h-4" />
+                    <span>
+                      Letter for {getSelectedEmployee()!.first_name} {getSelectedEmployee()!.last_name} — {getSelectedEmployee()!.job_title}
+                    </span>
+                  </div>
+                )}
+                <Textarea
+                  value={referralContent}
+                  onChange={(e) => setReferralContent(e.target.value)}
+                  placeholder="Write your referral letter here..."
+                  rows={14}
+                  className="font-mono text-sm"
+                />
+                {referralMode === 'ai' && (
+                  <p className="text-xs text-muted-foreground">
+                    ✨ AI-generated draft — feel free to edit before saving.
+                  </p>
+                )}
+              </div>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setReferralStep('ask')}>
+                  Back
+                </Button>
+                <Button
+                  onClick={handleSaveReferralLetter}
+                  disabled={isSavingLetter || !referralContent.trim()}
+                  className="gap-2"
+                >
+                  {isSavingLetter ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FileText className="w-4 h-4" />
+                  )}
+                  {isSavingLetter ? 'Saving...' : 'Save Letter'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

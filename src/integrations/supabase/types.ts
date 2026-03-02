@@ -524,6 +524,54 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_letters: {
+        Row: {
+          content: string
+          created_at: string
+          employee_user_id: string
+          employer_id: string
+          employment_record_id: string
+          generated_by: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          employee_user_id: string
+          employer_id: string
+          employment_record_id: string
+          generated_by?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          employee_user_id?: string
+          employer_id?: string
+          employment_record_id?: string
+          generated_by?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_letters_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_letters_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_events: {
         Row: {
           created_at: string
