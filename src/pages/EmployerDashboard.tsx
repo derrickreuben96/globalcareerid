@@ -248,6 +248,22 @@ export default function EmployerDashboard() {
     return employees.find(e => e.record_id === selectedRecord);
   };
 
+  const buildSignatureBlock = () => {
+    const lines = [
+      '\n\n---\n',
+      'Yours sincerely,\n',
+    ];
+    if (writerDetails.name) lines.push(writerDetails.name);
+    if (writerDetails.designation) lines.push(writerDetails.designation);
+    if (employer) lines.push(employer.company_name);
+    if (writerDetails.contactNumber) lines.push(`Tel: ${writerDetails.contactNumber}`);
+    if (writerDetails.address) lines.push(writerDetails.address);
+    lines.push('\n\n[OFFICIAL COMPANY STAMP]');
+    lines.push(`${employer?.company_name || 'Company'}`);
+    lines.push(`Date: ${new Date().toLocaleDateString()}`);
+    return lines.join('\n');
+  };
+
   const handleGenerateAILetter = async () => {
     const emp = getSelectedEmployee();
     if (!emp || !employer) return;
@@ -263,17 +279,22 @@ export default function EmployerDashboard() {
           startDate: new Date(emp.start_date).toLocaleDateString(),
           endDate: new Date(endDate).toLocaleDateString(),
           additionalNotes: referralNotes,
+          writerName: writerDetails.name,
+          writerDesignation: writerDetails.designation,
+          writerContact: writerDetails.contactNumber,
+          writerAddress: writerDetails.address,
         },
       });
 
       if (error) throw error;
-      setReferralContent(data.letter || '');
+      setReferralContent((data.letter || '') + buildSignatureBlock());
       setReferralMode('ai');
       setReferralStep('write');
     } catch (e) {
       console.error(e);
       toast.error('Failed to generate letter. You can write one manually.');
       setReferralMode('manual');
+      setReferralContent(buildSignatureBlock());
       setReferralStep('write');
     } finally {
       setIsGeneratingLetter(false);
