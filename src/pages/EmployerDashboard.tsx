@@ -792,11 +792,17 @@ export default function EmployerDashboard() {
             <DialogTitle>
               {referralStep === 'end' && 'End Employment'}
               {referralStep === 'ask' && 'Write a Referral Letter?'}
+              {referralStep === 'writer' && 'Your Details (Letter Writer)'}
               {referralStep === 'write' && 'Referral Letter'}
             </DialogTitle>
             {referralStep === 'ask' && (
               <DialogDescription>
                 Employment has been ended. Would you like to write a referral letter for this employee?
+              </DialogDescription>
+            )}
+            {referralStep === 'writer' && (
+              <DialogDescription>
+                These details will appear as the signatory on the referral letter.
               </DialogDescription>
             )}
           </DialogHeader>
