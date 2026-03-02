@@ -227,14 +227,88 @@ export default function EmployerDashboard() {
     }
 
     toast.success('Employment record closed successfully');
-    setEndEmploymentOpen(false);
-    setSelectedRecord(null);
 
     setEmployees(employees.map(e => 
       e.record_id === selectedRecord 
         ? { ...e, end_date: endDate, status: 'ended' }
         : e
     ));
+
+    // Move to referral letter prompt
+    setReferralStep('ask');
+  };
+
+  const getSelectedEmployee = () => {
+    return employees.find(e => e.record_id === selectedRecord);
+  };
+
+  const handleGenerateAILetter = async () => {
+    const emp = getSelectedEmployee();
+    if (!emp || !employer) return;
+
+    setIsGeneratingLetter(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-referral-letter', {
+        body: {
+          employeeName: `${emp.first_name} ${emp.last_name}`,
+          jobTitle: emp.job_title,
+          department: emp.department,
+          companyName: employer.company_name,
+          startDate: new Date(emp.start_date).toLocaleDateString(),
+          endDate: new Date(endDate).toLocaleDateString(),
+          additionalNotes: referralNotes,
+        },
+      });
+
+      if (error) throw error;
+      setReferralContent(data.letter || '');
+      setReferralMode('ai');
+      setReferralStep('write');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to generate letter. You can write one manually.');
+      setReferralMode('manual');
+      setReferralStep('write');
+    } finally {
+      setIsGeneratingLetter(false);
+    }
+  };
+
+  const handleSaveReferralLetter = async () => {
+    const emp = getSelectedEmployee();
+    if (!emp || !employer || !referralContent.trim()) {
+      toast.error('Please write the referral letter content');
+      return;
+    }
+
+    setIsSavingLetter(true);
+    try {
+      const { error } = await supabase.from('referral_letters').insert({
+        employment_record_id: selectedRecord!,
+        employer_id: employer.id,
+        employee_user_id: emp.user_id,
+        content: referralContent.trim(),
+        generated_by: referralMode || 'manual',
+      });
+
+      if (error) throw error;
+      toast.success('Referral letter saved successfully');
+      closeEndEmploymentDialog();
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to save referral letter');
+    } finally {
+      setIsSavingLetter(false);
+    }
+  };
+
+  const closeEndEmploymentDialog = () => {
+    setEndEmploymentOpen(false);
+    setSelectedRecord(null);
+    setReferralStep('end');
+    setReferralMode(null);
+    setReferralContent('');
+    setReferralNotes('');
   };
 
   const handleSignOut = async () => {
