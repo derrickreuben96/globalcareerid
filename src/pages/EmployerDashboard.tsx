@@ -35,7 +35,10 @@ import {
   Mail,
   Settings,
   Upload,
-  Edit
+  Edit,
+  FileText,
+  Sparkles,
+  PenLine
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TalentSearch } from '@/components/employer/TalentSearch';
