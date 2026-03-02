@@ -867,7 +867,7 @@ export default function EmployerDashboard() {
                   variant="outline"
                   onClick={() => {
                     setReferralMode('manual');
-                    setReferralStep('write');
+                    setReferralStep('writer');
                   }}
                   className="gap-2"
                 >
@@ -875,16 +875,14 @@ export default function EmployerDashboard() {
                   Write Manually
                 </Button>
                 <Button
-                  onClick={handleGenerateAILetter}
-                  disabled={isGeneratingLetter}
+                  onClick={() => {
+                    setReferralMode('ai');
+                    setReferralStep('writer');
+                  }}
                   className="gap-2"
                 >
-                  {isGeneratingLetter ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-4 h-4" />
-                  )}
-                  {isGeneratingLetter ? 'Generating...' : 'Generate with AI'}
+                  <Sparkles className="w-4 h-4" />
+                  Generate with AI
                 </Button>
               </DialogFooter>
             </>
