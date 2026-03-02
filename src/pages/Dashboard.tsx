@@ -376,6 +376,12 @@ export default function Dashboard() {
                       Work History
                     </TabsTrigger>
                   )}
+                  {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="referral-letters" className="gap-2">
+                      <Award className="w-4 h-4" />
+                      Referral Letters
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger value="profile" className="gap-2">
                     <User className="w-4 h-4" />
                     Profile
