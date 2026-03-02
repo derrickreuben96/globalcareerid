@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProfileIdCard } from '@/components/ProfileIdCard';
 import { EmploymentTimeline } from '@/components/EmploymentTimeline';
+import { ReferralLettersViewer } from '@/components/dashboard/ReferralLettersViewer';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { WorkHistory } from '@/components/dashboard/WorkHistory';
 import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
