@@ -95,8 +95,6 @@ export default function EmployerDashboard() {
   const [referralNotes, setReferralNotes] = useState('');
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
   const [isSavingLetter, setIsSavingLetter] = useState(false);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isAddingEmployee, setIsAddingEmployee] = useState(false);
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
