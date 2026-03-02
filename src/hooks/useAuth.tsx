@@ -42,7 +42,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MAX_LOADING_MS = 10000;
+const MAX_LOADING_MS = 5000;
 
 /**
  * Forcefully clears ALL client-side auth artifacts.
