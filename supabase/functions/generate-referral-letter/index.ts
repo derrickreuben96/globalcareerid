@@ -11,10 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { employeeName, jobTitle, department, companyName, startDate, endDate, additionalNotes } = await req.json();
-
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const { employeeName, jobTitle, department, companyName, startDate, endDate, additionalNotes, writerName, writerDesignation, writerContact, writerAddress } = await req.json();
 
     const prompt = `Write a professional referral/recommendation letter for an employee with the following details:
 
@@ -25,13 +22,20 @@ serve(async (req) => {
 - Employment Period: ${startDate} to ${endDate}
 ${additionalNotes ? `- Additional Notes from Employer: ${additionalNotes}` : ''}
 
+The letter is being written by:
+- Name: ${writerName || 'Not specified'}
+- Designation: ${writerDesignation || 'Not specified'}
+${writerContact ? `- Contact: ${writerContact}` : ''}
+${writerAddress ? `- Address: ${writerAddress}` : ''}
+
 Write a formal, professional referral letter. The letter should:
 1. Be addressed "To Whom It May Concern"
-2. Confirm the employment details
-3. Highlight positive professional qualities
-4. Recommend the employee for future opportunities
-5. Be signed off with the company name
-6. Be concise but thorough (about 250-350 words)
+2. Include the current date at the top
+3. Confirm the employment details
+4. Highlight positive professional qualities
+5. Recommend the employee for future opportunities
+6. Do NOT include a signature block at the end — it will be added separately
+7. Be concise but thorough (about 250-350 words)
 
 Do NOT use placeholder brackets like [Name] — use the actual details provided.`;
 
