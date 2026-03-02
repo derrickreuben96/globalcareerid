@@ -755,33 +755,151 @@ export default function EmployerDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* End Employment Dialog */}
-      <Dialog open={endEmploymentOpen} onOpenChange={setEndEmploymentOpen}>
-        <DialogContent>
+      {/* End Employment & Referral Letter Dialog */}
+      <Dialog open={endEmploymentOpen} onOpenChange={(open) => {
+        if (!open) closeEndEmploymentDialog();
+      }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>End Employment</DialogTitle>
+            <DialogTitle>
+              {referralStep === 'end' && 'End Employment'}
+              {referralStep === 'ask' && 'Write a Referral Letter?'}
+              {referralStep === 'write' && 'Referral Letter'}
+            </DialogTitle>
+            {referralStep === 'ask' && (
+              <DialogDescription>
+                Employment has been ended. Would you like to write a referral letter for this employee?
+              </DialogDescription>
+            )}
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-muted-foreground">
-              This will mark the employment record as ended. This action cannot be undone.
-            </p>
-            <div className="space-y-2">
-              <Label>End Date</Label>
-              <Input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEndEmploymentOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEndEmployment}>
-              Confirm End Employment
-            </Button>
-          </DialogFooter>
+
+          {/* Step 1: End employment */}
+          {referralStep === 'end' && (
+            <>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  This will mark the employment record as ended. This action cannot be undone.
+                </p>
+                <div className="space-y-2">
+                  <Label>End Date</Label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={closeEndEmploymentDialog}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEndEmployment}>
+                  Confirm End Employment
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 2: Ask about referral letter */}
+          {referralStep === 'ask' && (
+            <>
+              <div className="space-y-4 py-4">
+                {getSelectedEmployee() && (
+                  <div className="p-4 bg-muted rounded-lg">
+                    <p className="font-medium text-foreground">
+                      {getSelectedEmployee()!.first_name} {getSelectedEmployee()!.last_name}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {getSelectedEmployee()!.job_title}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Additional notes for the AI (optional)</Label>
+                  <Textarea
+                    value={referralNotes}
+                    onChange={(e) => setReferralNotes(e.target.value)}
+                    placeholder="e.g. Excellent team player, led key projects, strong leadership skills..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={closeEndEmploymentDialog}>
+                  Skip
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setReferralMode('manual');
+                    setReferralStep('write');
+                  }}
+                  className="gap-2"
+                >
+                  <PenLine className="w-4 h-4" />
+                  Write Manually
+                </Button>
+                <Button
+                  onClick={handleGenerateAILetter}
+                  disabled={isGeneratingLetter}
+                  className="gap-2"
+                >
+                  {isGeneratingLetter ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                  {isGeneratingLetter ? 'Generating...' : 'Generate with AI'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 3: Write/Edit referral letter */}
+          {referralStep === 'write' && (
+            <>
+              <div className="space-y-4 py-2">
+                {getSelectedEmployee() && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <FileText className="w-4 h-4" />
+                    <span>
+                      Letter for {getSelectedEmployee()!.first_name} {getSelectedEmployee()!.last_name} — {getSelectedEmployee()!.job_title}
+                    </span>
+                  </div>
+                )}
+                <Textarea
+                  value={referralContent}
+                  onChange={(e) => setReferralContent(e.target.value)}
+                  placeholder="Write your referral letter here..."
+                  rows={14}
+                  className="font-mono text-sm"
+                />
+                {referralMode === 'ai' && (
+                  <p className="text-xs text-muted-foreground">
+                    ✨ AI-generated draft — feel free to edit before saving.
+                  </p>
+                )}
+              </div>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setReferralStep('ask')}>
+                  Back
+                </Button>
+                <Button
+                  onClick={handleSaveReferralLetter}
+                  disabled={isSavingLetter || !referralContent.trim()}
+                  className="gap-2"
+                >
+                  {isSavingLetter ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FileText className="w-4 h-4" />
+                  )}
+                  {isSavingLetter ? 'Saving...' : 'Save Letter'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
