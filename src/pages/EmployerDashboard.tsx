@@ -336,6 +336,7 @@ export default function EmployerDashboard() {
     setReferralMode(null);
     setReferralContent('');
     setReferralNotes('');
+    setWriterDetails({ name: '', designation: '', contactNumber: '', address: '' });
   };
 
   const handleSignOut = async () => {
