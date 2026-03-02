@@ -36,6 +36,7 @@ import {
   AlertTriangle,
   Loader2,
   LogOut,
+  Award,
   Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
