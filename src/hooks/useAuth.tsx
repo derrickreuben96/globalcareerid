@@ -42,7 +42,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MAX_LOADING_MS = 10000;
+const MAX_LOADING_MS = 5000;
 
 /**
  * Forcefully clears ALL client-side auth artifacts.
@@ -179,16 +179,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       try {
-        // ALWAYS validate session against the backend — never trust local storage alone
-        const { data: { user: validatedUser }, error: userError } = await supabase.auth.getUser();
+        // 1. Quick local check — if no local session, skip the slow network call entirely
+        const { data: { session: localSession } } = await supabase.auth.getSession();
+
+        if (!localSession) {
+          // No local tokens at all — immediately mark unauthenticated (no network needed)
+          if (mounted) {
+            clearState();
+            setAuthStatus('unauthenticated');
+          }
+          return;
+        }
+
+        // 2. We have local tokens — set optimistic state for faster perceived login
+        setSession(localSession);
+        setUser(localSession.user);
+        currentUserIdRef.current = localSession.user.id;
+
+        // 3. Validate with backend AND fetch profile in parallel (saves ~1 round trip)
+        const [userResult, profileDone] = await Promise.all([
+          supabase.auth.getUser(),
+          fetchProfile(localSession.user.id),
+        ]);
 
         if (!mounted) return;
 
+        const { data: { user: validatedUser }, error: userError } = userResult;
+
         if (userError || !validatedUser) {
-          if (userError) {
-            console.warn('Auth: Backend session validation failed:', userError.message);
-          }
-          // Backend says no valid session → purge any stale client tokens
+          // Backend rejected the session — stale tokens from another device
+          console.warn('Auth: Backend rejected local session:', userError?.message);
           purgeClientSession();
           clearState();
           setAuthError(userError ? 'Session expired. Please sign in again.' : null);
@@ -196,15 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // Backend confirmed user — now get the session object
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (!mounted) return;
-
-        setSession(currentSession);
-        setUser(validatedUser);
-        currentUserIdRef.current = validatedUser.id;
-        await fetchProfile(validatedUser.id);
-
+        // 4. Backend confirmed — we're good (profile already fetched above)
         if (mounted) {
           setAuthStatus('authenticated');
         }

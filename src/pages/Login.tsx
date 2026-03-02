@@ -92,12 +92,12 @@ export default function Login() {
     setIsLoading(true);
     console.log('[Login] Start: credentials submitted');
 
-    // 10-second safety timeout — guarantees spinner stops
+    // 5-second safety timeout — guarantees spinner stops
     const loginTimeout = setTimeout(() => {
-      console.error('[Login] Timeout: 10s elapsed, force-stopping spinner');
+      console.error('[Login] Timeout: 5s elapsed, force-stopping spinner');
       setIsLoading(false);
       toast.error('Login timed out. Please try again.');
-    }, 10000);
+    }, 5000);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
