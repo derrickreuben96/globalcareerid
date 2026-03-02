@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProfileIdCard } from '@/components/ProfileIdCard';
 import { EmploymentTimeline } from '@/components/EmploymentTimeline';
+import { ReferralLettersViewer } from '@/components/dashboard/ReferralLettersViewer';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { WorkHistory } from '@/components/dashboard/WorkHistory';
 import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
@@ -35,6 +36,7 @@ import {
   AlertTriangle,
   Loader2,
   LogOut,
+  Award,
   Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -374,6 +376,12 @@ export default function Dashboard() {
                       Work History
                     </TabsTrigger>
                   )}
+                  {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="referral-letters" className="gap-2">
+                      <Award className="w-4 h-4" />
+                      Referral Letters
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger value="profile" className="gap-2">
                     <User className="w-4 h-4" />
                     Profile
@@ -449,6 +457,12 @@ export default function Dashboard() {
                 {isJobSeeker && !isAdmin && (
                   <TabsContent value="work-history">
                     <WorkHistory />
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="referral-letters">
+                    <ReferralLettersViewer />
                   </TabsContent>
                 )}
 
