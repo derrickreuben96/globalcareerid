@@ -888,7 +888,73 @@ export default function EmployerDashboard() {
             </>
           )}
 
-          {/* Step 3: Write/Edit referral letter */}
+          {/* Step 3: Writer details */}
+          {referralStep === 'writer' && (
+            <>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Full Name *</Label>
+                  <Input
+                    placeholder="e.g., Jane Doe"
+                    value={writerDetails.name}
+                    onChange={(e) => setWriterDetails({ ...writerDetails, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Designation / Title *</Label>
+                  <Input
+                    placeholder="e.g., HR Manager"
+                    value={writerDetails.designation}
+                    onChange={(e) => setWriterDetails({ ...writerDetails, designation: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Contact Number</Label>
+                  <Input
+                    placeholder="e.g., +254 700 000 000"
+                    value={writerDetails.contactNumber}
+                    onChange={(e) => setWriterDetails({ ...writerDetails, contactNumber: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Address</Label>
+                  <Input
+                    placeholder="e.g., P.O. Box 12345, Nairobi, Kenya"
+                    value={writerDetails.address}
+                    onChange={(e) => setWriterDetails({ ...writerDetails, address: e.target.value })}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setReferralStep('ask')}>
+                  Back
+                </Button>
+                <Button
+                  disabled={!writerDetails.name.trim() || !writerDetails.designation.trim() || (referralMode === 'ai' && isGeneratingLetter)}
+                  onClick={() => {
+                    if (referralMode === 'ai') {
+                      handleGenerateAILetter();
+                    } else {
+                      setReferralContent(buildSignatureBlock());
+                      setReferralStep('write');
+                    }
+                  }}
+                  className="gap-2"
+                >
+                  {referralMode === 'ai' && isGeneratingLetter ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : referralMode === 'ai' ? (
+                    <Sparkles className="w-4 h-4" />
+                  ) : (
+                    <PenLine className="w-4 h-4" />
+                  )}
+                  {referralMode === 'ai' && isGeneratingLetter ? 'Generating...' : referralMode === 'ai' ? 'Generate Letter' : 'Continue to Write'}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 4: Write/Edit referral letter */}
           {referralStep === 'write' && (
             <>
               <div className="space-y-4 py-2">
