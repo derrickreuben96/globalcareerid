@@ -42,6 +42,12 @@ import {
 import { toast } from 'sonner';
 import { skillSchema, disputeReasonSchema, validateField } from '@/lib/validation';
 
+/** Mask a sensitive ID: show first 2 and last 2 characters, mask the rest */
+function maskId(value: string): string {
+  if (value.length <= 4) return value;
+  return value.slice(0, 2) + '•'.repeat(value.length - 4) + value.slice(-2);
+}
+
 interface EmploymentRecord {
   id: string;
   job_title: string;
