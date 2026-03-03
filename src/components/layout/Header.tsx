@@ -148,6 +148,7 @@ export function Header() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {isSessionConfirmed && <NotificationBell />}
             {isSessionConfirmed ? (
               <DropdownMenu>

@@ -497,12 +497,12 @@ export default function Dashboard() {
                           <div>
                             <Label className="text-muted-foreground">National ID</Label>
                             <p className={`font-medium ${profile.national_id ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.national_id || '⚠ Required'}
+                              {profile.national_id ? maskId(profile.national_id) : '⚠ Required'}
                             </p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">Passport Number</Label>
-                            <p className="font-medium text-foreground">{profile.passport_number || 'Not provided'}</p>
+                            <p className="font-medium text-foreground">{profile.passport_number ? maskId(profile.passport_number) : 'Not provided'}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">Country of Residence</Label>
