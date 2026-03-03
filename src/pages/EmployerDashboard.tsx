@@ -711,6 +711,18 @@ export default function EmployerDashboard() {
             </div>
           )}
 
+          {activeSection === 'promotions' && (
+            <div className="glass-card rounded-2xl p-6">
+              <PendingPromotions employerId={employer.id} />
+            </div>
+          )}
+
+          {activeSection === 'analytics' && (
+            <div className="glass-card rounded-2xl p-6">
+              <EmployerAnalytics employerId={employer.id} />
+            </div>
+          )}
+
           {activeSection === 'audit' && (
             <div className="glass-card rounded-2xl p-6">
               <h2 className="text-xl font-display font-semibold text-foreground mb-6">
