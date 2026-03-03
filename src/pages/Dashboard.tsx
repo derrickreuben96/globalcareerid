@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProfileIdCard } from '@/components/ProfileIdCard';
 import { EmploymentTimeline } from '@/components/EmploymentTimeline';
+import { StructuredEmploymentTimeline } from '@/components/StructuredEmploymentTimeline';
 import { ReferralLettersViewer } from '@/components/dashboard/ReferralLettersViewer';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { WorkHistory } from '@/components/dashboard/WorkHistory';
@@ -11,6 +12,8 @@ import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
 import { ProfileVisibilityToggle } from '@/components/dashboard/ProfileVisibilityToggle';
 import { MissingFieldsPrompt } from '@/components/dashboard/MissingFieldsPrompt';
 import { ExperienceUpdateRequest } from '@/components/dashboard/ExperienceUpdateRequest';
+import { PromotionRequestForm } from '@/components/dashboard/PromotionRequestForm';
+import { CareerAnalytics } from '@/components/dashboard/CareerAnalytics';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
 import { NotificationSettings } from '@/components/dashboard/NotificationSettings';
 import { TwoFactorSettings } from '@/components/dashboard/TwoFactorSettings';
@@ -37,7 +40,9 @@ import {
   Loader2,
   LogOut,
   Award,
-  Building2
+  Building2,
+  TrendingUp,
+  GitBranch
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { skillSchema, disputeReasonSchema, validateField } from '@/lib/validation';
@@ -369,11 +374,23 @@ export default function Dashboard() {
             {/* Main Content */}
             <div className="lg:col-span-2">
               <Tabs defaultValue={isJobSeeker && !isAdmin ? "timeline" : "profile"} className="w-full">
-                <TabsList className="mb-6">
+                <TabsList className="mb-6 flex-wrap">
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="timeline" className="gap-2">
                       <Briefcase className="w-4 h-4" />
                       Employer Records
+                    </TabsTrigger>
+                  )}
+                  {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="career-ladder" className="gap-2">
+                      <GitBranch className="w-4 h-4" />
+                      Career Ladder
+                    </TabsTrigger>
+                  )}
+                  {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="analytics" className="gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Analytics
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
@@ -437,9 +454,19 @@ export default function Dashboard() {
                         </div>
                       )}
                       
-                      {/* Experience Update Requests */}
+                      {/* Experience Update Requests & Promotion Request */}
                       {records.length > 0 && (
-                        <div className="mt-6 pt-6 border-t border-border">
+                        <div className="mt-6 pt-6 border-t border-border space-y-4">
+                          <div className="flex flex-wrap gap-2">
+                            <PromotionRequestForm 
+                              userId={user!.id}
+                              records={records.filter(r => r.status === 'active').map(r => ({
+                                id: r.id,
+                                job_title: r.job_title,
+                                employer: { company_name: r.employer?.company_name || 'Unknown' },
+                              }))}
+                            />
+                          </div>
                           <ExperienceUpdateRequest 
                             userId={user!.id} 
                             records={records.map(r => ({
@@ -456,6 +483,28 @@ export default function Dashboard() {
                           />
                         </div>
                       )}
+                    </div>
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="career-ladder">
+                    <div className="glass-card rounded-2xl p-6">
+                      <h2 className="text-xl font-display font-semibold text-foreground mb-2">
+                        Career Ladder
+                      </h2>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Your role progression across companies
+                      </p>
+                      <StructuredEmploymentTimeline userId={user!.id} />
+                    </div>
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="analytics">
+                    <div className="glass-card rounded-2xl p-6">
+                      <CareerAnalytics userId={user!.id} />
                     </div>
                   </TabsContent>
                 )}

@@ -47,6 +47,8 @@ import { BulkUpload } from '@/components/employer/BulkUpload';
 import { CompanyProfileEditor } from '@/components/employer/CompanyProfileEditor';
 import { EmployerAIChat } from '@/components/employer/EmployerAIChat';
 import { EmployerExperienceRequests } from '@/components/employer/EmployerExperienceRequests';
+import { PendingPromotions } from '@/components/employer/PendingPromotions';
+import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
 
 interface Employer {
   id: string;
@@ -104,7 +106,7 @@ export default function EmployerDashboard() {
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
-  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests'>('employees');
+  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics'>('employees');
   
   const [newEmployee, setNewEmployee] = useState({
     profileId: '',
@@ -516,6 +518,22 @@ export default function EmployerDashboard() {
               Update Requests
             </Button>
             <Button 
+              variant={activeSection === 'promotions' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('promotions')}
+              className="gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              Role Updates
+            </Button>
+            <Button 
+              variant={activeSection === 'analytics' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('analytics')}
+              className="gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Analytics
+            </Button>
+            <Button 
               variant={activeSection === 'audit' ? 'default' : 'outline'}
               onClick={() => setActiveSection('audit')}
               className="gap-2"
@@ -690,6 +708,18 @@ export default function EmployerDashboard() {
           {activeSection === 'requests' && (
             <div className="glass-card rounded-2xl p-6">
               <EmployerExperienceRequests employerId={employer.id} />
+            </div>
+          )}
+
+          {activeSection === 'promotions' && (
+            <div className="glass-card rounded-2xl p-6">
+              <PendingPromotions employerId={employer.id} />
+            </div>
+          )}
+
+          {activeSection === 'analytics' && (
+            <div className="glass-card rounded-2xl p-6">
+              <EmployerAnalytics employerId={employer.id} />
             </div>
           )}
 
