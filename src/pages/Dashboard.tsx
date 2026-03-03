@@ -4,6 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProfileIdCard } from '@/components/ProfileIdCard';
 import { EmploymentTimeline } from '@/components/EmploymentTimeline';
+import { StructuredEmploymentTimeline } from '@/components/StructuredEmploymentTimeline';
 import { ReferralLettersViewer } from '@/components/dashboard/ReferralLettersViewer';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { WorkHistory } from '@/components/dashboard/WorkHistory';
@@ -11,6 +12,8 @@ import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
 import { ProfileVisibilityToggle } from '@/components/dashboard/ProfileVisibilityToggle';
 import { MissingFieldsPrompt } from '@/components/dashboard/MissingFieldsPrompt';
 import { ExperienceUpdateRequest } from '@/components/dashboard/ExperienceUpdateRequest';
+import { PromotionRequestForm } from '@/components/dashboard/PromotionRequestForm';
+import { CareerAnalytics } from '@/components/dashboard/CareerAnalytics';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
 import { NotificationSettings } from '@/components/dashboard/NotificationSettings';
 import { TwoFactorSettings } from '@/components/dashboard/TwoFactorSettings';
@@ -37,7 +40,9 @@ import {
   Loader2,
   LogOut,
   Award,
-  Building2
+  Building2,
+  TrendingUp,
+  GitBranch
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { skillSchema, disputeReasonSchema, validateField } from '@/lib/validation';
