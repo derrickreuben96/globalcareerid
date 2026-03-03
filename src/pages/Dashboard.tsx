@@ -454,9 +454,19 @@ export default function Dashboard() {
                         </div>
                       )}
                       
-                      {/* Experience Update Requests */}
+                      {/* Experience Update Requests & Promotion Request */}
                       {records.length > 0 && (
-                        <div className="mt-6 pt-6 border-t border-border">
+                        <div className="mt-6 pt-6 border-t border-border space-y-4">
+                          <div className="flex flex-wrap gap-2">
+                            <PromotionRequestForm 
+                              userId={user!.id}
+                              records={records.filter(r => r.status === 'active').map(r => ({
+                                id: r.id,
+                                job_title: r.job_title,
+                                employer: { company_name: r.employer?.company_name || 'Unknown' },
+                              }))}
+                            />
+                          </div>
                           <ExperienceUpdateRequest 
                             userId={user!.id} 
                             records={records.map(r => ({
@@ -473,6 +483,28 @@ export default function Dashboard() {
                           />
                         </div>
                       )}
+                    </div>
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="career-ladder">
+                    <div className="glass-card rounded-2xl p-6">
+                      <h2 className="text-xl font-display font-semibold text-foreground mb-2">
+                        Career Ladder
+                      </h2>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Your role progression across companies
+                      </p>
+                      <StructuredEmploymentTimeline userId={user!.id} />
+                    </div>
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="analytics">
+                    <div className="glass-card rounded-2xl p-6">
+                      <CareerAnalytics userId={user!.id} />
                     </div>
                   </TabsContent>
                 )}
