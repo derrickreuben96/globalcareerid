@@ -144,6 +144,45 @@ export type Database = {
           },
         ]
       }
+      duplicate_risk_flags: {
+        Row: {
+          created_at: string
+          id: string
+          matched_profile_id: string | null
+          profile_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_flag: boolean
+          risk_reasons: Json | null
+          risk_score: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matched_profile_id?: string | null
+          profile_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_flag?: boolean
+          risk_reasons?: Json | null
+          risk_score?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matched_profile_id?: string | null
+          profile_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_flag?: boolean
+          risk_reasons?: Json | null
+          risk_score?: number
+          status?: string
+        }
+        Relationships: []
+      }
       employers: {
         Row: {
           address: string | null
@@ -500,6 +539,62 @@ export type Database = {
         }
         Relationships: []
       }
+      promotion_requests: {
+        Row: {
+          created_at: string
+          effective_date: string
+          employee_id: string
+          employment_record_id: string
+          id: string
+          promotion_type: Database["public"]["Enums"]["promotion_type"]
+          proposed_department: string | null
+          proposed_role_title: string
+          review_timestamp: string | null
+          reviewed_by: string | null
+          reviewer_remarks: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          effective_date: string
+          employee_id: string
+          employment_record_id: string
+          id?: string
+          promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          proposed_department?: string | null
+          proposed_role_title: string
+          review_timestamp?: string | null
+          reviewed_by?: string | null
+          reviewer_remarks?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          effective_date?: string
+          employee_id?: string
+          employment_record_id?: string
+          id?: string
+          promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          proposed_department?: string | null
+          proposed_role_title?: string
+          review_timestamp?: string | null
+          reviewed_by?: string | null
+          reviewer_remarks?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promotion_requests_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recovery_codes: {
         Row: {
           code_hash: string
@@ -565,6 +660,53 @@ export type Database = {
           },
           {
             foreignKeyName: "referral_letters_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_history: {
+        Row: {
+          approval_timestamp: string | null
+          approved_by: string | null
+          created_at: string
+          department: string | null
+          employment_record_id: string
+          id: string
+          promotion_type: Database["public"]["Enums"]["promotion_type"]
+          role_end_date: string | null
+          role_start_date: string
+          role_title: string
+        }
+        Insert: {
+          approval_timestamp?: string | null
+          approved_by?: string | null
+          created_at?: string
+          department?: string | null
+          employment_record_id: string
+          id?: string
+          promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          role_end_date?: string | null
+          role_start_date: string
+          role_title: string
+        }
+        Update: {
+          approval_timestamp?: string | null
+          approved_by?: string | null
+          created_at?: string
+          department?: string | null
+          employment_record_id?: string
+          id?: string
+          promotion_type?: Database["public"]["Enums"]["promotion_type"]
+          role_end_date?: string | null
+          role_start_date?: string
+          role_title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_history_employment_record_id_fkey"
             columns: ["employment_record_id"]
             isOneToOne: false
             referencedRelation: "employment_records"
@@ -752,6 +894,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_promotion: {
+        Args: { approver_id: string; request_id_param: string }
+        Returns: undefined
+      }
       check_rate_limit: {
         Args: {
           event_type_param: string
@@ -969,6 +1115,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "job_seeker" | "employer"
+      promotion_type: "initial" | "promotion" | "lateral" | "demotion"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1097,6 +1244,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "job_seeker", "employer"],
+      promotion_type: ["initial", "promotion", "lateral", "demotion"],
     },
   },
 } as const
