@@ -42,6 +42,12 @@ import {
 import { toast } from 'sonner';
 import { skillSchema, disputeReasonSchema, validateField } from '@/lib/validation';
 
+/** Mask a sensitive ID: show first 2 and last 2 characters, mask the rest */
+function maskId(value: string): string {
+  if (value.length <= 4) return value;
+  return value.slice(0, 2) + '•'.repeat(value.length - 4) + value.slice(-2);
+}
+
 interface EmploymentRecord {
   id: string;
   job_title: string;
@@ -497,12 +503,12 @@ export default function Dashboard() {
                           <div>
                             <Label className="text-muted-foreground">National ID</Label>
                             <p className={`font-medium ${profile.national_id ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.national_id || '⚠ Required'}
+                              {profile.national_id ? maskId(profile.national_id) : '⚠ Required'}
                             </p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">Passport Number</Label>
-                            <p className="font-medium text-foreground">{profile.passport_number || 'Not provided'}</p>
+                            <p className="font-medium text-foreground">{profile.passport_number ? maskId(profile.passport_number) : 'Not provided'}</p>
                           </div>
                           <div>
                             <Label className="text-muted-foreground">Country of Residence</Label>
