@@ -518,6 +518,22 @@ export default function EmployerDashboard() {
               Update Requests
             </Button>
             <Button 
+              variant={activeSection === 'promotions' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('promotions')}
+              className="gap-2"
+            >
+              <Sparkles className="w-4 h-4" />
+              Role Updates
+            </Button>
+            <Button 
+              variant={activeSection === 'analytics' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('analytics')}
+              className="gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Analytics
+            </Button>
+            <Button 
               variant={activeSection === 'audit' ? 'default' : 'outline'}
               onClick={() => setActiveSection('audit')}
               className="gap-2"
