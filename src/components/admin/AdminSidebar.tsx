@@ -9,6 +9,7 @@ import {
   Activity,
   FileText,
   Edit,
+  Fingerprint,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
