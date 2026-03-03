@@ -12,6 +12,7 @@ import { AdminAIChat } from "@/components/admin/AdminAIChat";
 import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { AdminDocumentReview } from "@/components/admin/AdminDocumentReview";
 import { AdminExperienceRequests } from "@/components/admin/AdminExperienceRequests";
+import { AdminDuplicateRisks } from "@/components/admin/AdminDuplicateRisks";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
