@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
 import { Menu, X, Settings, Building2, User, ChevronDown, LogOut, Shield } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import logoImage from '@/assets/logo.png';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
