@@ -374,11 +374,23 @@ export default function Dashboard() {
             {/* Main Content */}
             <div className="lg:col-span-2">
               <Tabs defaultValue={isJobSeeker && !isAdmin ? "timeline" : "profile"} className="w-full">
-                <TabsList className="mb-6">
+                <TabsList className="mb-6 flex-wrap">
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="timeline" className="gap-2">
                       <Briefcase className="w-4 h-4" />
                       Employer Records
+                    </TabsTrigger>
+                  )}
+                  {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="career-ladder" className="gap-2">
+                      <GitBranch className="w-4 h-4" />
+                      Career Ladder
+                    </TabsTrigger>
+                  )}
+                  {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="analytics" className="gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      Analytics
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
