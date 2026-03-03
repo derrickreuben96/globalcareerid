@@ -207,6 +207,8 @@ export default function AdminDashboard() {
         return <AdminExperienceRequests />;
       case "activity":
         return <AdminActivityLog />;
+      case "duplicate-risks":
+        return <AdminDuplicateRisks />;
       default:
         return <AdminOverview employers={employers} disputes={disputes} userCount={userCount} />;
     }
