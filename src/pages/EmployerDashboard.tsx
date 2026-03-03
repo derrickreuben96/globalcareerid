@@ -47,6 +47,8 @@ import { BulkUpload } from '@/components/employer/BulkUpload';
 import { CompanyProfileEditor } from '@/components/employer/CompanyProfileEditor';
 import { EmployerAIChat } from '@/components/employer/EmployerAIChat';
 import { EmployerExperienceRequests } from '@/components/employer/EmployerExperienceRequests';
+import { PendingPromotions } from '@/components/employer/PendingPromotions';
+import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
 
 interface Employer {
   id: string;
