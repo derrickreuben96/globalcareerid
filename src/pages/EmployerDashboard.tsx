@@ -543,6 +543,14 @@ export default function EmployerDashboard() {
               <History className="w-4 h-4" />
               Audit Log
             </Button>
+            <Button 
+              variant={activeSection === 'verify' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('verify')}
+              className="gap-2"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Verify Letter
+            </Button>
           </div>
 
           {/* Content Sections */}
