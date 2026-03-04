@@ -108,7 +108,7 @@ export default function EmployerDashboard() {
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
-  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics'>('employees');
+  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics' | 'verify'>('employees');
   
   const [newEmployee, setNewEmployee] = useState({
     profileId: '',
