@@ -38,7 +38,8 @@ import {
   Edit,
   FileText,
   Sparkles,
-  PenLine
+  PenLine,
+  ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TalentSearch } from '@/components/employer/TalentSearch';
@@ -49,6 +50,7 @@ import { EmployerAIChat } from '@/components/employer/EmployerAIChat';
 import { EmployerExperienceRequests } from '@/components/employer/EmployerExperienceRequests';
 import { PendingPromotions } from '@/components/employer/PendingPromotions';
 import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
+import { ReferralLetterVerifier } from '@/components/employer/ReferralLetterVerifier';
 
 interface Employer {
   id: string;
@@ -106,7 +108,7 @@ export default function EmployerDashboard() {
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
-  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics'>('employees');
+  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics' | 'verify'>('employees');
   
   const [newEmployee, setNewEmployee] = useState({
     profileId: '',
@@ -541,6 +543,14 @@ export default function EmployerDashboard() {
               <History className="w-4 h-4" />
               Audit Log
             </Button>
+            <Button 
+              variant={activeSection === 'verify' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('verify')}
+              className="gap-2"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Verify Letter
+            </Button>
           </div>
 
           {/* Content Sections */}
@@ -730,6 +740,10 @@ export default function EmployerDashboard() {
               </h2>
               <AuditLogViewer employerId={employer.id} />
             </div>
+          )}
+
+          {activeSection === 'verify' && (
+            <ReferralLetterVerifier />
           )}
         </div>
       </main>

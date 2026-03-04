@@ -629,6 +629,7 @@ export type Database = {
           generated_by: string
           id: string
           updated_at: string
+          verification_number: string
         }
         Insert: {
           content: string
@@ -639,6 +640,7 @@ export type Database = {
           generated_by?: string
           id?: string
           updated_at?: string
+          verification_number?: string
         }
         Update: {
           content?: string
@@ -649,6 +651,7 @@ export type Database = {
           generated_by?: string
           id?: string
           updated_at?: string
+          verification_number?: string
         }
         Relationships: [
           {
@@ -909,6 +912,7 @@ export type Database = {
       }
       generate_employer_id: { Args: never; Returns: string }
       generate_profile_id: { Args: never; Returns: string }
+      generate_referral_verification_number: { Args: never; Returns: string }
       get_admin_disputes: {
         Args: never
         Returns: {
@@ -1111,6 +1115,16 @@ export type Database = {
       verify_recovery_code: {
         Args: { input_code_hash: string; target_user_id: string }
         Returns: boolean
+      }
+      verify_referral_letter: {
+        Args: { verification_num: string }
+        Returns: {
+          company_name: string
+          employee_name: string
+          is_valid: boolean
+          issued_date: string
+          job_title: string
+        }[]
       }
     }
     Enums: {
