@@ -24,6 +24,7 @@ interface ReferralLetter {
     logo_url: string | null;
     country: string | null;
     phone: string | null;
+    website: string | null;
   };
   employment_record?: {
     job_title: string;
