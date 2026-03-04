@@ -95,6 +95,7 @@ export function ReferralLettersViewer() {
       const companyAddress = letter.employer?.address || '';
       const companyPhone = letter.employer?.phone || '';
       const companyCountry = letter.employer?.country || '';
+      const companyWebsite = letter.employer?.website || '';
       const verificationNumber = letter.verification_number;
       const issueDate = new Date(letter.created_at).toLocaleDateString('en-GB', {
         day: '2-digit', month: 'long', year: 'numeric'
