@@ -17,11 +17,13 @@ interface ReferralLetter {
   created_at: string;
   employment_record_id: string;
   employer_id: string;
+  verification_number: string;
   employer?: {
     company_name: string;
     address: string | null;
     logo_url: string | null;
     country: string | null;
+    phone: string | null;
   };
   employment_record?: {
     job_title: string;
@@ -43,8 +45,8 @@ export function ReferralLettersViewer() {
     const { data, error } = await supabase
       .from('referral_letters')
       .select(`
-        id, content, generated_by, created_at, employment_record_id, employer_id,
-        employer:employers(company_name, address, logo_url, country),
+        id, content, generated_by, created_at, employment_record_id, employer_id, verification_number,
+        employer:employers(company_name, address, logo_url, country, phone),
         employment_record:employment_records(job_title, start_date, end_date)
       `)
       .eq('employee_user_id', user.id)
@@ -63,7 +65,6 @@ export function ReferralLettersViewer() {
     fetchLetters();
   }, [fetchLetters]);
 
-  // Load an image as base64 data URL
   const loadImageAsBase64 = (src: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -89,96 +90,130 @@ export function ReferralLettersViewer() {
       const pageHeight = 297;
       const margin = 20;
       const contentWidth = pageWidth - margin * 2;
-
-      // Load Global Career ID logo for watermark
-      let gcidLogoBase64: string | null = null;
-      try {
-        gcidLogoBase64 = await loadImageAsBase64(logoSrc);
-      } catch { /* skip if fails */ }
-
-      // Load company logo if available
-      let companyLogoBase64: string | null = null;
-      if (letter.employer?.logo_url) {
-        try {
-          companyLogoBase64 = await loadImageAsBase64(letter.employer.logo_url);
-        } catch { /* skip */ }
-      }
-
-      // --- WATERMARK LAYER ---
-      pdf.saveGraphicsState();
-      // Global Career ID watermark - center diagonal
-      if (gcidLogoBase64) {
-        // Faint logo watermark in center
-        const wmSize = 80;
-        const wmX = (pageWidth - wmSize) / 2;
-        const wmY = (pageHeight - wmSize) / 2 - 10;
-        pdf.setGState(pdf.GState({ opacity: 0.06 }));
-        pdf.addImage(gcidLogoBase64, 'PNG', wmX, wmY, wmSize, wmSize);
-      }
-
-      // Company name watermark text (diagonal)
       const companyName = letter.employer?.company_name || 'Company';
-      pdf.setGState(pdf.GState({ opacity: 0.04 }));
-      pdf.setFontSize(60);
-      pdf.setTextColor(100, 100, 100);
-      // Rotate text diagonally
-      const centerX = pageWidth / 2;
-      const centerY = pageHeight / 2;
-      pdf.text(companyName.toUpperCase(), centerX, centerY + 30, {
-        align: 'center',
-        angle: 35,
+      const companyAddress = letter.employer?.address || '';
+      const companyPhone = letter.employer?.phone || '';
+      const companyCountry = letter.employer?.country || '';
+      const verificationNumber = letter.verification_number;
+      const issueDate = new Date(letter.created_at).toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'long', year: 'numeric'
       });
 
-      pdf.restoreGraphicsState();
+      // Load logos
+      let gcidLogoBase64: string | null = null;
+      let companyLogoBase64: string | null = null;
+      try { gcidLogoBase64 = await loadImageAsBase64(logoSrc); } catch {}
+      if (letter.employer?.logo_url) {
+        try { companyLogoBase64 = await loadImageAsBase64(letter.employer.logo_url); } catch {}
+      }
 
-      // --- HEADER ---
-      let yPos = margin;
+      const addWatermarks = (p: jsPDF) => {
+        p.saveGraphicsState();
+        // GCID logo watermark center
+        if (gcidLogoBase64) {
+          const wmSize = 70;
+          p.setGState(p.GState({ opacity: 0.05 }));
+          p.addImage(gcidLogoBase64, 'PNG', (pageWidth - wmSize) / 2, (pageHeight - wmSize) / 2 - 10, wmSize, wmSize);
+        }
+        // Company name diagonal watermark
+        p.setGState(p.GState({ opacity: 0.035 }));
+        p.setFontSize(55);
+        p.setTextColor(100, 100, 100);
+        p.text(companyName.toUpperCase(), pageWidth / 2, pageHeight / 2 + 30, { align: 'center', angle: 35 });
+        // Verification number watermark (repeated pattern)
+        p.setGState(p.GState({ opacity: 0.03 }));
+        p.setFontSize(8);
+        for (let y = 40; y < pageHeight - 20; y += 35) {
+          for (let x = 10; x < pageWidth; x += 60) {
+            p.text(verificationNumber, x, y, { angle: 25 });
+          }
+        }
+        // Micro-text border
+        p.setGState(p.GState({ opacity: 0.08 }));
+        p.setFontSize(4);
+        const borderText = `GLOBAL CAREER ID • ${verificationNumber} • VERIFIED DOCUMENT • `;
+        const repeatedBorder = borderText.repeat(8);
+        p.text(repeatedBorder, margin, 12, { maxWidth: contentWidth });
+        p.text(repeatedBorder, margin, pageHeight - 8, { maxWidth: contentWidth });
+        p.restoreGraphicsState();
 
-      // Company logo (top-left) if available
+        // Decorative border lines
+        pdf.setDrawColor(0, 80, 160);
+        pdf.setLineWidth(0.3);
+        pdf.rect(8, 8, pageWidth - 16, pageHeight - 16);
+        pdf.setDrawColor(200, 200, 200);
+        pdf.setLineWidth(0.15);
+        pdf.rect(10, 10, pageWidth - 20, pageHeight - 20);
+      };
+
+      addWatermarks(pdf);
+
+      // --- CENTERED HEADER ---
+      let yPos = 22;
+
+      // Company logo centered
       if (companyLogoBase64) {
         try {
-          pdf.addImage(companyLogoBase64, 'PNG', margin, yPos, 25, 25);
+          pdf.addImage(companyLogoBase64, 'PNG', (pageWidth - 20) / 2, yPos, 20, 20);
+          yPos += 22;
         } catch { /* skip */ }
       }
 
-      // Global Career ID logo (top-right)
-      if (gcidLogoBase64) {
-        pdf.addImage(gcidLogoBase64, 'PNG', pageWidth - margin - 25, yPos, 25, 25);
-      }
-
-      // Company header text
-      const headerX = companyLogoBase64 ? margin + 30 : margin;
+      // Company name centered
       pdf.setFontSize(16);
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(33, 33, 33);
-      pdf.text(companyName, headerX, yPos + 10);
+      pdf.text(companyName, pageWidth / 2, yPos, { align: 'center' });
+      yPos += 6;
 
-      if (letter.employer?.address) {
+      // Address centered
+      if (companyAddress) {
         pdf.setFontSize(9);
         pdf.setFont('helvetica', 'normal');
         pdf.setTextColor(100, 100, 100);
-        const addrLines = pdf.splitTextToSize(letter.employer.address, contentWidth - 60);
-        pdf.text(addrLines, headerX, yPos + 16);
+        const addrLines = pdf.splitTextToSize(companyAddress, contentWidth - 20);
+        for (const line of addrLines) {
+          pdf.text(line, pageWidth / 2, yPos, { align: 'center' });
+          yPos += 4;
+        }
       }
 
-      if (letter.employer?.country) {
+      // Country
+      if (companyCountry) {
         pdf.setFontSize(9);
         pdf.setTextColor(100, 100, 100);
-        pdf.text(letter.employer.country, headerX, yPos + 22);
+        pdf.text(companyCountry, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 4;
       }
 
-      yPos += 32;
+      // Contact
+      if (companyPhone) {
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Tel: ${companyPhone}`, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 4;
+      }
 
-      // Divider line
+      yPos += 2;
+
+      // Divider
       pdf.setDrawColor(0, 100, 180);
       pdf.setLineWidth(0.8);
       pdf.line(margin, yPos, pageWidth - margin, yPos);
-      yPos += 4;
-
-      // Thin secondary line
+      yPos += 2;
       pdf.setDrawColor(200, 200, 200);
       pdf.setLineWidth(0.3);
       pdf.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 6;
+
+      // Verification number & GCID logo on right
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(0, 80, 160);
+      pdf.text(`Ref: ${verificationNumber}`, margin, yPos);
+      if (gcidLogoBase64) {
+        pdf.addImage(gcidLogoBase64, 'PNG', pageWidth - margin - 15, yPos - 5, 15, 15);
+      }
       yPos += 10;
 
       // --- LETTER CONTENT ---
@@ -190,24 +225,10 @@ export function ReferralLettersViewer() {
       const lineHeight = 5.5;
 
       for (const line of lines) {
-        if (yPos + lineHeight > pageHeight - 50) {
-          // New page with watermark
+        if (yPos + lineHeight > pageHeight - 55) {
           pdf.addPage();
-          yPos = margin;
-
-          // Re-add watermark on new page
-          pdf.saveGraphicsState();
-          if (gcidLogoBase64) {
-            const wmSize = 80;
-            pdf.setGState(pdf.GState({ opacity: 0.06 }));
-            pdf.addImage(gcidLogoBase64, 'PNG', (pageWidth - wmSize) / 2, (pageHeight - wmSize) / 2 - 10, wmSize, wmSize);
-          }
-          pdf.setGState(pdf.GState({ opacity: 0.04 }));
-          pdf.setFontSize(60);
-          pdf.setTextColor(100, 100, 100);
-          pdf.text(companyName.toUpperCase(), pageWidth / 2, pageHeight / 2 + 30, { align: 'center', angle: 35 });
-          pdf.restoreGraphicsState();
-
+          addWatermarks(pdf);
+          yPos = margin + 5;
           pdf.setFontSize(11);
           pdf.setFont('helvetica', 'normal');
           pdf.setTextColor(33, 33, 33);
@@ -218,57 +239,60 @@ export function ReferralLettersViewer() {
 
       yPos += 10;
 
-      // --- COMPANY STAMP ---
-      if (yPos + 55 > pageHeight - 30) {
+      // --- DIGITAL STAMP ---
+      if (yPos + 60 > pageHeight - 30) {
         pdf.addPage();
-        yPos = margin;
+        addWatermarks(pdf);
+        yPos = margin + 5;
       }
 
-      // Generate stamp
       const stampX = pageWidth - margin - 50;
-      const stampY = yPos;
-      const stampRadius = 22;
+      const stampRadius = 24;
       const stampCenterX = stampX + 25;
-      const stampCenterY = stampY + 25;
+      const stampCenterY = yPos + 25;
 
       // Outer circle
       pdf.setDrawColor(0, 80, 160);
       pdf.setLineWidth(1.5);
       pdf.circle(stampCenterX, stampCenterY, stampRadius);
-
       // Inner circle
       pdf.setLineWidth(0.5);
       pdf.circle(stampCenterX, stampCenterY, stampRadius - 3);
+      // Innermost circle
+      pdf.setLineWidth(0.3);
+      pdf.circle(stampCenterX, stampCenterY, stampRadius - 6);
 
-      // Company name around the stamp (top arc text)
-      pdf.setFontSize(6);
+      pdf.setFontSize(5.5);
       pdf.setFont('helvetica', 'bold');
       pdf.setTextColor(0, 80, 160);
 
-      const stampName = companyName.toUpperCase();
-      // Place company name at top of stamp
-      pdf.text(stampName, stampCenterX, stampCenterY - 12, { align: 'center' });
+      // Company name at top of stamp
+      const stampNameDisplay = companyName.length > 25 ? companyName.substring(0, 25) + '...' : companyName;
+      pdf.text(stampNameDisplay.toUpperCase(), stampCenterX, stampCenterY - 14, { align: 'center' });
 
-      // Star or symbol in center
-      pdf.setFontSize(14);
-      pdf.text('★', stampCenterX, stampCenterY + 2, { align: 'center' });
+      // Star
+      pdf.setFontSize(12);
+      pdf.text('★', stampCenterX, stampCenterY, { align: 'center' });
 
-      // "VERIFIED" text at bottom
+      // VERIFIED
       pdf.setFontSize(5);
-      pdf.text('VERIFIED • OFFICIAL', stampCenterX, stampCenterY + 9, { align: 'center' });
+      pdf.text('VERIFIED • OFFICIAL', stampCenterX, stampCenterY + 7, { align: 'center' });
 
-      // Address line in stamp
-      if (letter.employer?.address) {
-        pdf.setFontSize(4);
+      // Address in stamp
+      if (companyAddress) {
+        pdf.setFontSize(3.5);
         pdf.setFont('helvetica', 'normal');
-        const shortAddr = letter.employer.address.length > 40
-          ? letter.employer.address.substring(0, 40) + '...'
-          : letter.employer.address;
-        pdf.text(shortAddr, stampCenterX, stampCenterY + 14, { align: 'center' });
+        const shortAddr = companyAddress.length > 45 ? companyAddress.substring(0, 45) + '...' : companyAddress;
+        pdf.text(shortAddr, stampCenterX, stampCenterY + 11, { align: 'center' });
       }
 
+      // Date in stamp
+      pdf.setFontSize(4.5);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(issueDate, stampCenterX, stampCenterY + 15, { align: 'center' });
+
       // --- FOOTER ---
-      const footerY = pageHeight - 15;
+      const footerY = pageHeight - 18;
       pdf.setDrawColor(200, 200, 200);
       pdf.setLineWidth(0.3);
       pdf.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
@@ -277,19 +301,17 @@ export function ReferralLettersViewer() {
       pdf.setFont('helvetica', 'italic');
       pdf.setTextColor(150, 150, 150);
       pdf.text('This referral letter was generated and verified through Global Career ID platform.', margin, footerY);
-      pdf.text(`Document ID: ${letter.id.substring(0, 8).toUpperCase()}`, pageWidth - margin, footerY, { align: 'right' });
+      pdf.text(`Verification: ${verificationNumber}`, pageWidth - margin, footerY, { align: 'right' });
 
-      // Global Career ID branding footer
       if (gcidLogoBase64) {
-        pdf.addImage(gcidLogoBase64, 'PNG', margin, footerY - 12, 8, 8);
+        pdf.addImage(gcidLogoBase64, 'PNG', margin, footerY - 14, 8, 8);
       }
       pdf.setFontSize(6);
       pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(150, 150, 150);
-      pdf.text('Powered by Global Career ID', margin + 10, footerY - 6);
+      pdf.text('Powered by Global Career ID', margin + 10, footerY - 8);
+      pdf.text(`Verify at globalcareerid.com | ${verificationNumber}`, margin + 10, footerY - 4);
 
-      // Save the PDF
-      const fileName = `Referral_Letter_${companyName.replace(/\s+/g, '_')}_${new Date(letter.created_at).toISOString().split('T')[0]}.pdf`;
+      const fileName = `Referral_Letter_${companyName.replace(/\s+/g, '_')}_${verificationNumber}.pdf`;
       pdf.save(fileName);
       toast.success('PDF downloaded successfully');
     } catch (error) {
@@ -350,9 +372,9 @@ export function ReferralLettersViewer() {
                   {letter.employment_record?.job_title || 'Position'} •{' '}
                   {new Date(letter.created_at).toLocaleDateString()}
                 </p>
-                <Badge variant="outline" className="mt-1 text-xs">
-                  {letter.generated_by === 'ai' ? 'AI Generated' : 'Manual'}
-                </Badge>
+                <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                  {letter.verification_number}
+                </p>
               </div>
             </div>
             <div className="flex gap-2 ml-auto sm:ml-0">
@@ -390,6 +412,9 @@ export function ReferralLettersViewer() {
               Referral Letter — {previewLetter?.employer?.company_name}
             </DialogTitle>
           </DialogHeader>
+          <div className="text-xs text-muted-foreground font-mono mb-2">
+            Verification: {previewLetter?.verification_number}
+          </div>
           <ScrollArea className="max-h-[60vh]">
             <div className="prose prose-sm max-w-none p-4 bg-muted/30 rounded-lg whitespace-pre-wrap font-serif text-foreground leading-relaxed">
               {previewLetter?.content}
