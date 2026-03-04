@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Facebook, Linkedin } from "lucide-react";
 import logoImage from '@/assets/logo.png';
 
 export function Footer() {
