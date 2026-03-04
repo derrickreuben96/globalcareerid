@@ -94,9 +94,8 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/50">
-          <p>© {new Date().getFullYear()} Global Career ID. All rights reserved.</p>
-          <div className="flex items-center gap-4">
+        <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/50">
+          <div className="flex items-center justify-center gap-4 mb-4">
             <a href="https://www.facebook.com/profile.php?id=61587225303471" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">
               <Facebook className="w-5 h-5" />
             </a>
@@ -104,6 +103,7 @@ export function Footer() {
               <Linkedin className="w-5 h-5" />
             </a>
           </div>
+          <p>© {new Date().getFullYear()} Global Career ID. All rights reserved.</p>
         </div>
       </div>
     </footer>
