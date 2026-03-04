@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Facebook, Linkedin } from "lucide-react";
 import logoImage from '@/assets/logo.png';
 
 export function Footer() {
@@ -93,8 +94,16 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/50">
+        <div className="mt-12 pt-8 border-t border-primary-foreground/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-primary-foreground/50">
           <p>© {new Date().getFullYear()} Global Career ID. All rights reserved.</p>
+          <div className="flex items-center gap-4">
+            <a href="https://www.facebook.com/profile.php?id=61587225303471" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a href="https://www.linkedin.com/company/global-career-id/" target="_blank" rel="noopener noreferrer" className="hover:text-primary-foreground transition-colors">
+              <Linkedin className="w-5 h-5" />
+            </a>
+          </div>
         </div>
       </div>
     </footer>
