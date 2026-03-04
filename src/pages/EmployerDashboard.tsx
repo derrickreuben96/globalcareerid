@@ -50,6 +50,7 @@ import { EmployerAIChat } from '@/components/employer/EmployerAIChat';
 import { EmployerExperienceRequests } from '@/components/employer/EmployerExperienceRequests';
 import { PendingPromotions } from '@/components/employer/PendingPromotions';
 import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
+import { ReferralLetterVerifier } from '@/components/employer/ReferralLetterVerifier';
 
 interface Employer {
   id: string;
