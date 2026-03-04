@@ -741,6 +741,10 @@ export default function EmployerDashboard() {
               <AuditLogViewer employerId={employer.id} />
             </div>
           )}
+
+          {activeSection === 'verify' && (
+            <ReferralLetterVerifier />
+          )}
         </div>
       </main>
 
