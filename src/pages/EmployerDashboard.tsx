@@ -38,7 +38,8 @@ import {
   Edit,
   FileText,
   Sparkles,
-  PenLine
+  PenLine,
+  ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TalentSearch } from '@/components/employer/TalentSearch';
