@@ -196,6 +196,14 @@ export function ReferralLettersViewer() {
         yPos += 4;
       }
 
+      // Website
+      if (companyWebsite) {
+        pdf.setFontSize(9);
+        pdf.setTextColor(0, 80, 160);
+        pdf.text(companyWebsite, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 4;
+      }
+
       yPos += 2;
 
       // Divider
