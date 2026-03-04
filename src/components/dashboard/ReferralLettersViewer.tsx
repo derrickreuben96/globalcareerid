@@ -24,6 +24,7 @@ interface ReferralLetter {
     logo_url: string | null;
     country: string | null;
     phone: string | null;
+    website: string | null;
   };
   employment_record?: {
     job_title: string;
@@ -46,7 +47,7 @@ export function ReferralLettersViewer() {
       .from('referral_letters')
       .select(`
         id, content, generated_by, created_at, employment_record_id, employer_id, verification_number,
-        employer:employers(company_name, address, logo_url, country, phone),
+        employer:employers(company_name, address, logo_url, country, phone, website),
         employment_record:employment_records(job_title, start_date, end_date)
       `)
       .eq('employee_user_id', user.id)
@@ -94,6 +95,7 @@ export function ReferralLettersViewer() {
       const companyAddress = letter.employer?.address || '';
       const companyPhone = letter.employer?.phone || '';
       const companyCountry = letter.employer?.country || '';
+      const companyWebsite = letter.employer?.website || '';
       const verificationNumber = letter.verification_number;
       const issueDate = new Date(letter.created_at).toLocaleDateString('en-GB', {
         day: '2-digit', month: 'long', year: 'numeric'
@@ -191,6 +193,14 @@ export function ReferralLettersViewer() {
         pdf.setFontSize(9);
         pdf.setTextColor(100, 100, 100);
         pdf.text(`Tel: ${companyPhone}`, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 4;
+      }
+
+      // Website
+      if (companyWebsite) {
+        pdf.setFontSize(9);
+        pdf.setTextColor(0, 80, 160);
+        pdf.text(companyWebsite, pageWidth / 2, yPos, { align: 'center' });
         yPos += 4;
       }
 
