@@ -1,0 +1,1 @@
+ALTER TABLE public.employers ADD COLUMN email text DEFAULT NULL;
