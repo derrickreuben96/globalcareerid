@@ -332,7 +332,15 @@ export function ReferralLettersViewer() {
       pdf.text(`Verify at globalcareerid.com | ${verificationNumber}`, margin + 10, footerY - 4);
 
       const fileName = `Referral_Letter_${companyName.replace(/\s+/g, '_')}_${verificationNumber}.pdf`;
-      pdf.save(fileName);
+      const blob = pdf.output('blob');
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       toast.success('PDF downloaded successfully');
     } catch (error) {
       console.error('PDF generation error:', error);
