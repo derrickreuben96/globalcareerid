@@ -25,7 +25,7 @@ export const phoneSchema = z
 
 export const passwordSchema = z
   .string()
-  .min(6, 'Password must be at least 6 characters')
+  .min(8, 'Password must be at least 8 characters')
   .max(128, 'Password must be 128 characters or less');
 
 export const skillSchema = z
