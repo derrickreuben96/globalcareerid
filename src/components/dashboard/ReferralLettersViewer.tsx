@@ -48,7 +48,7 @@ export function ReferralLettersViewer() {
       .from('referral_letters')
       .select(`
         id, content, generated_by, created_at, employment_record_id, employer_id, verification_number,
-        employer:employers(company_name, address, logo_url, country, phone, website),
+        employer:employers(company_name, address, logo_url, country, phone, website, email),
         employment_record:employment_records(job_title, start_date, end_date)
       `)
       .eq('employee_user_id', user.id)
