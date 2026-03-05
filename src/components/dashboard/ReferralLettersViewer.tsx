@@ -198,6 +198,14 @@ export function ReferralLettersViewer() {
         yPos += 4;
       }
 
+      // Email
+      if (companyEmail) {
+        pdf.setFontSize(9);
+        pdf.setTextColor(100, 100, 100);
+        pdf.text(`Email: ${companyEmail}`, pageWidth / 2, yPos, { align: 'center' });
+        yPos += 4;
+      }
+
       // Website
       if (companyWebsite) {
         pdf.setFontSize(9);
