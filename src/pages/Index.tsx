@@ -25,6 +25,7 @@ const testimonials = [
   },
   {
     name: 'David Mwangi',
+    image: testimonialDavid,
     role: 'Software Engineer',
     company: '',
     type: 'jobseeker' as const,
@@ -33,6 +34,7 @@ const testimonials = [
   },
   {
     name: 'Patricia Oduor',
+    image: testimonialPatricia,
     role: 'Talent Acquisition Lead',
     company: 'Savannah Consulting Group',
     type: 'employer' as const,
@@ -41,6 +43,7 @@ const testimonials = [
   },
   {
     name: 'Michael Otieno',
+    image: testimonialMichael,
     role: 'Project Manager',
     company: '',
     type: 'jobseeker' as const,
@@ -49,6 +52,7 @@ const testimonials = [
   },
   {
     name: 'Linda Wambui',
+    image: testimonialLinda,
     role: 'CEO',
     company: 'NexGen Staffing',
     type: 'employer' as const,
@@ -57,6 +61,7 @@ const testimonials = [
   },
   {
     name: 'Samuel Kipchoge',
+    image: testimonialSamuel,
     role: 'Accountant',
     company: '',
     type: 'jobseeker' as const,
