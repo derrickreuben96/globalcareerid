@@ -243,7 +243,58 @@ export default function Index() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Testimonials */}
+      <section className="py-24 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+              What Our Users Say
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Trusted by employers and job seekers across industries
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {testimonials.map((t, index) => (
+              <div
+                key={index}
+                className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:shadow-elevated transition-shadow duration-300 animate-fade-in"
+                style={{ animationDelay: `${index * 80}ms` }}
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Quote className="w-5 h-5 text-primary/40" />
+                    <span className={`text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      t.type === 'employer' 
+                        ? 'bg-accent/10 text-accent' 
+                        : 'bg-primary/10 text-primary'
+                    }`}>
+                      {t.type === 'employer' ? 'Employer' : 'Job Seeker'}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed italic">
+                    "{t.quote}"
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border">
+                  <div className="flex items-center gap-1 mb-2">
+                    {Array.from({ length: t.rating }).map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="font-semibold text-foreground">{t.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t.role}{t.company ? `, ${t.company}` : ''}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       <section className="py-24 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-display font-bold">
