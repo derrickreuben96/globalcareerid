@@ -4,8 +4,59 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { AIChatWidget } from '@/components/AIChatWidget';
-import { Shield, UserCheck, Building2, Search, QrCode, Lock, CheckCircle, ArrowRight, Users, FileCheck, Clock, Mail } from 'lucide-react';
+import { Shield, UserCheck, Building2, Search, QrCode, Lock, CheckCircle, ArrowRight, Users, FileCheck, Clock, Mail, Quote, Star } from 'lucide-react';
 import { HeroBackground } from '@/components/HeroBackground';
+
+const testimonials = [
+  {
+    name: 'Amina Hassan',
+    role: 'HR Director',
+    company: 'TechBridge Solutions',
+    type: 'employer' as const,
+    quote: 'Global Career ID has cut our background check time by 80%. We now verify candidates in minutes instead of weeks. It\'s transformed our hiring process completely.',
+    rating: 5,
+  },
+  {
+    name: 'David Mwangi',
+    role: 'Software Engineer',
+    company: '',
+    type: 'jobseeker' as const,
+    quote: 'I no longer worry about proving my work history. My verified profile speaks for itself—recruiters trust it instantly and I get callbacks faster than ever.',
+    rating: 5,
+  },
+  {
+    name: 'Patricia Oduor',
+    role: 'Talent Acquisition Lead',
+    company: 'Savannah Consulting Group',
+    type: 'employer' as const,
+    quote: 'We\'ve eliminated resume fraud from our pipeline entirely. The employer-verified records give us confidence that every candidate is who they say they are.',
+    rating: 5,
+  },
+  {
+    name: 'Michael Otieno',
+    role: 'Project Manager',
+    company: '',
+    type: 'jobseeker' as const,
+    quote: 'Sharing my Profile ID is so much easier than sending CVs. Employers can see my entire verified career history with one click. This is the future of hiring.',
+    rating: 5,
+  },
+  {
+    name: 'Linda Wambui',
+    role: 'CEO',
+    company: 'NexGen Staffing',
+    type: 'employer' as const,
+    quote: 'As a staffing agency, trust is everything. Global Career ID gives our clients the assurance they need, and our placement success rate has never been higher.',
+    rating: 5,
+  },
+  {
+    name: 'Samuel Kipchoge',
+    role: 'Accountant',
+    company: '',
+    type: 'jobseeker' as const,
+    quote: 'After years of carrying reference letters, I finally have a digital, verified record of my career. The privacy controls let me decide exactly who sees my data.',
+    rating: 5,
+  },
+];
 import ceoPhoto from '@/assets/ceo-photo.jpg';
 
 const features = [{
@@ -192,7 +243,58 @@ export default function Index() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Testimonials */}
+      <section className="py-24 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+              What Our Users Say
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
+              Trusted by employers and job seekers across industries
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {testimonials.map((t, index) => (
+              <div
+                key={index}
+                className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:shadow-elevated transition-shadow duration-300 animate-fade-in"
+                style={{ animationDelay: `${index * 80}ms` }}
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Quote className="w-5 h-5 text-primary/40" />
+                    <span className={`text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                      t.type === 'employer' 
+                        ? 'bg-accent/10 text-accent' 
+                        : 'bg-primary/10 text-primary'
+                    }`}>
+                      {t.type === 'employer' ? 'Employer' : 'Job Seeker'}
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed italic">
+                    "{t.quote}"
+                  </p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border">
+                  <div className="flex items-center gap-1 mb-2">
+                    {Array.from({ length: t.rating }).map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="font-semibold text-foreground">{t.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t.role}{t.company ? `, ${t.company}` : ''}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
       <section className="py-24 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-display font-bold">
