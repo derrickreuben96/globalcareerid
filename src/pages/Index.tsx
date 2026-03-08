@@ -6,10 +6,17 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { Shield, UserCheck, Building2, Search, QrCode, Lock, CheckCircle, ArrowRight, Users, FileCheck, Clock, Mail, Quote, Star } from 'lucide-react';
 import { HeroBackground } from '@/components/HeroBackground';
+import testimonialAmina from '@/assets/testimonial-amina.jpg';
+import testimonialDavid from '@/assets/testimonial-david.jpg';
+import testimonialPatricia from '@/assets/testimonial-patricia.jpg';
+import testimonialMichael from '@/assets/testimonial-michael.jpg';
+import testimonialLinda from '@/assets/testimonial-linda.jpg';
+import testimonialSamuel from '@/assets/testimonial-samuel.jpg';
 
 const testimonials = [
   {
     name: 'Amina Hassan',
+    image: testimonialAmina,
     role: 'HR Director',
     company: 'TechBridge Solutions',
     type: 'employer' as const,
