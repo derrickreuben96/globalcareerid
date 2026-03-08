@@ -289,16 +289,19 @@ export default function Index() {
                     "{t.quote}"
                   </p>
                 </div>
-                <div className="mt-6 pt-4 border-t border-border">
-                  <div className="flex items-center gap-1 mb-2">
-                    {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    ))}
+                <div className="mt-6 pt-4 border-t border-border flex items-center gap-3">
+                  <img src={t.image} alt={t.name} className="w-11 h-11 rounded-full object-cover border-2 border-primary/20 flex-shrink-0" />
+                  <div>
+                    <div className="flex items-center gap-1 mb-0.5">
+                      {Array.from({ length: t.rating }).map((_, i) => (
+                        <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <p className="font-semibold text-foreground text-sm">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t.role}{t.company ? `, ${t.company}` : ''}
+                    </p>
                   </div>
-                  <p className="font-semibold text-foreground">{t.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {t.role}{t.company ? `, ${t.company}` : ''}
-                  </p>
                 </div>
               </div>
             ))}
