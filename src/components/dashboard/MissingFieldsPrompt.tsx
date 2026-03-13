@@ -153,7 +153,20 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
               </div>
             )}
 
-            {!profile.phone && (
+            {!profile.date_of_birth && (
+              <div className="space-y-1.5">
+                <Label>Date of Birth <span className="text-destructive">*</span></Label>
+                <Input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  min="1900-01-01"
+                  className="border-warning/50 bg-warning/5"
+                />
+              </div>
+            )}
+
               <div className="space-y-1.5">
                 <Label htmlFor="phone" className="border-warning/50">Phone</Label>
                 <Input
