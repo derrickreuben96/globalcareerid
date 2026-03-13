@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertTriangle, CheckCircle, Loader2, CreditCard, Globe } from 'lucide-react';
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { countries } from '@/lib/countries';
@@ -20,6 +21,7 @@ interface MissingFieldsPromptProps {
     phone: string | null;
     country: string | null;
     citizenship: string | null;
+    gender: string | null;
   };
   onUpdate: () => Promise<void>;
 }
@@ -30,6 +32,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
   const [phone, setPhone] = useState(profile.phone || '');
   const [country, setCountry] = useState(profile.country || '');
   const [citizenship, setCitizenship] = useState(profile.citizenship || '');
+  const [gender, setGender] = useState(profile.gender || '');
   const [isSaving, setIsSaving] = useState(false);
 
   const missingFields: string[] = [];
@@ -37,6 +40,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
   if (!profile.phone) missingFields.push('Phone');
   if (!profile.country) missingFields.push('Country');
   if (!profile.citizenship) missingFields.push('Citizenship');
+  if (!profile.gender) missingFields.push('Gender');
 
   const handleSave = async () => {
     if (!nationalId.trim()) {
@@ -54,6 +58,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
       if (!profile.phone && phone.trim()) updates.phone = phone.trim();
       if (!profile.country && country.trim()) updates.country = country.trim();
       if (!profile.citizenship && citizenship.trim()) updates.citizenship = citizenship.trim();
+      if (!profile.gender && gender) updates.gender = gender;
 
       const { error } = await supabase
         .from('profiles')
@@ -126,6 +131,23 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
                 onChange={(e) => setPassportNumber(e.target.value)}
               />
             </div>
+
+            {!profile.gender && (
+              <div className="space-y-1.5">
+                <Label>Gender <span className="text-destructive">*</span></Label>
+                <Select value={gender} onValueChange={setGender}>
+                  <SelectTrigger className="border-warning/50 bg-warning/5">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="non_binary">Non-binary</SelectItem>
+                    <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {!profile.phone && (
               <div className="space-y-1.5">

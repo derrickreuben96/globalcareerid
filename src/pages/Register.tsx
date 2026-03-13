@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { countries, industries } from '@/lib/countries';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserCheck, Building2, ArrowRight, Shield, Mail, Lock, User, Phone, Briefcase, MapPin, Loader2, Globe, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -51,6 +52,7 @@ export default function Register() {
     citizenship: '',
     nationalId: '',
     passportNumber: '',
+    gender: '',
     password: '',
     confirmPassword: '',
   });
@@ -87,6 +89,11 @@ export default function Register() {
   const handleJobSeekerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!jobSeekerForm.gender) {
+      toast.error('Please select your gender');
+      return;
+    }
+
     // Validate form with zod schema
     const validation = validateForm(jobSeekerRegistrationSchema, jobSeekerForm);
     if (!validation.success) {
@@ -120,6 +127,7 @@ export default function Register() {
         if (jobSeekerForm.citizenship) updates.citizenship = jobSeekerForm.citizenship;
         if (jobSeekerForm.nationalId.trim()) updates.national_id = jobSeekerForm.nationalId.trim();
         if (jobSeekerForm.passportNumber.trim()) updates.passport_number = jobSeekerForm.passportNumber.trim();
+        if (jobSeekerForm.gender) updates.gender = jobSeekerForm.gender;
         if (jobSeekerForm.nationalId.trim()) updates.profile_complete = true;
         
         if (Object.keys(updates).length > 0) {
@@ -434,6 +442,25 @@ export default function Register() {
                           disabled={isLoading}
                         />
                       </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="gender">Gender <span className="text-destructive">*</span></Label>
+                      <Select
+                        value={jobSeekerForm.gender}
+                        onValueChange={(v) => setJobSeekerForm({ ...jobSeekerForm, gender: v })}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="non_binary">Non-binary</SelectItem>
+                          <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">

@@ -64,6 +64,7 @@ interface EmploymentRecord {
   employer: {
     company_name: string;
     is_verified: boolean;
+    logo_url: string | null;
   };
 }
 
@@ -104,8 +105,8 @@ export default function Dashboard() {
         const timer = setTimeout(() => setShowOnboarding(true), 1000);
         return () => clearTimeout(timer);
       }
-      // Check for missing mandatory fields (national_id is mandatory)
-      if (!profile.national_id) {
+      // Check for missing mandatory fields (national_id or gender is mandatory)
+      if (!profile.national_id || !(profile as any).gender) {
         const timer = setTimeout(() => setShowMissingFields(true), 1500);
         return () => clearTimeout(timer);
       }
@@ -145,7 +146,7 @@ export default function Dashboard() {
         end_date,
         status,
         employer_id,
-        employer:employers(company_name, is_verified)
+        employer:employers(company_name, is_verified, logo_url)
       `)
       .eq('user_id', user.id)
       .in('status', ['active', 'ended', 'disputed'])
@@ -317,6 +318,7 @@ export default function Dashboard() {
     status: r.status as 'active' | 'ended' | 'disputed' | 'pending',
     employerName: r.employer?.company_name || 'Unknown Company',
     employerVerified: r.employer?.is_verified || false,
+    employerLogoUrl: r.employer?.logo_url || undefined,
   }));
 
   return (
@@ -379,12 +381,6 @@ export default function Dashboard() {
                     <TabsTrigger value="timeline" className="gap-2">
                       <Briefcase className="w-4 h-4" />
                       Employer Records
-                    </TabsTrigger>
-                  )}
-                  {isJobSeeker && !isAdmin && (
-                    <TabsTrigger value="career-ladder" className="gap-2">
-                      <GitBranch className="w-4 h-4" />
-                      Career Ladder
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
@@ -487,19 +483,6 @@ export default function Dashboard() {
                   </TabsContent>
                 )}
 
-                {isJobSeeker && !isAdmin && (
-                  <TabsContent value="career-ladder">
-                    <div className="glass-card rounded-2xl p-6">
-                      <h2 className="text-xl font-display font-semibold text-foreground mb-2">
-                        Career Ladder
-                      </h2>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        Your role progression across companies
-                      </p>
-                      <StructuredEmploymentTimeline userId={user!.id} />
-                    </div>
-                  </TabsContent>
-                )}
 
                 {isJobSeeker && !isAdmin && (
                   <TabsContent value="analytics">
@@ -569,6 +552,12 @@ export default function Dashboard() {
                             <Label className="text-muted-foreground">Citizenship</Label>
                             <p className={`font-medium ${profile.citizenship ? 'text-foreground' : 'text-warning'}`}>
                               {profile.citizenship || '⚠ Not provided'}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Gender</Label>
+                            <p className={`font-medium ${(profile as any).gender ? 'text-foreground' : 'text-warning'}`}>
+                              {(profile as any).gender ? ((profile as any).gender === 'prefer_not_to_say' ? 'Prefer not to say' : (profile as any).gender === 'non_binary' ? 'Non-binary' : (profile as any).gender.charAt(0).toUpperCase() + (profile as any).gender.slice(1)) : '⚠ Not provided'}
                             </p>
                           </div>
                           {!profile.national_id && (
@@ -805,6 +794,7 @@ export default function Dashboard() {
             phone: profile.phone,
             country: profile.country,
             citizenship: profile.citizenship,
+            gender: (profile as any).gender,
           }}
           onUpdate={refreshProfile}
         />
