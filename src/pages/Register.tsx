@@ -89,6 +89,11 @@ export default function Register() {
   const handleJobSeekerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!jobSeekerForm.gender) {
+      toast.error('Please select your gender');
+      return;
+    }
+
     // Validate form with zod schema
     const validation = validateForm(jobSeekerRegistrationSchema, jobSeekerForm);
     if (!validation.success) {
