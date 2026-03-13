@@ -62,6 +62,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
       if (!profile.country && country.trim()) updates.country = country.trim();
       if (!profile.citizenship && citizenship.trim()) updates.citizenship = citizenship.trim();
       if (!profile.gender && gender) updates.gender = gender;
+      if (!profile.date_of_birth && dateOfBirth) updates.date_of_birth = dateOfBirth;
 
       const { error } = await supabase
         .from('profiles')
