@@ -146,7 +146,7 @@ export default function Dashboard() {
         end_date,
         status,
         employer_id,
-        employer:employers(company_name, is_verified)
+        employer:employers(company_name, is_verified, logo_url)
       `)
       .eq('user_id', user.id)
       .in('status', ['active', 'ended', 'disputed'])
