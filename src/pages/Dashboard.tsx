@@ -786,6 +786,7 @@ export default function Dashboard() {
             phone: profile.phone,
             country: profile.country,
             citizenship: profile.citizenship,
+            gender: (profile as any).gender,
           }}
           onUpdate={refreshProfile}
         />
