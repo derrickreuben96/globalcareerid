@@ -94,6 +94,10 @@ export default function Register() {
       toast.error('Please select your gender');
       return;
     }
+    if (!jobSeekerForm.dateOfBirth) {
+      toast.error('Please enter your date of birth');
+      return;
+    }
 
     // Validate form with zod schema
     const validation = validateForm(jobSeekerRegistrationSchema, jobSeekerForm);
