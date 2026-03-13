@@ -34,6 +34,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
   const [country, setCountry] = useState(profile.country || '');
   const [citizenship, setCitizenship] = useState(profile.citizenship || '');
   const [gender, setGender] = useState(profile.gender || '');
+  const [dateOfBirth, setDateOfBirth] = useState(profile.date_of_birth || '');
   const [isSaving, setIsSaving] = useState(false);
 
   const missingFields: string[] = [];
@@ -42,6 +43,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
   if (!profile.country) missingFields.push('Country');
   if (!profile.citizenship) missingFields.push('Citizenship');
   if (!profile.gender) missingFields.push('Gender');
+  if (!profile.date_of_birth) missingFields.push('Date of Birth');
 
   const handleSave = async () => {
     if (!nationalId.trim()) {
