@@ -13,6 +13,7 @@ interface TimelineRecord {
   status: 'active' | 'ended' | 'disputed' | 'pending';
   employerName: string;
   employerVerified?: boolean;
+  employerLogoUrl?: string;
   isDisputed?: boolean;
 }
 
