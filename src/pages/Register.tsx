@@ -51,6 +51,7 @@ export default function Register() {
     citizenship: '',
     nationalId: '',
     passportNumber: '',
+    gender: '',
     password: '',
     confirmPassword: '',
   });
