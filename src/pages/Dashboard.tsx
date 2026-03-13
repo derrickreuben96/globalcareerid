@@ -105,8 +105,8 @@ export default function Dashboard() {
         const timer = setTimeout(() => setShowOnboarding(true), 1000);
         return () => clearTimeout(timer);
       }
-      // Check for missing mandatory fields (national_id or gender is mandatory)
-      if (!profile.national_id || !(profile as any).gender) {
+      // Check for missing mandatory fields
+      if (!profile.national_id || !(profile as any).gender || !(profile as any).date_of_birth) {
         const timer = setTimeout(() => setShowMissingFields(true), 1500);
         return () => clearTimeout(timer);
       }
