@@ -318,6 +318,7 @@ export default function Dashboard() {
     status: r.status as 'active' | 'ended' | 'disputed' | 'pending',
     employerName: r.employer?.company_name || 'Unknown Company',
     employerVerified: r.employer?.is_verified || false,
+    employerLogoUrl: r.employer?.logo_url || undefined,
   }));
 
   return (

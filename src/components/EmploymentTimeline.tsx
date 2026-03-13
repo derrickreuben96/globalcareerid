@@ -97,7 +97,11 @@ export function EmploymentTimeline({ records, showDisputeButton = false, onDispu
                 </div>
 
                 <div className="flex items-center gap-2 text-muted-foreground mb-3">
-                  <Building2 className="w-4 h-4" />
+                  {record.employerLogoUrl ? (
+                    <img src={record.employerLogoUrl} alt={record.employerName} className="w-6 h-6 rounded object-cover" />
+                  ) : (
+                    <Building2 className="w-4 h-4" />
+                  )}
                   <span className="font-medium text-foreground/80">{record.employerName}</span>
                   {record.employerVerified && <VerifiedBadge variant="inline" />}
                 </div>
