@@ -552,6 +552,12 @@ export default function Dashboard() {
                               {profile.citizenship || '⚠ Not provided'}
                             </p>
                           </div>
+                          <div>
+                            <Label className="text-muted-foreground">Gender</Label>
+                            <p className={`font-medium ${(profile as any).gender ? 'text-foreground' : 'text-warning'}`}>
+                              {(profile as any).gender ? ((profile as any).gender === 'prefer_not_to_say' ? 'Prefer not to say' : (profile as any).gender === 'non_binary' ? 'Non-binary' : (profile as any).gender.charAt(0).toUpperCase() + (profile as any).gender.slice(1)) : '⚠ Not provided'}
+                            </p>
+                          </div>
                           {!profile.national_id && (
                             <div className="md:col-span-2">
                               <Button 
