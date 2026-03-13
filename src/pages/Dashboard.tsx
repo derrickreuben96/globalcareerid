@@ -382,12 +382,6 @@ export default function Dashboard() {
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
-                    <TabsTrigger value="career-ladder" className="gap-2">
-                      <GitBranch className="w-4 h-4" />
-                      Career Ladder
-                    </TabsTrigger>
-                  )}
-                  {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="analytics" className="gap-2">
                       <TrendingUp className="w-4 h-4" />
                       Analytics
