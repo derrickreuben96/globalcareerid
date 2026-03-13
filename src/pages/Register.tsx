@@ -53,6 +53,7 @@ export default function Register() {
     nationalId: '',
     passportNumber: '',
     gender: '',
+    dateOfBirth: '',
     password: '',
     confirmPassword: '',
   });
