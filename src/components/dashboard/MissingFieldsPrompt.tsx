@@ -167,6 +167,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
               </div>
             )}
 
+            {!profile.phone && (
               <div className="space-y-1.5">
                 <Label htmlFor="phone" className="border-warning/50">Phone</Label>
                 <Input
