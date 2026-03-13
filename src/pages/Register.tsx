@@ -127,6 +127,7 @@ export default function Register() {
         if (jobSeekerForm.citizenship) updates.citizenship = jobSeekerForm.citizenship;
         if (jobSeekerForm.nationalId.trim()) updates.national_id = jobSeekerForm.nationalId.trim();
         if (jobSeekerForm.passportNumber.trim()) updates.passport_number = jobSeekerForm.passportNumber.trim();
+        if (jobSeekerForm.gender) updates.gender = jobSeekerForm.gender;
         if (jobSeekerForm.nationalId.trim()) updates.profile_complete = true;
         
         if (Object.keys(updates).length > 0) {
