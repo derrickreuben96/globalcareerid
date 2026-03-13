@@ -64,6 +64,7 @@ interface EmploymentRecord {
   employer: {
     company_name: string;
     is_verified: boolean;
+    logo_url: string | null;
   };
 }
 
