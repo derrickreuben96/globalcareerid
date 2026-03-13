@@ -478,6 +478,7 @@ export type Database = {
           citizenship: string | null
           country: string | null
           created_at: string
+          date_of_birth: string | null
           email: string
           experience_level: string | null
           first_name: string
@@ -502,6 +503,7 @@ export type Database = {
           citizenship?: string | null
           country?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email: string
           experience_level?: string | null
           first_name: string
@@ -526,6 +528,7 @@ export type Database = {
           citizenship?: string | null
           country?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string
           experience_level?: string | null
           first_name?: string
