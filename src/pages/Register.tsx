@@ -53,6 +53,7 @@ export default function Register() {
     nationalId: '',
     passportNumber: '',
     gender: '',
+    dateOfBirth: '',
     password: '',
     confirmPassword: '',
   });
@@ -93,6 +94,10 @@ export default function Register() {
       toast.error('Please select your gender');
       return;
     }
+    if (!jobSeekerForm.dateOfBirth) {
+      toast.error('Please enter your date of birth');
+      return;
+    }
 
     // Validate form with zod schema
     const validation = validateForm(jobSeekerRegistrationSchema, jobSeekerForm);
@@ -128,6 +133,7 @@ export default function Register() {
         if (jobSeekerForm.nationalId.trim()) updates.national_id = jobSeekerForm.nationalId.trim();
         if (jobSeekerForm.passportNumber.trim()) updates.passport_number = jobSeekerForm.passportNumber.trim();
         if (jobSeekerForm.gender) updates.gender = jobSeekerForm.gender;
+        if (jobSeekerForm.dateOfBirth) updates.date_of_birth = jobSeekerForm.dateOfBirth;
         if (jobSeekerForm.nationalId.trim()) updates.profile_complete = true;
         
         if (Object.keys(updates).length > 0) {
@@ -461,6 +467,20 @@ export default function Register() {
                           <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="dateOfBirth">Date of Birth <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="dateOfBirth"
+                        type="date"
+                        value={jobSeekerForm.dateOfBirth}
+                        onChange={(e) => setJobSeekerForm({ ...jobSeekerForm, dateOfBirth: e.target.value })}
+                        max={new Date().toISOString().split('T')[0]}
+                        min="1900-01-01"
+                        required
+                        disabled={isLoading}
+                      />
                     </div>
 
                     <div className="space-y-2">

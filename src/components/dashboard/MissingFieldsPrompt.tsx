@@ -22,6 +22,7 @@ interface MissingFieldsPromptProps {
     country: string | null;
     citizenship: string | null;
     gender: string | null;
+    date_of_birth: string | null;
   };
   onUpdate: () => Promise<void>;
 }
@@ -33,6 +34,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
   const [country, setCountry] = useState(profile.country || '');
   const [citizenship, setCitizenship] = useState(profile.citizenship || '');
   const [gender, setGender] = useState(profile.gender || '');
+  const [dateOfBirth, setDateOfBirth] = useState(profile.date_of_birth || '');
   const [isSaving, setIsSaving] = useState(false);
 
   const missingFields: string[] = [];
@@ -41,6 +43,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
   if (!profile.country) missingFields.push('Country');
   if (!profile.citizenship) missingFields.push('Citizenship');
   if (!profile.gender) missingFields.push('Gender');
+  if (!profile.date_of_birth) missingFields.push('Date of Birth');
 
   const handleSave = async () => {
     if (!nationalId.trim()) {
@@ -59,6 +62,7 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
       if (!profile.country && country.trim()) updates.country = country.trim();
       if (!profile.citizenship && citizenship.trim()) updates.citizenship = citizenship.trim();
       if (!profile.gender && gender) updates.gender = gender;
+      if (!profile.date_of_birth && dateOfBirth) updates.date_of_birth = dateOfBirth;
 
       const { error } = await supabase
         .from('profiles')
@@ -146,6 +150,20 @@ export function MissingFieldsPrompt({ isOpen, onClose, userId, profile, onUpdate
                     <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            )}
+
+            {!profile.date_of_birth && (
+              <div className="space-y-1.5">
+                <Label>Date of Birth <span className="text-destructive">*</span></Label>
+                <Input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  max={new Date().toISOString().split('T')[0]}
+                  min="1900-01-01"
+                  className="border-warning/50 bg-warning/5"
+                />
               </div>
             )}
 

@@ -105,8 +105,8 @@ export default function Dashboard() {
         const timer = setTimeout(() => setShowOnboarding(true), 1000);
         return () => clearTimeout(timer);
       }
-      // Check for missing mandatory fields (national_id or gender is mandatory)
-      if (!profile.national_id || !(profile as any).gender) {
+      // Check for missing mandatory fields
+      if (!profile.national_id || !(profile as any).gender || !(profile as any).date_of_birth) {
         const timer = setTimeout(() => setShowMissingFields(true), 1500);
         return () => clearTimeout(timer);
       }
@@ -560,7 +560,13 @@ export default function Dashboard() {
                               {(profile as any).gender ? ((profile as any).gender === 'prefer_not_to_say' ? 'Prefer not to say' : (profile as any).gender === 'non_binary' ? 'Non-binary' : (profile as any).gender.charAt(0).toUpperCase() + (profile as any).gender.slice(1)) : '⚠ Not provided'}
                             </p>
                           </div>
-                          {!profile.national_id && (
+                          <div>
+                            <Label className="text-muted-foreground">Date of Birth</Label>
+                            <p className={`font-medium ${(profile as any).date_of_birth ? 'text-foreground' : 'text-warning'}`}>
+                              {(profile as any).date_of_birth ? new Date((profile as any).date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '⚠ Not provided'}
+                            </p>
+                          </div>
+                          {(!profile.national_id || !(profile as any).gender || !(profile as any).date_of_birth) && (
                             <div className="md:col-span-2">
                               <Button 
                                 variant="outline" 
@@ -795,6 +801,7 @@ export default function Dashboard() {
             country: profile.country,
             citizenship: profile.citizenship,
             gender: (profile as any).gender,
+            date_of_birth: (profile as any).date_of_birth,
           }}
           onUpdate={refreshProfile}
         />
