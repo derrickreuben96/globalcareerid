@@ -22,6 +22,7 @@ interface MissingFieldsPromptProps {
     country: string | null;
     citizenship: string | null;
     gender: string | null;
+    date_of_birth: string | null;
   };
   onUpdate: () => Promise<void>;
 }

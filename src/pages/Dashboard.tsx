@@ -801,6 +801,7 @@ export default function Dashboard() {
             country: profile.country,
             citizenship: profile.citizenship,
             gender: (profile as any).gender,
+            date_of_birth: (profile as any).date_of_birth,
           }}
           onUpdate={refreshProfile}
         />
