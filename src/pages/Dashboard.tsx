@@ -481,19 +481,6 @@ export default function Dashboard() {
                   </TabsContent>
                 )}
 
-                {isJobSeeker && !isAdmin && (
-                  <TabsContent value="career-ladder">
-                    <div className="glass-card rounded-2xl p-6">
-                      <h2 className="text-xl font-display font-semibold text-foreground mb-2">
-                        Career Ladder
-                      </h2>
-                      <p className="text-sm text-muted-foreground mb-6">
-                        Your role progression across companies
-                      </p>
-                      <StructuredEmploymentTimeline userId={user!.id} />
-                    </div>
-                  </TabsContent>
-                )}
 
                 {isJobSeeker && !isAdmin && (
                   <TabsContent value="analytics">

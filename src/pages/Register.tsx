@@ -438,6 +438,25 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="gender">Gender <span className="text-destructive">*</span></Label>
+                      <Select
+                        value={jobSeekerForm.gender}
+                        onValueChange={(v) => setJobSeekerForm({ ...jobSeekerForm, gender: v })}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="non_binary">Non-binary</SelectItem>
+                          <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
