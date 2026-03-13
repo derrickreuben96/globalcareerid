@@ -470,6 +470,20 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="dateOfBirth">Date of Birth <span className="text-destructive">*</span></Label>
+                      <Input
+                        id="dateOfBirth"
+                        type="date"
+                        value={jobSeekerForm.dateOfBirth}
+                        onChange={(e) => setJobSeekerForm({ ...jobSeekerForm, dateOfBirth: e.target.value })}
+                        max={new Date().toISOString().split('T')[0]}
+                        min="1900-01-01"
+                        required
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
