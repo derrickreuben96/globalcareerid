@@ -133,6 +133,7 @@ export default function Register() {
         if (jobSeekerForm.nationalId.trim()) updates.national_id = jobSeekerForm.nationalId.trim();
         if (jobSeekerForm.passportNumber.trim()) updates.passport_number = jobSeekerForm.passportNumber.trim();
         if (jobSeekerForm.gender) updates.gender = jobSeekerForm.gender;
+        if (jobSeekerForm.dateOfBirth) updates.date_of_birth = jobSeekerForm.dateOfBirth;
         if (jobSeekerForm.nationalId.trim()) updates.profile_complete = true;
         
         if (Object.keys(updates).length > 0) {
