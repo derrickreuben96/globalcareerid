@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -12,56 +12,80 @@ import { supabase } from '@/integrations/supabase/client';
 import { MFAVerification } from '@/components/auth/MFAVerification';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
 
-const getRedirectPath = async (userId: string): Promise<string> => {
-  const [profileRes, rolesRes] = await Promise.all([
-    supabase.from('profiles').select('account_type').eq('user_id', userId).maybeSingle(),
-    supabase.from('user_roles').select('role').eq('user_id', userId),
-  ]);
-  
-  const roles = rolesRes.data?.map(r => r.role) || [];
+function getRedirectFromProfile(profile: any, roles: string[]): string {
   if (roles.includes('admin')) return '/admin';
-  if (profileRes.data?.account_type === 'organization' || roles.includes('employer')) return '/employer';
+  if (profile?.account_type === 'organization' || roles.includes('employer')) return '/employer';
   return '/dashboard';
-};
-
-const getWelcomeInfo = async (userId: string): Promise<{ name: string; logoUrl?: string | null }> => {
-  const [profileRes, employerRes, orgRes] = await Promise.all([
-    supabase.from('profiles').select('first_name, last_name, account_type').eq('user_id', userId).maybeSingle(),
-    supabase.from('employers').select('company_name, logo_url').eq('user_id', userId).maybeSingle(),
-    supabase.from('organization_profiles').select('company_name, logo_url').eq('user_id', userId).maybeSingle(),
-  ]);
-  
-  const isOrg = profileRes.data?.account_type === 'organization' || !!employerRes.data || !!orgRes.data;
-  
-  if (isOrg) {
-    const logo = employerRes.data?.logo_url || orgRes.data?.logo_url;
-    const name = employerRes.data?.company_name || orgRes.data?.company_name || profileRes.data?.first_name || 'Organization';
-    return { name, logoUrl: logo };
-  }
-  return { name: profileRes.data?.first_name || 'User' };
-};
-
-const prefetchRedirectPath = (userId: string) => {
-  return getRedirectPath(userId);
-};
+}
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { user, profile, roles, authStatus } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showMFA, setShowMFA] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null }>({ name: '' });
   const [pendingPath, setPendingPath] = useState('');
   const [isResetting, setIsResetting] = useState(false);
+  const waitingForAuthRef = useRef(false);
+
+  // When auth becomes authenticated after login, compute redirect and show welcome
+  useEffect(() => {
+    if (!waitingForAuthRef.current) return;
+    if (authStatus !== 'authenticated' || !user || !profile) return;
+
+    waitingForAuthRef.current = false;
+    setIsLoading(false);
+
+    const path = getRedirectFromProfile(profile, roles);
+
+    // Build welcome info from profile
+    const isOrg = profile.account_type === 'organization' || roles.includes('employer');
+    const name = isOrg ? (profile.first_name || 'Organization') : (profile.first_name || 'User');
+
+    setWelcomeInfo({ name, logoUrl: null });
+    setPendingPath(path);
+    setShowWelcome(true);
+
+    // Try to get logo for org users (non-blocking)
+    if (isOrg && user) {
+      Promise.all([
+        supabase.from('employers').select('logo_url, company_name').eq('user_id', user.id).maybeSingle(),
+        supabase.from('organization_profiles').select('logo_url, company_name').eq('user_id', user.id).maybeSingle(),
+      ]).then(([empRes, orgRes]) => {
+        const logo = empRes.data?.logo_url || orgRes.data?.logo_url;
+        const companyName = empRes.data?.company_name || orgRes.data?.company_name || name;
+        if (logo || companyName !== name) {
+          setWelcomeInfo({ name: companyName, logoUrl: logo });
+        }
+      }).catch(() => {});
+    }
+  }, [authStatus, user, profile, roles]);
+
+  // Safety timeout for the waiting-for-auth state
+  useEffect(() => {
+    if (!waitingForAuthRef.current || !isLoading) return;
+    const timeout = setTimeout(() => {
+      if (waitingForAuthRef.current) {
+        console.warn('[Login] Auth state timeout after 10s');
+        waitingForAuthRef.current = false;
+        setIsLoading(false);
+        // If we're actually authenticated, just redirect
+        if (authStatus === 'authenticated' && profile) {
+          const path = getRedirectFromProfile(profile, roles);
+          navigate(path);
+        } else {
+          toast.error('Login timed out. Please try again.');
+        }
+      }
+    }, 10000);
+    return () => clearTimeout(timeout);
+  }, [isLoading, authStatus, profile, roles, navigate]);
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,13 +116,6 @@ export default function Login() {
     setIsLoading(true);
     console.log('[Login] Start: credentials submitted');
 
-    // 15-second safety timeout — guarantees spinner stops
-    const loginTimeout = setTimeout(() => {
-      console.error('[Login] Timeout: 15s elapsed, force-stopping spinner');
-      setIsLoading(false);
-      toast.error('Login timed out. Please try again.');
-    }, 15000);
-
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: form.email,
@@ -108,24 +125,18 @@ export default function Login() {
       console.log('[Login] Credential validation complete', { success: !error, userId: data?.user?.id });
 
       if (error) {
-        clearTimeout(loginTimeout);
         toast.error(error.message);
         setIsLoading(false);
         return;
       }
 
       if (!data?.user) {
-        clearTimeout(loginTimeout);
         toast.error('Login failed: no user returned.');
         setIsLoading(false);
         return;
       }
 
-      // Start redirect path + welcome info fetch immediately, in parallel with MFA check
-      const redirectPromise = prefetchRedirectPath(data.user.id);
-      const welcomePromise = getWelcomeInfo(data.user.id);
-
-      // Check MFA factors with a safety timeout to prevent hanging
+      // Check MFA factors with a safety timeout
       console.log('[Login] Checking MFA factors...');
       let hasVerifiedTOTP = false;
       try {
@@ -144,20 +155,14 @@ export default function Login() {
       console.log('[Login] MFA check complete', { hasVerifiedTOTP });
 
       if (hasVerifiedTOTP) {
-        clearTimeout(loginTimeout);
         setShowMFA(true);
         setIsLoading(false);
       } else {
-        const [path, welcome] = await Promise.all([redirectPromise, welcomePromise]);
-        clearTimeout(loginTimeout);
-        console.log('[Login] Session confirmed, redirecting to', path);
-        setIsLoading(false);
-        setWelcomeInfo(welcome);
-        setPendingPath(path);
-        setShowWelcome(true);
+        // Wait for useAuth to finish loading profile via onAuthStateChange
+        waitingForAuthRef.current = true;
+        console.log('[Login] Waiting for auth state to settle...');
       }
     } catch (err) {
-      clearTimeout(loginTimeout);
       console.error('[Login] Unhandled error:', err);
       toast.error('Login failed. Please try again.');
       setIsLoading(false);
@@ -166,20 +171,13 @@ export default function Login() {
 
   const handleMFASuccess = async () => {
     setShowMFA(false);
-    const { data: { user: mfaUser } } = await supabase.auth.getUser();
-    if (mfaUser) {
-      const [path, welcome] = await Promise.all([getRedirectPath(mfaUser.id), getWelcomeInfo(mfaUser.id)]);
-      setWelcomeInfo(welcome);
-      setPendingPath(path);
-      setShowWelcome(true);
-    } else {
-      navigate('/dashboard');
-    }
+    setIsLoading(true);
+    waitingForAuthRef.current = true;
+    console.log('[Login] MFA verified, waiting for auth state...');
   };
 
   const handleMFACancel = async () => {
     setShowMFA(false);
-    // Sign out since MFA wasn't completed
     await supabase.auth.signOut();
   };
 
@@ -188,7 +186,6 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Google OAuth users go to /dashboard first, which will redirect org accounts to /employer
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
@@ -385,14 +382,12 @@ export default function Login() {
 
       <Footer />
 
-      {/* MFA Verification Dialog */}
       <MFAVerification
         isOpen={showMFA}
         onSuccess={handleMFASuccess}
         onCancel={handleMFACancel}
       />
 
-      {/* Welcome Overlay */}
       {showWelcome && (
         <WelcomeOverlay
           name={welcomeInfo.name}
