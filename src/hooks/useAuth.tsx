@@ -168,8 +168,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(newSession.user ?? null);
         currentUserIdRef.current = newUserId;
 
-        // After init, handle new sign-ins (not token refreshes for same user)
-        if (newUserId && initCompleteRef.current && newUserId !== previousUserId) {
+        // Handle new sign-ins: fetch profile and set authenticated.
+        // Key fix: process SIGNED_IN events even if init hasn't completed yet,
+        // because a slow/hanging getUser() during init would otherwise block login.
+        const isNewSignIn = newUserId && newUserId !== previousUserId;
+        const isExplicitSignIn = event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED';
+
+        if (isNewSignIn && (initCompleteRef.current || isExplicitSignIn)) {
+          // If init is still running, mark it complete so it won't overwrite our state
+          initCompleteRef.current = true;
           setAuthStatus('loading');
           await fetchProfile(newUserId);
           if (mounted) setAuthStatus('authenticated');
