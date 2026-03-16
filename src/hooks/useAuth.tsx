@@ -168,8 +168,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(newSession.user ?? null);
         currentUserIdRef.current = newUserId;
 
-        // After init, handle new sign-ins (not token refreshes for same user)
-        if (newUserId && initCompleteRef.current && newUserId !== previousUserId) {
+        // Handle new sign-ins: fetch profile and set authenticated.
+        // Key fix: process SIGNED_IN events even if init hasn't completed yet,
+        // because a slow/hanging getUser() during init would otherwise block login.
+        const isNewSignIn = newUserId && newUserId !== previousUserId;
+        const isExplicitSignIn = event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED';
+
+        if (isNewSignIn && (initCompleteRef.current || isExplicitSignIn)) {
+          // If init is still running, mark it complete so it won't overwrite our state
+          initCompleteRef.current = true;
           setAuthStatus('loading');
           await fetchProfile(newUserId);
           if (mounted) setAuthStatus('authenticated');
@@ -183,7 +190,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data: { session: localSession } } = await supabase.auth.getSession();
 
         if (!localSession) {
-          // No local tokens at all — immediately mark unauthenticated (no network needed)
           if (mounted) {
             clearState();
             setAuthStatus('unauthenticated');
@@ -196,7 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(localSession.user);
         currentUserIdRef.current = localSession.user.id;
 
-        // 3. Validate with backend AND fetch profile in parallel (saves ~1 round trip)
+        // 3. Validate with backend AND fetch profile in parallel
         const [userResult, profileDone] = await Promise.all([
           supabase.auth.getUser(),
           fetchProfile(localSession.user.id),
@@ -204,10 +210,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (!mounted) return;
 
+        // If a new sign-in already happened while we were awaiting, don't overwrite
+        if (initCompleteRef.current) {
+          console.log('Auth: Init skipped — sign-in already processed by listener');
+          return;
+        }
+
         const { data: { user: validatedUser }, error: userError } = userResult;
 
         if (userError || !validatedUser) {
-          // Backend rejected the session — stale tokens from another device
           console.warn('Auth: Backend rejected local session:', userError?.message);
           purgeClientSession();
           clearState();
@@ -216,13 +227,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        // 4. Backend confirmed — we're good (profile already fetched above)
         if (mounted) {
           setAuthStatus('authenticated');
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        if (mounted) {
+        if (mounted && !initCompleteRef.current) {
           purgeClientSession();
           clearState();
           setAuthError('Network error during authentication');
