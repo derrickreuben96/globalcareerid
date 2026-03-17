@@ -34,58 +34,47 @@ export default function Login() {
   const [isResetting, setIsResetting] = useState(false);
   const waitingForAuthRef = useRef(false);
 
-  // When auth becomes authenticated after login, compute redirect and show welcome
-  useEffect(() => {
-    if (!waitingForAuthRef.current) return;
-    if (authStatus !== 'authenticated' || !user || !profile) return;
+  // Direct redirect helper — bypasses useAuth reactive flow entirely
+  const performRedirect = async (userId: string) => {
+    console.log('[Login] Fetching profile for redirect...');
+    try {
+      const [profileRes, rolesRes] = await Promise.all([
+        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId),
+      ]);
 
-    waitingForAuthRef.current = false;
-    setIsLoading(false);
+      const fetchedProfile = profileRes.data;
+      const fetchedRoles = rolesRes.data?.map(r => r.role) || [];
+      const path = getRedirectFromProfile(fetchedProfile, fetchedRoles);
 
-    const path = getRedirectFromProfile(profile, roles);
+      // Build welcome info
+      const isOrg = fetchedProfile?.account_type === 'organization' || fetchedRoles.includes('employer');
+      const name = isOrg ? (fetchedProfile?.first_name || 'Organization') : (fetchedProfile?.first_name || 'User');
 
-    // Build welcome info from profile
-    const isOrg = profile.account_type === 'organization' || roles.includes('employer');
-    const name = isOrg ? (profile.first_name || 'Organization') : (profile.first_name || 'User');
+      setWelcomeInfo({ name, logoUrl: null });
+      setPendingPath(path);
+      setShowWelcome(true);
+      setIsLoading(false);
 
-    setWelcomeInfo({ name, logoUrl: null });
-    setPendingPath(path);
-    setShowWelcome(true);
-
-    // Try to get logo for org users (non-blocking)
-    if (isOrg && user) {
-      Promise.all([
-        supabase.from('employers').select('logo_url, company_name').eq('user_id', user.id).maybeSingle(),
-        supabase.from('organization_profiles').select('logo_url, company_name').eq('user_id', user.id).maybeSingle(),
-      ]).then(([empRes, orgRes]) => {
-        const logo = empRes.data?.logo_url || orgRes.data?.logo_url;
-        const companyName = empRes.data?.company_name || orgRes.data?.company_name || name;
-        if (logo || companyName !== name) {
-          setWelcomeInfo({ name: companyName, logoUrl: logo });
-        }
-      }).catch(() => {});
-    }
-  }, [authStatus, user, profile, roles, isLoading]);
-
-  // Safety timeout for the waiting-for-auth state
-  useEffect(() => {
-    if (!waitingForAuthRef.current || !isLoading) return;
-    const timeout = setTimeout(() => {
-      if (waitingForAuthRef.current) {
-        console.warn('[Login] Auth state timeout after 10s');
-        waitingForAuthRef.current = false;
-        setIsLoading(false);
-        // If we're actually authenticated, just redirect
-        if (authStatus === 'authenticated' && profile) {
-          const path = getRedirectFromProfile(profile, roles);
-          navigate(path);
-        } else {
-          toast.error('Login timed out. Please try again.');
-        }
+      // Try to get logo for org users (non-blocking)
+      if (isOrg) {
+        Promise.all([
+          supabase.from('employers').select('logo_url, company_name').eq('user_id', userId).maybeSingle(),
+          supabase.from('organization_profiles').select('logo_url, company_name').eq('user_id', userId).maybeSingle(),
+        ]).then(([empRes, orgRes]) => {
+          const logo = empRes.data?.logo_url || orgRes.data?.logo_url;
+          const companyName = empRes.data?.company_name || orgRes.data?.company_name || name;
+          if (logo || companyName !== name) {
+            setWelcomeInfo({ name: companyName, logoUrl: logo });
+          }
+        }).catch(() => {});
       }
-    }, 10000);
-    return () => clearTimeout(timeout);
-  }, [isLoading, authStatus, profile, roles, navigate]);
+    } catch (err) {
+      console.error('[Login] Profile fetch failed, redirecting to dashboard:', err);
+      setIsLoading(false);
+      navigate('/dashboard');
+    }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
