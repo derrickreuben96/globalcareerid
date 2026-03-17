@@ -65,7 +65,7 @@ export default function Login() {
         }
       }).catch(() => {});
     }
-  }, [authStatus, user, profile, roles]);
+  }, [authStatus, user, profile, roles, isLoading]);
 
   // Safety timeout for the waiting-for-auth state
   useEffect(() => {
