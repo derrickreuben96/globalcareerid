@@ -114,6 +114,9 @@ export default function Login() {
     if (!form.email || !form.password) return;
 
     setIsLoading(true);
+    // Set waiting flag BEFORE signInWithPassword so we catch the auth state
+    // change that fires during the call (before it returns to us).
+    waitingForAuthRef.current = true;
     console.log('[Login] Start: credentials submitted');
 
     try {
@@ -125,12 +128,14 @@ export default function Login() {
       console.log('[Login] Credential validation complete', { success: !error, userId: data?.user?.id });
 
       if (error) {
+        waitingForAuthRef.current = false;
         toast.error(error.message);
         setIsLoading(false);
         return;
       }
 
       if (!data?.user) {
+        waitingForAuthRef.current = false;
         toast.error('Login failed: no user returned.');
         setIsLoading(false);
         return;
@@ -155,14 +160,14 @@ export default function Login() {
       console.log('[Login] MFA check complete', { hasVerifiedTOTP });
 
       if (hasVerifiedTOTP) {
+        waitingForAuthRef.current = false;
         setShowMFA(true);
         setIsLoading(false);
       } else {
-        // Wait for useAuth to finish loading profile via onAuthStateChange
-        waitingForAuthRef.current = true;
         console.log('[Login] Waiting for auth state to settle...');
       }
     } catch (err) {
+      waitingForAuthRef.current = false;
       console.error('[Login] Unhandled error:', err);
       toast.error('Login failed. Please try again.');
       setIsLoading(false);
