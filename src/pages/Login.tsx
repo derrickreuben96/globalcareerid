@@ -32,7 +32,7 @@ export default function Login() {
   const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null }>({ name: '' });
   const [pendingPath, setPendingPath] = useState('');
   const [isResetting, setIsResetting] = useState(false);
-  const waitingForAuthRef = useRef(false);
+  
 
   // Direct redirect helper — bypasses useAuth reactive flow entirely
   const performRedirect = async (userId: string) => {
