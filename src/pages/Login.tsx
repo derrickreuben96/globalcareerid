@@ -52,24 +52,21 @@ export default function Login() {
     };
     
     try {
+      const profilePromise = supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle();
+      const rolesPromise = supabase.from('user_roles').select('role').eq('user_id', userId);
+
       const [profileRes, rolesRes] = await Promise.all([
-        fetchWithTimeout(
-          supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-          'Profile fetch'
-        ),
-        fetchWithTimeout(
-          supabase.from('user_roles').select('role').eq('user_id', userId),
-          'Roles fetch'
-        ),
+        fetchWithTimeout(profilePromise, 'Profile fetch'),
+        fetchWithTimeout(rolesPromise, 'Roles fetch'),
       ]);
 
       console.log('[Login] Profile/roles fetch complete', { 
-        hasProfile: !!profileRes?.data, 
+        hasProfile: !!(profileRes as any)?.data, 
         rolesCount: (rolesRes as any)?.data?.length ?? 0 
       });
 
-      const fetchedProfile = profileRes?.data ?? null;
-      const fetchedRoles = (rolesRes as any)?.data?.map((r: any) => r.role) || [];
+      const fetchedProfile = (profileRes as any)?.data ?? null;
+      const fetchedRoles = ((rolesRes as any)?.data?.map((r: any) => r.role) || []) as string[];
       const path = getRedirectFromProfile(fetchedProfile, fetchedRoles);
 
       // Build welcome info
