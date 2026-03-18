@@ -1085,6 +1085,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_user_verification_requests: {
+        Args: { target_user_id: string }
+        Returns: {
+          created_at: string
+          employer_email: string
+          expires_at: string
+          id: string
+          status: string
+          work_history_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
