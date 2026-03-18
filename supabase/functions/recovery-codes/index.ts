@@ -159,8 +159,8 @@ serve(async (req) => {
         );
       }
 
-      // For verification during login, userId comes from the request
-      const targetUserId = (typeof userId === 'string' && userId) ? userId : user.id;
+      // Always use the authenticated user's ID to prevent IDOR attacks
+      const targetUserId = user.id;
 
       // Check rate limit before processing
       const { data: canProceed, error: rateLimitError } = await supabaseAdmin
