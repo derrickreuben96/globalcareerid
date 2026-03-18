@@ -37,14 +37,36 @@ export default function Login() {
   // Direct redirect helper — bypasses useAuth reactive flow entirely
   const performRedirect = async (userId: string) => {
     console.log('[Login] Fetching profile for redirect...');
+    
+    // Wrap profile fetch with a 8s timeout to prevent indefinite hanging
+    const fetchWithTimeout = <T,>(promise: PromiseLike<T>, label: string): Promise<T | null> => {
+      return Promise.race([
+        Promise.resolve(promise),
+        new Promise<null>((resolve) => {
+          setTimeout(() => {
+            console.warn(`[Login] ${label} timed out after 8s`);
+            resolve(null);
+          }, 8000);
+        }),
+      ]);
+    };
+    
     try {
+      const profilePromise = supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle();
+      const rolesPromise = supabase.from('user_roles').select('role').eq('user_id', userId);
+
       const [profileRes, rolesRes] = await Promise.all([
-        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId),
+        fetchWithTimeout(profilePromise, 'Profile fetch'),
+        fetchWithTimeout(rolesPromise, 'Roles fetch'),
       ]);
 
-      const fetchedProfile = profileRes.data;
-      const fetchedRoles = rolesRes.data?.map(r => r.role) || [];
+      console.log('[Login] Profile/roles fetch complete', { 
+        hasProfile: !!(profileRes as any)?.data, 
+        rolesCount: (rolesRes as any)?.data?.length ?? 0 
+      });
+
+      const fetchedProfile = (profileRes as any)?.data ?? null;
+      const fetchedRoles = ((rolesRes as any)?.data?.map((r: any) => r.role) || []) as string[];
       const path = getRedirectFromProfile(fetchedProfile, fetchedRoles);
 
       // Build welcome info
