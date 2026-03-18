@@ -39,9 +39,9 @@ export default function Login() {
     console.log('[Login] Fetching profile for redirect...');
     
     // Wrap profile fetch with a 8s timeout to prevent indefinite hanging
-    const fetchWithTimeout = <T,>(promise: Promise<T>, label: string): Promise<T | null> => {
+    const fetchWithTimeout = <T,>(promise: PromiseLike<T>, label: string): Promise<T | null> => {
       return Promise.race([
-        promise,
+        Promise.resolve(promise),
         new Promise<null>((resolve) => {
           setTimeout(() => {
             console.warn(`[Login] ${label} timed out after 8s`);
