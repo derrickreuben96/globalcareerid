@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -13,6 +13,35 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
+
+    // Authenticate and verify admin role
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Invalid token" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: isAdmin } = await supabase.rpc("has_role", {
+      _user_id: user.id,
+      _role: "admin",
+    });
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Admin access required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Get all profiles
     const { data: profiles, error: profErr } = await supabase
@@ -52,7 +81,6 @@ serve(async (req) => {
             score += 40;
             reasons.push("Identical National ID");
           } else if (idA.length > 3 && idB.length > 3) {
-            // Check if differ by 1-2 chars
             let diff = 0;
             const maxLen = Math.max(idA.length, idB.length);
             for (let k = 0; k < maxLen; k++) {
@@ -77,14 +105,11 @@ serve(async (req) => {
               const startB = new Date(rb.start_date).getTime();
               const endB = rb.end_date ? new Date(rb.end_date).getTime() : Date.now();
               
-              // Check date overlap
               if (startA <= endB && startB <= endA) {
-                // Similar start dates (within 30 days)
                 if (Math.abs(startA - startB) < 30 * 24 * 60 * 60 * 1000) {
                   score += 20;
                   reasons.push("Same company with similar start dates");
                 }
-                // Same job title
                 if (ra.job_title.toLowerCase() === rb.job_title.toLowerCase()) {
                   score += 15;
                   reasons.push("Duplicate role at same company");
@@ -94,7 +119,6 @@ serve(async (req) => {
           }
         }
 
-        // Only flag if score is meaningful
         if (score >= 30) {
           flagsToInsert.push({
             profile_id: a.id,
@@ -124,7 +148,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("Duplicate detection error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
