@@ -20,6 +20,7 @@ interface Profile {
   passport_number: string | null;
   profile_complete: boolean;
   account_type: string;
+  profile_image_url: string | null;
   created_at: string;
   updated_at: string;
 }
