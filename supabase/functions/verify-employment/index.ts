@@ -6,6 +6,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -17,7 +27,7 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
-  const action = url.searchParams.get("action"); // confirm or reject
+  const action = url.searchParams.get("action");
 
   if (!token) {
     return new Response(renderPage("Invalid Link", "This verification link is invalid.", "error"), {
@@ -25,7 +35,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Look up the verification request
   const { data: request, error } = await supabase
     .from("verification_requests")
     .select("*, work_history:work_history!inner(*)")
@@ -38,7 +47,6 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Check expiry
   if (new Date(request.expires_at) < new Date()) {
     await supabase.from("verification_requests").update({ status: "expired" }).eq("id", request.id);
     return new Response(renderPage("Link Expired", "This verification link has expired. Please ask the employee to send a new request.", "error"), {
@@ -54,14 +62,12 @@ Deno.serve(async (req) => {
 
   const wh = request.work_history;
 
-  // If no action yet, show the review form
   if (!action) {
     return new Response(renderReviewPage(wh, token), {
       headers: { ...corsHeaders, "Content-Type": "text/html" },
     });
   }
 
-  // Process the action
   if (action === "confirm") {
     await supabase.from("verification_requests").update({ status: "completed" }).eq("id", request.id);
     await supabase.from("work_history").update({
@@ -71,7 +77,7 @@ Deno.serve(async (req) => {
     }).eq("id", wh.id);
 
     return new Response(renderPage("Employment Verified ✓", 
-      `You have confirmed that <strong>${wh.role}</strong> at <strong>${wh.company_name}</strong> is accurate. Thank you!`, "success"), {
+      `You have confirmed that <strong>${escapeHtml(wh.role)}</strong> at <strong>${escapeHtml(wh.company_name)}</strong> is accurate. Thank you!`, "success"), {
       headers: { ...corsHeaders, "Content-Type": "text/html" },
     });
   } else if (action === "reject") {
@@ -96,11 +102,11 @@ function renderPage(title: string, message: string, type: "success" | "error" | 
   const color = type === "success" ? "#16a34a" : type === "error" ? "#dc2626" : "#2563eb";
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title} - TrueWork Verification</title>
+<title>${escapeHtml(title)} - TrueWork Verification</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f9fafb;}
 .card{background:white;border-radius:16px;padding:48px;max-width:500px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
 h1{color:${color};margin-bottom:16px;} p{color:#555;line-height:1.6;}</style></head>
-<body><div class="card"><h1>${title}</h1><p>${message}</p></div></body></html>`;
+<body><div class="card"><h1>${escapeHtml(title)}</h1><p>${message}</p></div></body></html>`;
 }
 
 function renderReviewPage(wh: any, token: string) {
@@ -120,15 +126,15 @@ td{padding:12px;border:1px solid #e5e7eb;} td:first-child{font-weight:600;backgr
 <h1>Employment Verification</h1>
 <p class="subtitle">Please review the following employment details and confirm or reject.</p>
 <table>
-<tr><td>Company</td><td>${wh.company_name}</td></tr>
-<tr><td>Role</td><td>${wh.role}</td></tr>
-<tr><td>Department</td><td>${wh.department || 'N/A'}</td></tr>
-<tr><td>Type</td><td>${wh.employment_type}</td></tr>
-<tr><td>Period</td><td>${wh.start_date} to ${wh.end_date || 'Present'}</td></tr>
+<tr><td>Company</td><td>${escapeHtml(wh.company_name)}</td></tr>
+<tr><td>Role</td><td>${escapeHtml(wh.role)}</td></tr>
+<tr><td>Department</td><td>${escapeHtml(wh.department) || 'N/A'}</td></tr>
+<tr><td>Type</td><td>${escapeHtml(wh.employment_type)}</td></tr>
+<tr><td>Period</td><td>${escapeHtml(wh.start_date)} to ${escapeHtml(wh.end_date) || 'Present'}</td></tr>
 </table>
 <div class="actions">
-<a href="?token=${token}&action=confirm" class="btn btn-confirm">✓ Confirm Employment</a>
-<a href="?token=${token}&action=reject" class="btn btn-reject">✗ Reject</a>
+<a href="?token=${encodeURIComponent(token)}&action=confirm" class="btn btn-confirm">✓ Confirm Employment</a>
+<a href="?token=${encodeURIComponent(token)}&action=reject" class="btn btn-reject">✗ Reject</a>
 </div>
 <p style="color:#999;font-size:12px;margin-top:16px;">No account required. This link is secure and unique to this request.</p>
 </div></body></html>`;
