@@ -29,7 +29,7 @@ export default function Login() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null }>({ name: '' });
+  const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null; profileImageUrl?: string | null }>({ name: '' });
   const [pendingPath, setPendingPath] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   

@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Shield } from 'lucide-react';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface WelcomeOverlayProps {
   name: string;
   logoUrl?: string | null;
+  profileImageUrl?: string | null;
   onComplete: () => void;
 }
 
-export function WelcomeOverlay({ name, logoUrl, onComplete }: WelcomeOverlayProps) {
+export function WelcomeOverlay({ name, logoUrl, profileImageUrl, onComplete }: WelcomeOverlayProps) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -18,6 +20,13 @@ export function WelcomeOverlay({ name, logoUrl, onComplete }: WelcomeOverlayProp
     return () => clearTimeout(timer);
   }, [onComplete]);
 
+  const initials = name
+    .split(' ')
+    .map(n => n.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <div
       className={`fixed inset-0 z-[100] flex items-center justify-center bg-background transition-opacity duration-500 ${
@@ -25,7 +34,14 @@ export function WelcomeOverlay({ name, logoUrl, onComplete }: WelcomeOverlayProp
       }`}
     >
       <div className="text-center animate-in fade-in zoom-in duration-500">
-        {logoUrl ? (
+        {profileImageUrl ? (
+          <Avatar className="w-24 h-24 mx-auto mb-6 shadow-lg border-2 border-primary/20">
+            <AvatarImage src={profileImageUrl} alt={name} />
+            <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        ) : logoUrl ? (
           <img
             src={logoUrl}
             alt="Company logo"
