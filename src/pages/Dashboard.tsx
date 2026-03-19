@@ -12,6 +12,7 @@ import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
 import { ProfileVisibilityToggle } from '@/components/dashboard/ProfileVisibilityToggle';
 import { MissingFieldsPrompt } from '@/components/dashboard/MissingFieldsPrompt';
 import { ExperienceUpdateRequest } from '@/components/dashboard/ExperienceUpdateRequest';
+import { ProfileImageUpload } from '@/components/dashboard/ProfileImageUpload';
 import { PromotionRequestForm } from '@/components/dashboard/PromotionRequestForm';
 import { CareerAnalytics } from '@/components/dashboard/CareerAnalytics';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
