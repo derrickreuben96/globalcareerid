@@ -491,6 +491,7 @@ export type Database = {
           phone: string | null
           profile_complete: boolean
           profile_id: string
+          profile_image_url: string | null
           skills: string[] | null
           updated_at: string
           user_id: string
@@ -516,6 +517,7 @@ export type Database = {
           phone?: string | null
           profile_complete?: boolean
           profile_id: string
+          profile_image_url?: string | null
           skills?: string[] | null
           updated_at?: string
           user_id: string
@@ -541,6 +543,7 @@ export type Database = {
           phone?: string | null
           profile_complete?: boolean
           profile_id?: string
+          profile_image_url?: string | null
           skills?: string[] | null
           updated_at?: string
           user_id?: string
