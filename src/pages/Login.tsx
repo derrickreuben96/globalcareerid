@@ -29,7 +29,7 @@ export default function Login() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null }>({ name: '' });
+  const [welcomeInfo, setWelcomeInfo] = useState<{ name: string; logoUrl?: string | null; profileImageUrl?: string | null }>({ name: '' });
   const [pendingPath, setPendingPath] = useState('');
   const [isResetting, setIsResetting] = useState(false);
   
@@ -72,8 +72,9 @@ export default function Login() {
       // Build welcome info
       const isOrg = fetchedProfile?.account_type === 'organization' || fetchedRoles.includes('employer');
       const name = isOrg ? (fetchedProfile?.first_name || 'Organization') : (fetchedProfile?.first_name || 'User');
+      const profileImageUrl = !isOrg ? fetchedProfile?.profile_image_url : null;
 
-      setWelcomeInfo({ name, logoUrl: null });
+      setWelcomeInfo({ name, logoUrl: null, profileImageUrl });
       setPendingPath(path);
       setShowWelcome(true);
       setIsLoading(false);
@@ -407,6 +408,7 @@ export default function Login() {
         <WelcomeOverlay
           name={welcomeInfo.name}
           logoUrl={welcomeInfo.logoUrl}
+          profileImageUrl={welcomeInfo.profileImageUrl}
           onComplete={() => {
             setShowWelcome(false);
             navigate(pendingPath);

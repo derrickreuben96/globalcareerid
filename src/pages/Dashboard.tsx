@@ -12,6 +12,7 @@ import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
 import { ProfileVisibilityToggle } from '@/components/dashboard/ProfileVisibilityToggle';
 import { MissingFieldsPrompt } from '@/components/dashboard/MissingFieldsPrompt';
 import { ExperienceUpdateRequest } from '@/components/dashboard/ExperienceUpdateRequest';
+import { ProfileImageUpload } from '@/components/dashboard/ProfileImageUpload';
 import { PromotionRequestForm } from '@/components/dashboard/PromotionRequestForm';
 import { CareerAnalytics } from '@/components/dashboard/CareerAnalytics';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
@@ -510,10 +511,21 @@ export default function Dashboard() {
                       Your Profile
                     </h2>
                     
-                    <div className="space-y-6">
-                      {/* Show personal info only for job seekers, not employers/admins */}
-                      {isJobSeeker && !isEmployer && !isAdmin && (
-                        <div className="grid md:grid-cols-2 gap-4">
+                     <div className="space-y-6">
+                       {/* Profile image upload - only for job seekers */}
+                       {isJobSeeker && !isEmployer && !isAdmin && (
+                         <ProfileImageUpload
+                           userId={user!.id}
+                           currentImageUrl={(profile as any).profile_image_url || null}
+                           firstName={profile.first_name}
+                           lastName={profile.last_name}
+                           onImageUpdated={refreshProfile}
+                         />
+                       )}
+
+                       {/* Show personal info only for job seekers, not employers/admins */}
+                       {isJobSeeker && !isEmployer && !isAdmin && (
+                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
                             <Label className="text-muted-foreground">First Name</Label>
                             <p className="font-medium text-foreground">{profile.first_name}</p>
