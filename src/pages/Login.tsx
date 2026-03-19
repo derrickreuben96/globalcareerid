@@ -408,6 +408,7 @@ export default function Login() {
         <WelcomeOverlay
           name={welcomeInfo.name}
           logoUrl={welcomeInfo.logoUrl}
+          profileImageUrl={welcomeInfo.profileImageUrl}
           onComplete={() => {
             setShowWelcome(false);
             navigate(pendingPath);
