@@ -1,9 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+function validateStringField(value: unknown, maxLength: number): string {
+  if (typeof value !== "string") return "";
+  return value.slice(0, maxLength).trim();
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -11,7 +17,66 @@ serve(async (req) => {
   }
 
   try {
-    const { employeeName, jobTitle, department, companyName, startDate, endDate, additionalNotes, writerName, writerDesignation, writerContact, writerAddress } = await req.json();
+    // --- Authentication ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = claimsData.claims.sub;
+
+    // Verify caller is an employer
+    const { data: employer } = await supabase
+      .from("employers")
+      .select("id, is_verified")
+      .eq("user_id", userId)
+      .single();
+
+    if (!employer) {
+      return new Response(JSON.stringify({ error: "Only employers can generate referral letters" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- Input validation ---
+    const body = await req.json();
+    const employeeName = validateStringField(body.employeeName, 200);
+    const jobTitle = validateStringField(body.jobTitle, 200);
+    const department = validateStringField(body.department, 200);
+    const companyName = validateStringField(body.companyName, 200);
+    const startDate = validateStringField(body.startDate, 50);
+    const endDate = validateStringField(body.endDate, 50);
+    const additionalNotes = validateStringField(body.additionalNotes, 1000);
+    const writerName = validateStringField(body.writerName, 200);
+    const writerDesignation = validateStringField(body.writerDesignation, 200);
+    const writerContact = validateStringField(body.writerContact, 100);
+    const writerAddress = validateStringField(body.writerAddress, 500);
+
+    if (!employeeName || !jobTitle || !companyName || !startDate || !endDate) {
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const prompt = `Write a professional referral/recommendation letter for an employee with the following details:
 

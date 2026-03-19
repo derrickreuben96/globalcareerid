@@ -6,6 +6,16 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -24,7 +34,6 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Validate user
     const anonClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!);
     const { data: { user }, error: authError } = await anonClient.auth.getUser(
       authHeader.replace("Bearer ", "")
@@ -46,7 +55,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify ownership
     const { data: record } = await supabase
       .from("work_history")
       .select("*")
@@ -61,11 +69,9 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate secure token
     const token = crypto.randomUUID() + "-" + crypto.randomUUID();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    // Create verification request
     const { error: insertError } = await supabase
       .from("verification_requests")
       .insert({
@@ -84,7 +90,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update work history status
     await supabase
       .from("work_history")
       .update({
@@ -93,17 +98,15 @@ Deno.serve(async (req) => {
       })
       .eq("id", work_history_id);
 
-    // Get user profile for email
     const { data: profile } = await supabase
       .from("profiles")
       .select("first_name, last_name")
       .eq("user_id", user.id)
       .single();
 
-    // Send verification email via Resend
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (resendApiKey) {
-      const verifyUrl = `${supabaseUrl}/functions/v1/verify-employment?token=${token}`;
+      const verifyUrl = `${supabaseUrl}/functions/v1/verify-employment?token=${encodeURIComponent(token)}`;
       
       await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -114,14 +117,14 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: "TrueWork <noreply@resend.dev>",
           to: [employer_email],
-          subject: `Employment Verification Request - ${profile?.first_name} ${profile?.last_name}`,
+          subject: `Employment Verification Request - ${escapeHtml(profile?.first_name)} ${escapeHtml(profile?.last_name)}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2>Employment Verification Request</h2>
-              <p>${profile?.first_name} ${profile?.last_name} has requested verification of their employment at <strong>${record.company_name}</strong>.</p>
+              <p>${escapeHtml(profile?.first_name)} ${escapeHtml(profile?.last_name)} has requested verification of their employment at <strong>${escapeHtml(record.company_name)}</strong>.</p>
               <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Role</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${record.role}</td></tr>
-                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Period</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${record.start_date} to ${record.end_date || 'Present'}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Role</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(record.role)}</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Period</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(record.start_date)} to ${escapeHtml(record.end_date) || 'Present'}</td></tr>
               </table>
               <p>Please click the link below to confirm or deny this employment record:</p>
               <a href="${verifyUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 16px 0;">Review Verification</a>
