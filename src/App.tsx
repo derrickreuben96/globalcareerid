@@ -62,6 +62,7 @@ const App = () => (
             <Route path="/careers" element={<Careers />} />
             <Route path="/verify-credential" element={<VerifyCredential />} />
             <Route path="/settings/privacy" element={<PrivacySettings />} />
+            <Route path="/admin/analytics" element={<AnalyticsDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
