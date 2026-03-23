@@ -27,6 +27,7 @@ import Careers from "./pages/Careers";
 import VerifyCredential from "./pages/VerifyCredential";
 import PrivacySettings from "./pages/settings/PrivacySettings";
 import { CookieConsent } from "./components/CookieConsent";
+import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
 
 const queryClient = new QueryClient();
 
