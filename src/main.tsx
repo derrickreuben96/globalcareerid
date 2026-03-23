@@ -10,7 +10,11 @@ import "./index.css";
 // Initialize Sentry before React render
 initErrorTracking();
 
-function ErrorFallback() {
+type ErrorFallbackProps = {
+  onReload: () => void;
+};
+
+function ErrorFallback({ onReload }: ErrorFallbackProps) {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="max-w-md w-full">
@@ -24,7 +28,7 @@ function ErrorFallback() {
           <p className="text-sm text-muted-foreground">
             An unexpected error occurred. Our team has been notified.
           </p>
-          <Button onClick={() => window.location.reload()} className="mt-2">
+          <Button onClick={onReload} className="mt-2">
             Reload Page
           </Button>
         </CardContent>
@@ -34,7 +38,15 @@ function ErrorFallback() {
 }
 
 createRoot(document.getElementById("root")!).render(
-  <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+  <Sentry.ErrorBoundary
+    fallback={() => (
+      <ErrorFallback
+        onReload={() => {
+          window.location.reload();
+        }}
+      />
+    )}
+  >
     <App />
   </Sentry.ErrorBoundary>
 );
