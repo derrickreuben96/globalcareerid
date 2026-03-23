@@ -97,6 +97,36 @@ export type Database = {
           },
         ]
       }
+      consent_log: {
+        Row: {
+          consent_type: string
+          created_at: string
+          granted: boolean
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          consent_type: string
+          created_at?: string
+          granted: boolean
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          consent_type?: string
+          created_at?: string
+          granted?: boolean
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       credentials: {
         Row: {
           employer_id: string
@@ -141,6 +171,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      data_export_requests: {
+        Row: {
+          created_at: string
+          download_url: string | null
+          expires_at: string | null
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          download_url?: string | null
+          expires_at?: string | null
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      deletion_requests: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          scheduled_for: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          scheduled_for?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          scheduled_for?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       disputes: {
         Row: {
