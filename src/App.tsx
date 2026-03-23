@@ -24,6 +24,7 @@ import ForEmployers from "./pages/ForEmployers";
 import Disputes from "./pages/Disputes";
 import About from "./pages/About";
 import Careers from "./pages/Careers";
+import VerifyCredential from "./pages/VerifyCredential";
 
 const queryClient = new QueryClient();
 
