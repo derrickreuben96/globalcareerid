@@ -750,6 +750,18 @@ export default function Dashboard() {
                     <div className="glass-card rounded-2xl p-6">
                       <NotificationSettings />
                     </div>
+
+                    <div className="glass-card rounded-2xl p-6">
+                      <h2 className="text-xl font-display font-semibold text-foreground mb-2">
+                        Privacy & Data
+                      </h2>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Manage your data exports, consent preferences, and account deletion.
+                      </p>
+                      <a href="/settings/privacy" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
+                        Go to Privacy Settings →
+                      </a>
+                    </div>
                   </div>
                 </TabsContent>
               </Tabs>
