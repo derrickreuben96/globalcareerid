@@ -97,6 +97,51 @@ export type Database = {
           },
         ]
       }
+      credentials: {
+        Row: {
+          employer_id: string
+          id: string
+          issued_at: string
+          profile_id: string
+          revoked_at: string | null
+          revoked_by: string | null
+          signed_jwt: string
+        }
+        Insert: {
+          employer_id: string
+          id?: string
+          issued_at?: string
+          profile_id: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          signed_jwt: string
+        }
+        Update: {
+          employer_id?: string
+          id?: string
+          issued_at?: string
+          profile_id?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          signed_jwt?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credentials_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credentials_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       disputes: {
         Row: {
           admin_notes: string | null
