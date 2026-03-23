@@ -24,6 +24,7 @@ import ForEmployers from "./pages/ForEmployers";
 import Disputes from "./pages/Disputes";
 import About from "./pages/About";
 import Careers from "./pages/Careers";
+import VerifyCredential from "./pages/VerifyCredential";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/disputes" element={<Disputes />} />
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
+            <Route path="/verify-credential" element={<VerifyCredential />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
