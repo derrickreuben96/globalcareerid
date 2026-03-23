@@ -165,8 +165,8 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Email Us</h3>
                       <p className="text-muted-foreground mb-2">For general inquiries and support</p>
-                      <a href="mailto:support@globalcareerid.com" className="text-primary hover:underline">
-                        support@globalcareerid.com
+                      <a href="mailto:official.gcid@outlook.com" className="text-primary hover:underline">
+                        official.gcid@outlook.com
                       </a>
                     </div>
                   </div>
