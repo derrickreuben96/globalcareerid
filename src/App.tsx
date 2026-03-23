@@ -25,6 +25,8 @@ import Disputes from "./pages/Disputes";
 import About from "./pages/About";
 import Careers from "./pages/Careers";
 import VerifyCredential from "./pages/VerifyCredential";
+import PrivacySettings from "./pages/settings/PrivacySettings";
+import { CookieConsent } from "./components/CookieConsent";
 
 const queryClient = new QueryClient();
 
@@ -58,9 +60,11 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/verify-credential" element={<VerifyCredential />} />
+            <Route path="/settings/privacy" element={<PrivacySettings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CookieConsent />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
