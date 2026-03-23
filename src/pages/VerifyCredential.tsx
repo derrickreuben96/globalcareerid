@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, XCircle, Loader2, Briefcase, Calendar, User } from 'lucide-react';
 import { verifyCredential } from '@/lib/verifyCredential';
+import { track } from '@/lib/analytics';
 
 interface CredentialPayload {
   profileId?: string;
@@ -33,6 +34,7 @@ export default function VerifyCredential() {
       if (result.valid && result.payload) {
         setPayload(result.payload as CredentialPayload);
         setStatus('valid');
+        track('credential_verified', { profileId: result.payload.profileId });
       } else {
         setReason(result.reason || 'Verification failed');
         setStatus('invalid');
