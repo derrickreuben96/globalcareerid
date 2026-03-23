@@ -238,8 +238,8 @@ export default function Contact() {
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Admin Contact</h3>
                       <p className="text-muted-foreground mb-2">For administrative matters</p>
-                      <a href="mailto:derrickreuben@outlook.com" className="text-primary hover:underline">
-                        derrickreuben@outlook.com
+                      <a href="mailto:official.gcid@outlook.com" className="text-primary hover:underline">
+                        official.gcid@outlook.com
                       </a>
                     </div>
                   </div>
