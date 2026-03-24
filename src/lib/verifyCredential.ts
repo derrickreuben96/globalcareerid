@@ -1,5 +1,4 @@
 import { jwtVerify, importSPKI } from 'jose';
-import { supabase } from '@/integrations/supabase/client';
 
 let cachedPublicKey: CryptoKey | null = null;
 
@@ -31,18 +30,24 @@ export async function verifyCredential(
       algorithms: ['ES256'],
     });
 
-    // Check revocation status in the credentials table
-    const { data, error } = await supabase
-      .from('credentials' as any)
-      .select('revoked_at')
-      .eq('signed_jwt', jwt)
-      .maybeSingle();
+    // Check revocation via edge function (no direct DB access needed)
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const response = await fetch(
+      `https://${projectId}.supabase.co/functions/v1/check-revocation`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jwt }),
+      }
+    );
 
-    if (error) {
+    if (!response.ok) {
       return { valid: false, reason: 'Unable to verify revocation status' };
     }
 
-    if (data && (data as any).revoked_at) {
+    const { revoked } = await response.json();
+
+    if (revoked) {
       return { valid: false, reason: 'revoked' };
     }
 

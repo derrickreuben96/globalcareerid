@@ -17,9 +17,11 @@ export function useCredential() {
   const credentialsQuery = useQuery({
     queryKey: ['credentials', user?.id],
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('credentials' as any)
         .select('*')
+        .eq('profile_id', user.id)
         .order('issued_at', { ascending: false });
 
       if (error) throw error;
