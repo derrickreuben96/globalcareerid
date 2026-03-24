@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate JWT from Supabase auth
     const { createClient } = await import(
       "https://esm.sh/@supabase/supabase-js@2"
     );
@@ -54,6 +53,65 @@ Deno.serve(async (req) => {
       );
     }
 
+    // --- Authorization checks using service role ---
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // 1. Verify the caller owns this employer and that the employer is verified
+    const { data: employer, error: employerError } = await adminClient
+      .from("employers")
+      .select("id")
+      .eq("id", employerId)
+      .eq("user_id", user.id)
+      .eq("is_verified", true)
+      .single();
+
+    if (employerError || !employer) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden - you are not the owner of this verified employer" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // 2. Resolve the target user from profileId and verify an employment record exists
+    const { data: profile, error: profileError } = await adminClient
+      .from("profiles")
+      .select("user_id")
+      .eq("id", profileId)
+      .single();
+
+    if (profileError || !profile) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden - profile not found" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { data: empRecord, error: empRecordError } = await adminClient
+      .from("employment_records")
+      .select("id")
+      .eq("employer_id", employerId)
+      .eq("user_id", profile.user_id)
+      .in("status", ["active", "ended"])
+      .single();
+
+    if (empRecordError || !empRecord) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden - no employment relationship found" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // --- Sign the credential ---
     const privateKeyPem = Deno.env.get("CREDENTIAL_PRIVATE_KEY");
     if (!privateKeyPem) {
       return new Response(
@@ -85,10 +143,7 @@ Deno.serve(async (req) => {
       .setSubject(profileId)
       .sign(privateKey);
 
-    // Store in credentials table using service role
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
-
+    // Store in credentials table
     const { error: insertError } = await adminClient
       .from("credentials")
       .insert({
