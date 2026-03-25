@@ -44,9 +44,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/employer" element={<EmployerDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/employer" element={<ProtectedRoute allowedRoles={['employer']}><EmployerDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/verify" element={<Verify />} />
             <Route path="/verify/:profileId" element={<Verify />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -58,12 +58,12 @@ const App = () => (
             <Route path="/for-job-seekers" element={<ForJobSeekers />} />
             <Route path="/for-employers" element={<ForEmployers />} />
             <Route path="/for-recruiters" element={<ForEmployers />} />
-            <Route path="/disputes" element={<Disputes />} />
+            <Route path="/disputes" element={<ProtectedRoute><Disputes /></ProtectedRoute>} />
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/verify-credential" element={<VerifyCredential />} />
-            <Route path="/settings/privacy" element={<PrivacySettings />} />
-            <Route path="/admin/analytics" element={<AnalyticsDashboard />} />
+            <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySettings /></ProtectedRoute>} />
+            <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin']}><AnalyticsDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
