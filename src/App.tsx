@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -6,29 +7,33 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import Index from "./pages/Index";
-import Register from "./pages/Register";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Verify from "./pages/Verify";
-import EmployerDashboard from "./pages/EmployerDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import Contact from "./pages/Contact";
-import HelpCenter from "./pages/HelpCenter";
-import FAQ from "./pages/FAQ";
-import HowItWorks from "./pages/HowItWorks";
-import ForJobSeekers from "./pages/ForJobSeekers";
-import ForEmployers from "./pages/ForEmployers";
-import Disputes from "./pages/Disputes";
-import About from "./pages/About";
-import Careers from "./pages/Careers";
-import VerifyCredential from "./pages/VerifyCredential";
-import PrivacySettings from "./pages/settings/PrivacySettings";
+import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
+import { PageLoader } from "./components/PageLoader";
 import { CookieConsent } from "./components/CookieConsent";
-import AnalyticsDashboard from "./pages/admin/AnalyticsDashboard";
+
+// Lazy-loaded pages
+const Index = lazy(() => import("./pages/Index"));
+const Register = lazy(() => import("./pages/Register"));
+const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Verify = lazy(() => import("./pages/Verify"));
+const EmployerDashboard = lazy(() => import("./pages/EmployerDashboard"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/TermsOfService"));
+const Contact = lazy(() => import("./pages/Contact"));
+const HelpCenter = lazy(() => import("./pages/HelpCenter"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const ForJobSeekers = lazy(() => import("./pages/ForJobSeekers"));
+const ForEmployers = lazy(() => import("./pages/ForEmployers"));
+const Disputes = lazy(() => import("./pages/Disputes"));
+const About = lazy(() => import("./pages/About"));
+const Careers = lazy(() => import("./pages/Careers"));
+const VerifyCredential = lazy(() => import("./pages/VerifyCredential"));
+const PrivacySettings = lazy(() => import("./pages/settings/PrivacySettings"));
+const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 
 const queryClient = new QueryClient();
 
@@ -40,6 +45,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+          <RouteErrorBoundary>
+          <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/register" element={<Register />} />
@@ -67,6 +74,8 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
+          </RouteErrorBoundary>
           <CookieConsent />
           </AuthProvider>
         </BrowserRouter>
