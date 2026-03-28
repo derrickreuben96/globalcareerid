@@ -71,7 +71,16 @@ interface EmploymentRecord {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, profile, roles, isLoading: authLoading, authStatus, signOut, refreshProfile } = useAuth();
+  const {
+    user: authUser,
+    session,
+    profile: authProfile,
+    roles,
+    isLoading: authLoading,
+    authStatus,
+    signOut,
+    refreshProfile,
+  } = useAuth();
   const [records, setRecords] = useState<EmploymentRecord[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
@@ -81,38 +90,77 @@ export default function Dashboard() {
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMissingFields, setShowMissingFields] = useState(false);
+  const [recoveredProfile, setRecoveredProfile] = useState<typeof authProfile>(null);
+  const [isRecoveringProfile, setIsRecoveringProfile] = useState(false);
 
-  // Auto-retry profile fetch if authenticated but profile is null (trigger delay)
+  const user = authUser ?? session?.user ?? null;
+  const profile = authProfile ?? recoveredProfile;
+
+  // Recover the profile directly if the auth context is authenticated but profile hydration lags behind.
   useEffect(() => {
-    if (authStatus === 'authenticated' && !profile && user) {
-      const retryTimer = setInterval(() => {
-        refreshProfile();
-      }, 2000);
-      const timeout = setTimeout(() => clearInterval(retryTimer), 15000);
-      return () => { clearInterval(retryTimer); clearTimeout(timeout); };
-    }
-  }, [authStatus, profile, user, refreshProfile]);
+    let isActive = true;
 
-  // Check user roles
-  const isEmployer = roles.includes('employer');
-  const isJobSeeker = roles.includes('job_seeker');
+    if (authStatus !== 'authenticated' || authProfile || recoveredProfile) {
+      return;
+    }
+
+    const recoverProfile = async () => {
+      const resolvedUserId = authUser?.id ?? session?.user?.id ?? (await supabase.auth.getUser()).data.user?.id;
+      if (!resolvedUserId || !isActive) return;
+
+      setIsRecoveringProfile(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', resolvedUserId)
+          .maybeSingle();
+
+        if (!isActive) return;
+
+        if (!error && data) {
+          setRecoveredProfile(data as NonNullable<typeof authProfile>);
+          return;
+        }
+
+        await refreshProfile();
+      } finally {
+        if (isActive) {
+          setIsRecoveringProfile(false);
+        }
+      }
+    };
+
+    void recoverProfile();
+    const retryTimer = setInterval(() => void recoverProfile(), 2000);
+    const timeout = setTimeout(() => clearInterval(retryTimer), 15000);
+
+    return () => {
+      isActive = false;
+      clearInterval(retryTimer);
+      clearTimeout(timeout);
+    };
+  }, [authStatus, authProfile, recoveredProfile, authUser?.id, session?.user?.id, refreshProfile]);
+
   const isAdmin = roles.includes('admin');
+  const isEmployer = roles.includes('employer') || profile?.account_type === 'organization';
+  const isJobSeeker = !isAdmin && !isEmployer;
 
   // Check if user needs onboarding (only for job seekers with no skills/bio)
   useEffect(() => {
-    if (profile && !authLoading && isJobSeeker && !isAdmin && !isEmployer) {
+    if (profile && !authLoading && isJobSeeker) {
       const isNewUser = (!profile.skills || profile.skills.length === 0) && !profile.bio;
       if (isNewUser) {
         const timer = setTimeout(() => setShowOnboarding(true), 1000);
         return () => clearTimeout(timer);
       }
-      // Check for missing mandatory fields
+
       if (!profile.national_id || !(profile as any).gender || !(profile as any).date_of_birth) {
         const timer = setTimeout(() => setShowMissingFields(true), 1500);
         return () => clearTimeout(timer);
       }
     }
-  }, [profile, authLoading, isJobSeeker, isAdmin, isEmployer]);
+  }, [profile, authLoading, isJobSeeker]);
 
   useEffect(() => {
     if (authStatus === 'loading') return;
