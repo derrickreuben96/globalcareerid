@@ -92,6 +92,7 @@ export default function Dashboard() {
   const [showMissingFields, setShowMissingFields] = useState(false);
   const [recoveredProfile, setRecoveredProfile] = useState<typeof authProfile>(null);
   const [isRecoveringProfile, setIsRecoveringProfile] = useState(false);
+  const [profileRecoveryFailed, setProfileRecoveryFailed] = useState(false);
 
   const user = authUser ?? session?.user ?? null;
   const profile = authProfile ?? recoveredProfile;
@@ -119,11 +120,20 @@ export default function Dashboard() {
         if (!isActive) return;
 
         if (!error && data) {
+          setProfileRecoveryFailed(false);
           setRecoveredProfile(data as NonNullable<typeof authProfile>);
           return;
         }
 
         await refreshProfile();
+        if (isActive) {
+          setProfileRecoveryFailed(true);
+        }
+      } catch (error) {
+        if (isActive) {
+          console.error('Dashboard profile recovery failed:', error);
+          setProfileRecoveryFailed(true);
+        }
       } finally {
         if (isActive) {
           setIsRecoveringProfile(false);
@@ -345,10 +355,19 @@ export default function Dashboard() {
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">Setting up your profile...</p>
-          <p className="text-xs text-muted-foreground">This may take a moment</p>
-          <Button variant="outline" size="sm" onClick={() => refreshProfile()}>
-            Retry
-          </Button>
+          <p className="text-xs text-muted-foreground">
+            {profileRecoveryFailed ? 'We found your session, but your profile data is still loading.' : 'This may take a moment'}
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => refreshProfile()} disabled={isRecoveringProfile}>
+              Retry
+            </Button>
+            {profileRecoveryFailed && (
+              <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
+                Reload session
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     );
