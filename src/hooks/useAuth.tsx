@@ -44,6 +44,27 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const MAX_LOADING_MS = 5000;
+const PROFILE_FETCH_TIMEOUT_MS = 4000;
+const SESSION_VALIDATE_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, warningMessage: string): Promise<T | null> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      console.warn(warningMessage);
+      resolve(null);
+    }, timeoutMs);
+
+    promise
+      .then((value) => {
+        window.clearTimeout(timeoutId);
+        resolve(value);
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutId);
+        reject(error);
+      });
+  });
+}
 
 /**
  * Forcefully clears ALL client-side auth artifacts.
@@ -81,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const currentUserIdRef = useRef<string | null>(null);
   const signingOutRef = useRef(false);
   const initCompleteRef = useRef(false);
+  const authStatusRef = useRef<AuthStatus>('loading');
 
   const isLoading = authStatus === 'loading';
 
@@ -94,10 +116,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = useCallback(async (userId: string): Promise<boolean> => {
     try {
-      const [profileResult, rolesResult] = await Promise.all([
-        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
-        supabase.from('user_roles').select('role').eq('user_id', userId)
-      ]);
+      const results = await withTimeout(
+        Promise.all([
+          supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
+          supabase.from('user_roles').select('role').eq('user_id', userId),
+        ]),
+        PROFILE_FETCH_TIMEOUT_MS,
+        `Auth: profile hydration timed out after ${PROFILE_FETCH_TIMEOUT_MS}ms`
+      );
+
+      if (!results) {
+        return false;
+      }
+
+      const [profileResult, rolesResult] = results;
 
       if (currentUserIdRef.current !== userId) return false;
 
@@ -105,6 +137,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error('Profile fetch error:', profileResult.error);
         setAuthError('Failed to load profile data');
         return false;
+      }
+
+      if (rolesResult.error) {
+        console.error('Roles fetch error:', rolesResult.error);
       }
 
       setProfile(profileResult.data);
@@ -123,11 +159,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    authStatusRef.current = authStatus;
+  }, [authStatus]);
+
+  useEffect(() => {
     let mounted = true;
 
     // Safety timeout — ALWAYS resolves auth state
     const safetyTimeout = setTimeout(() => {
-      if (mounted && authStatus === 'loading') {
+      if (mounted && authStatusRef.current === 'loading') {
         console.warn('Auth: Force-ending loading state after timeout');
         if (currentUserIdRef.current) {
           setAuthStatus('authenticated');
@@ -141,15 +181,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, MAX_LOADING_MS);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         if (!mounted || signingOutRef.current) return;
 
         if (event === 'SIGNED_OUT' || !newSession) {
           clearState();
           setAuthError(null);
-          if (initCompleteRef.current) {
-            setAuthStatus('unauthenticated');
-          }
+          initCompleteRef.current = true;
+          setAuthStatus('unauthenticated');
           return;
         }
 
@@ -163,97 +202,114 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const newUserId = newSession.user?.id ?? null;
-        const previousUserId = currentUserIdRef.current;
 
         setSession(newSession);
         setUser(newSession.user ?? null);
         currentUserIdRef.current = newUserId;
 
-        // Handle new sign-ins: fetch profile and set authenticated.
-        // Key fix: process SIGNED_IN events even if init hasn't completed yet,
-        // because a slow/hanging getUser() during init would otherwise block login.
-        const isNewSignIn = newUserId && newUserId !== previousUserId;
-        const isExplicitSignIn = event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED';
+        initCompleteRef.current = true;
+        setAuthError(null);
+        setAuthStatus('authenticated');
 
-        if (isNewSignIn && (initCompleteRef.current || isExplicitSignIn)) {
-          // If init is still running, mark it complete so it won't overwrite our state
-          initCompleteRef.current = true;
-          setAuthStatus('loading');
-          await fetchProfile(newUserId);
-          if (mounted) setAuthStatus('authenticated');
+        if (newUserId) {
+          void fetchProfile(newUserId);
         }
       }
     );
 
     const initializeAuth = async () => {
       try {
-        // 1. Quick local check — if no local session, skip the slow network call entirely
         const { data: { session: localSession } } = await supabase.auth.getSession();
-
-        if (!localSession) {
-          if (mounted) {
-            clearState();
-            setAuthStatus('unauthenticated');
-          }
-          return;
-        }
-
-        // 2. We have local tokens — set optimistic state for faster perceived login
-        setSession(localSession);
-        setUser(localSession.user);
-        currentUserIdRef.current = localSession.user.id;
-
-        // 3. Validate with backend AND fetch profile in parallel
-        const [userResult, profileDone] = await Promise.all([
-          supabase.auth.getUser(),
-          fetchProfile(localSession.user.id),
-        ]);
 
         if (!mounted) return;
 
-        // If a new sign-in already happened while we were awaiting, don't overwrite
-        if (initCompleteRef.current) {
-          console.log('Auth: Init skipped — sign-in already processed by listener');
-          return;
-        }
+        initCompleteRef.current = true;
 
-        const { data: { user: validatedUser }, error: userError } = userResult;
-
-        if (userError || !validatedUser) {
-          console.warn('Auth: Backend rejected local session:', userError?.message);
-          purgeClientSession();
+        if (!localSession) {
           clearState();
-          setAuthError(userError ? 'Session expired. Please sign in again.' : null);
           setAuthStatus('unauthenticated');
           return;
         }
 
-        if (mounted) {
-          setAuthStatus('authenticated');
-        }
+        setSession(localSession);
+        setUser(localSession.user);
+        currentUserIdRef.current = localSession.user.id;
+        setAuthError(null);
+        setAuthStatus('authenticated');
+
+        void fetchProfile(localSession.user.id);
+
+        void (async () => {
+          try {
+            const userResult = await withTimeout(
+              supabase.auth.getUser(),
+              SESSION_VALIDATE_TIMEOUT_MS,
+              `Auth: session validation timed out after ${SESSION_VALIDATE_TIMEOUT_MS}ms`
+            );
+
+            if (!mounted || !userResult || currentUserIdRef.current !== localSession.user.id) {
+              return;
+            }
+
+            const { data: { user: validatedUser }, error: userError } = userResult;
+
+            if (userError || !validatedUser) {
+              console.warn('Auth: Backend rejected local session:', userError?.message);
+              purgeClientSession();
+              clearState();
+              setAuthError(userError ? 'Session expired. Please sign in again.' : null);
+              setAuthStatus('unauthenticated');
+            }
+          } catch (validationError) {
+            console.error('Auth session validation error:', validationError);
+          }
+        })();
       } catch (error) {
         console.error('Auth initialization error:', error);
-        if (mounted && !initCompleteRef.current) {
+        if (mounted) {
           purgeClientSession();
           clearState();
           setAuthError('Network error during authentication');
           setAuthStatus('unauthenticated');
         }
-      } finally {
-        if (mounted) {
-          initCompleteRef.current = true;
-        }
       }
     };
 
-    initializeAuth();
+    void initializeAuth();
 
     return () => {
       mounted = false;
       clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [clearState, fetchProfile]);
+
+  useEffect(() => {
+    if (authStatus !== 'authenticated' || !user?.id || profile) return;
+
+    let active = true;
+    let inFlight = false;
+
+    const hydrateProfile = async () => {
+      if (!active || inFlight) return;
+      inFlight = true;
+      try {
+        await fetchProfile(user.id);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    void hydrateProfile();
+    const retryTimer = setInterval(() => void hydrateProfile(), 2000);
+    const stopTimer = setTimeout(() => clearInterval(retryTimer), 12000);
+
+    return () => {
+      active = false;
+      clearInterval(retryTimer);
+      clearTimeout(stopTimer);
+    };
+  }, [authStatus, user?.id, profile, fetchProfile]);
 
   const signUp = useCallback(async (email: string, password: string, metadata?: Record<string, any>) => {
     setAuthError(null);
