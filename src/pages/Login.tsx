@@ -411,7 +411,8 @@ export default function Login() {
           profileImageUrl={welcomeInfo.profileImageUrl}
           onComplete={() => {
             setShowWelcome(false);
-            navigate(pendingPath);
+            // Hard redirect to ensure clean auth state initialization
+            window.location.href = pendingPath;
           }}
         />
       )}
