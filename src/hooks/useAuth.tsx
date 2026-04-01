@@ -43,9 +43,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const MAX_LOADING_MS = 5000;
-const PROFILE_FETCH_TIMEOUT_MS = 4000;
-const SESSION_VALIDATE_TIMEOUT_MS = 8000;
+const MAX_LOADING_MS = 8000;
+const PROFILE_FETCH_TIMEOUT_MS = 12000;
+const SESSION_VALIDATE_TIMEOUT_MS = 12000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, warningMessage: string): Promise<T | null> {
   return new Promise((resolve, reject) => {
