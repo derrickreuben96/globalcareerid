@@ -115,6 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchProfile = useCallback(async (userId: string): Promise<boolean> => {
+    const t0 = performance.now();
+    console.log('[Auth Diag] fetchProfile started for', userId);
     try {
       const results = await withTimeout(
         Promise.all([
@@ -124,6 +126,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         PROFILE_FETCH_TIMEOUT_MS,
         `Auth: profile hydration timed out after ${PROFILE_FETCH_TIMEOUT_MS}ms`
       );
+
+      console.log('[Auth Diag] fetchProfile resolved in', Math.round(performance.now() - t0), 'ms, got data:', !!results);
 
       if (!results) {
         return false;
