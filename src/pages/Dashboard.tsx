@@ -106,6 +106,8 @@ export default function Dashboard() {
     }
 
     const recoverProfile = async () => {
+      const t0 = performance.now();
+      console.log('[Dashboard Diag] recoverProfile started, authStatus:', authStatus, 'hasAuthProfile:', !!authProfile, 'hasRecovered:', !!recoveredProfile);
       const resolvedUserId = authUser?.id ?? session?.user?.id ?? (await supabase.auth.getUser()).data.user?.id;
       if (!resolvedUserId || !isActive) return;
 
