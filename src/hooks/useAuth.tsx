@@ -125,8 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         `Auth: profile hydration timed out after ${PROFILE_FETCH_TIMEOUT_MS}ms`
       );
 
-      console.log('[Auth Diag] fetchProfile resolved in', Math.round(performance.now() - t0), 'ms, got data:', !!results);
-
       if (!results) {
         return false;
       }
