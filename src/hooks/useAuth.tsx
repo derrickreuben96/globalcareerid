@@ -115,8 +115,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchProfile = useCallback(async (userId: string): Promise<boolean> => {
-    const t0 = performance.now();
-    console.log('[Auth Diag] fetchProfile started for', userId);
     try {
       const results = await withTimeout(
         Promise.all([
