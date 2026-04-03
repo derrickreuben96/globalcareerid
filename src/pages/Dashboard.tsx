@@ -578,6 +578,23 @@ export default function Dashboard() {
                     <h2 className="text-xl font-display font-semibold text-foreground mb-6">
                       Your Profile
                     </h2>
+                    {isJobSeeker && !isEmployer && !isAdmin && (
+                      <div className="mb-6">
+                        <ProfileEditor
+                          userId={user!.id}
+                          profile={{
+                            first_name: profile.first_name,
+                            last_name: profile.last_name,
+                            phone: profile.phone,
+                            location: profile.location,
+                            bio: profile.bio,
+                            country: profile.country,
+                            citizenship: profile.citizenship,
+                          }}
+                          onUpdate={refreshProfile}
+                        />
+                      </div>
+                    )
                     
                      <div className="space-y-6">
                        {/* Profile image upload - only for job seekers */}
