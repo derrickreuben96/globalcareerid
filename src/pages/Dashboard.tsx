@@ -594,7 +594,7 @@ export default function Dashboard() {
                           onUpdate={refreshProfile}
                         />
                       </div>
-                    )
+                    )}
                     
                      <div className="space-y-6">
                        {/* Profile image upload - only for job seekers */}
