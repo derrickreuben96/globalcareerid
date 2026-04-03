@@ -34,6 +34,7 @@ const Careers = lazy(() => import("./pages/Careers"));
 const VerifyCredential = lazy(() => import("./pages/VerifyCredential"));
 const PrivacySettings = lazy(() => import("./pages/settings/PrivacySettings"));
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
