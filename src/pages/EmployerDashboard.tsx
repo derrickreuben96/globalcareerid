@@ -420,6 +420,13 @@ export default function EmployerDashboard() {
                   <UserPlus className="w-4 h-4" />
                   Add Employee
                 </Button>
+                {!employer.is_verified && employer.verification_status !== 'pending' && (
+                  <RequestVerification
+                    employerId={employer.id}
+                    companyName={employer.company_name}
+                    verificationStatus={employer.verification_status}
+                  />
+                )}
                 <Button variant="outline" onClick={handleSignOut}>
                   <LogOut className="w-4 h-4" />
                   Sign Out
