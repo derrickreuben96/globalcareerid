@@ -51,6 +51,7 @@ import { EmployerExperienceRequests } from '@/components/employer/EmployerExperi
 import { PendingPromotions } from '@/components/employer/PendingPromotions';
 import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
 import { ReferralLetterVerifier } from '@/components/employer/ReferralLetterVerifier';
+import { RequestVerification } from '@/components/employer/RequestVerification';
 
 interface Employer {
   id: string;
