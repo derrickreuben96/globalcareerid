@@ -34,6 +34,7 @@ const Careers = lazy(() => import("./pages/Careers"));
 const VerifyCredential = lazy(() => import("./pages/VerifyCredential"));
 const PrivacySettings = lazy(() => import("./pages/settings/PrivacySettings"));
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/careers" element={<Careers />} />
             <Route path="/verify-credential" element={<VerifyCredential />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySettings /></ProtectedRoute>} />
             <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin']}><AnalyticsDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
