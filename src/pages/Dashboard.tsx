@@ -11,6 +11,7 @@ import { WorkHistory } from '@/components/dashboard/WorkHistory';
 import { PendingApprovals } from '@/components/dashboard/PendingApprovals';
 import { ProfileVisibilityToggle } from '@/components/dashboard/ProfileVisibilityToggle';
 import { MissingFieldsPrompt } from '@/components/dashboard/MissingFieldsPrompt';
+import { ProfileEditor } from '@/components/dashboard/ProfileEditor';
 import { ExperienceUpdateRequest } from '@/components/dashboard/ExperienceUpdateRequest';
 import { ProfileImageUpload } from '@/components/dashboard/ProfileImageUpload';
 import { PromotionRequestForm } from '@/components/dashboard/PromotionRequestForm';
