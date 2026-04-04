@@ -582,7 +582,7 @@ export default function Dashboard() {
                       <div className="mb-6">
                         <ProfileEditor
                           userId={user!.id}
-                          profile={{
+                      profile={{
                             first_name: profile.first_name,
                             last_name: profile.last_name,
                             phone: profile.phone,
@@ -590,6 +590,10 @@ export default function Dashboard() {
                             bio: profile.bio,
                             country: profile.country,
                             citizenship: profile.citizenship,
+                            national_id: profile.national_id,
+                            passport_number: profile.passport_number,
+                            gender: (profile as any).gender,
+                            date_of_birth: (profile as any).date_of_birth,
                           }}
                           onUpdate={refreshProfile}
                         />

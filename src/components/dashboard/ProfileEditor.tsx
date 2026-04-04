@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { countries } from '@/lib/countries';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,12 +20,24 @@ interface ProfileData {
   bio: string | null;
   country: string | null;
   citizenship: string | null;
+  national_id: string | null;
+  passport_number: string | null;
+  gender: string | null;
+  date_of_birth: string | null;
 }
 
 interface ProfileEditorProps {
   userId: string;
   profile: ProfileData;
   onUpdate: () => Promise<void>;
+}
+
+function formatGenderLabel(gender: string): string {
+  switch (gender) {
+    case 'prefer_not_to_say': return 'Prefer not to say';
+    case 'non_binary': return 'Non-binary';
+    default: return gender.charAt(0).toUpperCase() + gender.slice(1);
+  }
 }
 
 export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps) {
@@ -38,6 +51,10 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
     bio: profile.bio || '',
     country: profile.country || '',
     citizenship: profile.citizenship || '',
+    national_id: profile.national_id || '',
+    passport_number: profile.passport_number || '',
+    gender: profile.gender || '',
+    date_of_birth: profile.date_of_birth || '',
   });
 
   const handleOpen = () => {
@@ -49,6 +66,10 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       bio: profile.bio || '',
       country: profile.country || '',
       citizenship: profile.citizenship || '',
+      national_id: profile.national_id || '',
+      passport_number: profile.passport_number || '',
+      gender: profile.gender || '',
+      date_of_birth: profile.date_of_birth || '',
     });
     setIsOpen(true);
   };
@@ -72,22 +93,43 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       }
     }
 
+    if (!form.national_id.trim()) {
+      toast.error('National ID is required');
+      return;
+    }
+
     setIsSaving(true);
+
+    const updates: Record<string, any> = {
+      first_name: form.first_name.trim(),
+      last_name: form.last_name.trim(),
+      phone: form.phone.trim() || null,
+      location: form.location.trim() || null,
+      bio: form.bio.trim() || null,
+      country: form.country.trim() || null,
+      citizenship: form.citizenship.trim() || null,
+      national_id: form.national_id.trim(),
+      passport_number: form.passport_number.trim() || null,
+      gender: form.gender || null,
+      date_of_birth: form.date_of_birth || null,
+    };
+
+    // Mark profile complete if all mandatory fields are present
+    if (updates.national_id && updates.gender && updates.date_of_birth) {
+      updates.profile_complete = true;
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({
-        first_name: form.first_name.trim(),
-        last_name: form.last_name.trim(),
-        phone: form.phone.trim() || null,
-        location: form.location.trim() || null,
-        bio: form.bio.trim() || null,
-        country: form.country.trim() || null,
-        citizenship: form.citizenship.trim() || null,
-      })
+      .update(updates)
       .eq('user_id', userId);
 
     if (error) {
-      toast.error('Failed to update profile');
+      if (error.message.includes('idx_profiles_national_id')) {
+        toast.error('This National ID is already registered. Please contact support.');
+      } else {
+        toast.error('Failed to update profile');
+      }
     } else {
       toast.success('Profile updated');
       await onUpdate();
@@ -104,7 +146,7 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
           </DialogHeader>
@@ -125,6 +167,52 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
                 />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>National ID <span className="text-destructive">*</span></Label>
+              <Input
+                value={form.national_id}
+                onChange={(e) => setForm({ ...form, national_id: e.target.value })}
+                placeholder="Enter your National ID number"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Passport Number</Label>
+              <Input
+                value={form.passport_number}
+                onChange={(e) => setForm({ ...form, passport_number: e.target.value })}
+                placeholder="Enter passport number (optional)"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Gender</Label>
+                <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="non_binary">Non-binary</SelectItem>
+                    <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Date of Birth</Label>
+                <Input
+                  type="date"
+                  value={form.date_of_birth}
+                  onChange={(e) => setForm({ ...form, date_of_birth: e.target.value })}
+                  max={new Date().toISOString().split('T')[0]}
+                  min="1900-01-01"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label>Phone</Label>
               <Input
