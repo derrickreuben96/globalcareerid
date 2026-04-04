@@ -24,6 +24,8 @@ interface ProfileData {
   passport_number: string | null;
   gender: string | null;
   date_of_birth: string | null;
+  availability: string | null;
+  experience_level: string | null;
 }
 
 interface ProfileEditorProps {
