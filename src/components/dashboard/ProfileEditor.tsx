@@ -74,6 +74,8 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       passport_number: profile.passport_number || '',
       gender: profile.gender || '',
       date_of_birth: profile.date_of_birth || '',
+      availability: profile.availability || 'not_looking',
+      experience_level: profile.experience_level || 'entry',
     });
     setIsOpen(true);
   };
