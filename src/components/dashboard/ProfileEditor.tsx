@@ -118,6 +118,8 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       passport_number: form.passport_number.trim() || null,
       gender: form.gender || null,
       date_of_birth: form.date_of_birth || null,
+      availability: form.availability || 'not_looking',
+      experience_level: form.experience_level || 'entry',
     };
 
     // Mark profile complete if all mandatory fields are present
