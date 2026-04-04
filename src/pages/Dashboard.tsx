@@ -593,7 +593,9 @@ export default function Dashboard() {
                             national_id: profile.national_id,
                             passport_number: profile.passport_number,
                             gender: (profile as any).gender,
-                            date_of_birth: (profile as any).date_of_birth,
+                             date_of_birth: (profile as any).date_of_birth,
+                            availability: (profile as any).availability,
+                            experience_level: (profile as any).experience_level,
                           }}
                           onUpdate={refreshProfile}
                         />

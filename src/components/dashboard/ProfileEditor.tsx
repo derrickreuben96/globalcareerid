@@ -24,6 +24,8 @@ interface ProfileData {
   passport_number: string | null;
   gender: string | null;
   date_of_birth: string | null;
+  availability: string | null;
+  experience_level: string | null;
 }
 
 interface ProfileEditorProps {
@@ -55,6 +57,8 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
     passport_number: profile.passport_number || '',
     gender: profile.gender || '',
     date_of_birth: profile.date_of_birth || '',
+    availability: profile.availability || 'not_looking',
+    experience_level: profile.experience_level || 'entry',
   });
 
   const handleOpen = () => {
@@ -70,6 +74,8 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       passport_number: profile.passport_number || '',
       gender: profile.gender || '',
       date_of_birth: profile.date_of_birth || '',
+      availability: profile.availability || 'not_looking',
+      experience_level: profile.experience_level || 'entry',
     });
     setIsOpen(true);
   };
@@ -112,6 +118,8 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       passport_number: form.passport_number.trim() || null,
       gender: form.gender || null,
       date_of_birth: form.date_of_birth || null,
+      availability: form.availability || 'not_looking',
+      experience_level: form.experience_level || 'entry',
     };
 
     // Mark profile complete if all mandatory fields are present
@@ -249,6 +257,36 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
                   icon={<Globe className="w-4 h-4" />}
                   placeholder="Select citizenship"
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Availability</Label>
+                <Select value={form.availability} onValueChange={(v) => setForm({ ...form, availability: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select availability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="not_looking">Not Looking</SelectItem>
+                    <SelectItem value="open">Open to Opportunities</SelectItem>
+                    <SelectItem value="actively_looking">Actively Looking</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Experience Level</Label>
+                <Select value={form.experience_level} onValueChange={(v) => setForm({ ...form, experience_level: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="entry">Entry Level</SelectItem>
+                    <SelectItem value="mid">Mid Level</SelectItem>
+                    <SelectItem value="senior">Senior Level</SelectItem>
+                    <SelectItem value="lead">Lead / Principal</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-2">
