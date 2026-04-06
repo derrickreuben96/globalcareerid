@@ -268,7 +268,7 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="not_looking">Not Looking</SelectItem>
-                    <SelectItem value="open">Open to Opportunities</SelectItem>
+                    <SelectItem value="open_to_offers">Open to Opportunities</SelectItem>
                     <SelectItem value="actively_looking">Actively Looking</SelectItem>
                   </SelectContent>
                 </Select>
