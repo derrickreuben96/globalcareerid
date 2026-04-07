@@ -669,6 +669,18 @@ export default function Dashboard() {
                               {(profile as any).date_of_birth ? new Date((profile as any).date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '⚠ Not provided'}
                             </p>
                           </div>
+                          <div>
+                            <Label className="text-muted-foreground">Availability</Label>
+                            <p className="font-medium text-foreground">
+                              {(profile as any).availability === 'open_to_offers' ? 'Open to Opportunities' : (profile as any).availability === 'actively_looking' ? 'Actively Looking' : 'Not Looking'}
+                            </p>
+                          </div>
+                          <div>
+                            <Label className="text-muted-foreground">Experience Level</Label>
+                            <p className="font-medium text-foreground">
+                              {(profile as any).experience_level === 'entry' ? 'Entry Level' : (profile as any).experience_level === 'mid' ? 'Mid Level' : (profile as any).experience_level === 'senior' ? 'Senior Level' : (profile as any).experience_level === 'lead' ? 'Lead / Principal' : (profile as any).experience_level === 'executive' ? 'Executive' : 'Entry Level'}
+                            </p>
+                          </div>
                           {(!profile.national_id || !(profile as any).gender || !(profile as any).date_of_birth) && (
                             <div className="md:col-span-2">
                               <Button 
