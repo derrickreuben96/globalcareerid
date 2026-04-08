@@ -3,13 +3,16 @@ import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
 import { Menu, X, Settings, Building2, User, ChevronDown, LogOut, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import logoImage from '@/assets/logo.png';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export function Header() {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, roles, profile, signOut, authStatus } = useAuth();
