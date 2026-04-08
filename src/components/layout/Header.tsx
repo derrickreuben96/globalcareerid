@@ -103,21 +103,21 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              How It Works
+              {t('nav.howItWorks')}
             </Link>
             
             {/* For Employers Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                For Employers
+                {t('nav.forEmployers')}
                 <ChevronDown className="w-3 h-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-64">
                 <DropdownMenuItem asChild>
                   <Link to="/for-employers" className="cursor-pointer">
                     <div>
-                      <p className="font-medium">Employers & Recruiters</p>
-                      <p className="text-xs text-muted-foreground">Verify talent and manage records</p>
+                      <p className="font-medium">{t('nav.employersRecruiters')}</p>
+                      <p className="text-xs text-muted-foreground">{t('nav.verifyTalent')}</p>
                     </div>
                   </Link>
                 </DropdownMenuItem>
@@ -127,15 +127,15 @@ export function Header() {
             {/* For Job Seekers Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                For Job Seekers
+                {t('nav.forJobSeekers')}
                 <ChevronDown className="w-3 h-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-64">
                 <DropdownMenuItem asChild>
                   <Link to="/for-job-seekers" className="cursor-pointer">
                     <div>
-                      <p className="font-medium">Employees & Job Seekers</p>
-                      <p className="text-xs text-muted-foreground">Build your verified career identity</p>
+                      <p className="font-medium">{t('nav.employeesJobSeekers')}</p>
+                      <p className="text-xs text-muted-foreground">{t('nav.buildCareerIdentity')}</p>
                     </div>
                   </Link>
                 </DropdownMenuItem>
@@ -145,12 +145,13 @@ export function Header() {
             {isAdmin && (
               <Link to="/admin" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
                 <Shield className="w-4 h-4" />
-                Admin
+                {t('nav.admin')}
               </Link>
             )}
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <ThemeToggle />
             {isSessionConfirmed && <NotificationBell />}
             {isSessionConfirmed ? (
