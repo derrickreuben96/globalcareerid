@@ -279,7 +279,7 @@ export default function Login() {
               <>
                 <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('login.email')}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
@@ -297,13 +297,13 @@ export default function Login() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                  <button
+                     <Label htmlFor="password">{t('login.password')}</Label>
+                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
                     className="text-sm text-primary hover:underline"
                   >
-                    Forgot password?
+                    {t('login.forgotPassword')}
                   </button>
                   </div>
                   <div className="relative">
@@ -333,9 +333,9 @@ export default function Login() {
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <>
-                      Sign In
-                      <ArrowRight className="w-5 h-5" />
+                     <>
+                       {t('login.signIn')}
+                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}
                 </Button>
@@ -345,7 +345,7 @@ export default function Login() {
                     <span className="w-full border-t border-border" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                    <span className="bg-background px-2 text-muted-foreground">{t('login.orContinueWith')}</span>
                   </div>
                 </div>
 
@@ -379,16 +379,17 @@ export default function Login() {
                           d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                         />
                       </svg>
-                      Continue with Google
+                      {t('login.continueWithGoogle')}
                     </>
                   )}
                 </Button>
               </form>
 
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-primary font-medium hover:underline">
-                  Create one
+               <div className="mt-6 text-center text-sm text-muted-foreground">
+                 {t('login.noAccount')}{' '}
+                 <Link to="/register" className="text-primary font-medium hover:underline">
+                   {t('login.createOne')}
+                 </Link>
                 </Link>
               </div>
               </>
