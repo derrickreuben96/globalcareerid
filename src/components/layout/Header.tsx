@@ -168,8 +168,8 @@ export function Header() {
                       <Link to="/admin" className="cursor-pointer flex items-center gap-2">
                         <Shield className="w-4 h-4" />
                         <div>
-                          <p className="font-medium">Admin Dashboard</p>
-                          <p className="text-xs text-muted-foreground">Manage platform</p>
+                          <p className="font-medium">{t('nav.adminDashboard')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.managePlatform')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -183,8 +183,8 @@ export function Header() {
                           <Building2 className="w-4 h-4" />
                         )}
                         <div>
-                          <p className="font-medium">Employer Dashboard</p>
-                          <p className="text-xs text-muted-foreground">Manage company</p>
+                          <p className="font-medium">{t('nav.employerDashboard')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.manageCompany')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -194,8 +194,8 @@ export function Header() {
                       <Link to="/dashboard" className="cursor-pointer flex items-center gap-2">
                         <User className="w-4 h-4" />
                         <div>
-                          <p className="font-medium">My Profile</p>
-                          <p className="text-xs text-muted-foreground">View your career ID</p>
+                          <p className="font-medium">{t('nav.myProfile')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.viewCareerID')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -203,19 +203,19 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                     <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
+                    {t('nav.signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/login">Log In</Link>
+                  <Link to="/login">{t('nav.logIn')}</Link>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" className="flex items-center gap-1">
-                      Get Started
+                      {t('nav.getStarted')}
                       <ChevronDown className="w-3 h-3" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -224,8 +224,8 @@ export function Header() {
                       <Link to="/register" className="cursor-pointer">
                         <User className="w-4 h-4 mr-2" />
                         <div>
-                          <p className="font-medium">Create Your Profile</p>
-                          <p className="text-xs text-muted-foreground">For job seekers & employees</p>
+                          <p className="font-medium">{t('nav.createYourProfile')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.forJobSeekersEmployees')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -233,8 +233,8 @@ export function Header() {
                       <Link to="/register?tab=employer" className="cursor-pointer">
                         <Building2 className="w-4 h-4 mr-2" />
                         <div>
-                          <p className="font-medium">Register Your Company</p>
-                          <p className="text-xs text-muted-foreground">For employers & recruiters</p>
+                          <p className="font-medium">{t('nav.registerYourCompany')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.forEmployersRecruiters')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
