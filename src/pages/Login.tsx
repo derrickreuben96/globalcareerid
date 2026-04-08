@@ -390,10 +390,9 @@ export default function Login() {
                  <Link to="/register" className="text-primary font-medium hover:underline">
                    {t('login.createOne')}
                  </Link>
-                </Link>
-              </div>
-              </>
-              )}
+               </div>
+               </>
+               )}
             </div>
           </div>
         </div>
