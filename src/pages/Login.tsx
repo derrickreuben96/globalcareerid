@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Shield, Mail, Lock, ArrowRight, Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { MFAVerification } from '@/components/auth/MFAVerification';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
@@ -20,6 +21,7 @@ function getRedirectFromProfile(profile: any, roles: string[]): string {
 
 export default function Login() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { user, profile, roles, authStatus } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -224,10 +226,10 @@ export default function Login() {
                 <Shield className="w-8 h-8 text-primary-foreground" />
               </div>
               <h1 className="text-3xl font-display font-bold text-foreground">
-                Welcome Back
+                {t('login.welcomeBack')}
               </h1>
               <p className="mt-2 text-muted-foreground">
-                Sign in to access your verified profile
+                {t('login.signInSubtitle')}
               </p>
             </div>
 
@@ -239,17 +241,17 @@ export default function Login() {
                     className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Back to login
+                    {t('login.backToLogin')}
                   </button>
                   <div>
-                    <h2 className="text-xl font-display font-semibold text-foreground">Reset Password</h2>
+                    <h2 className="text-xl font-display font-semibold text-foreground">{t('login.resetPassword')}</h2>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Enter your email and we'll send you a reset link.
+                      {t('login.resetPasswordDesc')}
                     </p>
                   </div>
                   <form onSubmit={handleForgotPassword} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="resetEmail">Email</Label>
+                      <Label htmlFor="resetEmail">{t('login.email')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -268,7 +270,7 @@ export default function Login() {
                       {isResetting ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        'Send Reset Link'
+                        {t('login.sendResetLink')}
                       )}
                     </Button>
                   </form>
