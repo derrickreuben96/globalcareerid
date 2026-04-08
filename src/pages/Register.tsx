@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserCheck, Building2, ArrowRight, Shield, Mail, Lock, User, Phone, Briefcase, MapPin, Loader2, Globe, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   jobSeekerRegistrationSchema, 
@@ -22,6 +23,7 @@ import {
 export default function Register() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') || searchParams.get('type');
   const defaultTab = tabParam === 'employer' ? 'employer' : 'jobseeker';
@@ -273,10 +275,10 @@ export default function Register() {
                 <Shield className="w-8 h-8 text-primary-foreground" />
               </div>
               <h1 className="text-3xl font-display font-bold text-foreground">
-                Create Your Account
+                {t('register.createAccount')}
               </h1>
               <p className="mt-2 text-muted-foreground">
-                Join Global Career ID and build your verified professional identity
+                {t('register.joinSubtitle')}
               </p>
             </div>
 
@@ -285,11 +287,11 @@ export default function Register() {
                 <TabsList className="grid w-full grid-cols-2 mb-8">
                   <TabsTrigger value="jobseeker" className="gap-2">
                     <UserCheck className="w-4 h-4" />
-                    Career Individual
+                    {t('register.careerIndividual')}
                   </TabsTrigger>
                   <TabsTrigger value="employer" className="gap-2">
                     <Building2 className="w-4 h-4" />
-                    Organization
+                    {t('register.organization')}
                   </TabsTrigger>
                 </TabsList>
 
