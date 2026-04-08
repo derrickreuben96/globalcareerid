@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { UserCheck, Building2, ArrowRight, Shield, Mail, Lock, User, Phone, Briefcase, MapPin, Loader2, Globe, ImagePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   jobSeekerRegistrationSchema, 
@@ -22,6 +23,7 @@ import {
 export default function Register() {
   const navigate = useNavigate();
   const { signUp } = useAuth();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') || searchParams.get('type');
   const defaultTab = tabParam === 'employer' ? 'employer' : 'jobseeker';
@@ -273,10 +275,10 @@ export default function Register() {
                 <Shield className="w-8 h-8 text-primary-foreground" />
               </div>
               <h1 className="text-3xl font-display font-bold text-foreground">
-                Create Your Account
+                {t('register.createAccount')}
               </h1>
               <p className="mt-2 text-muted-foreground">
-                Join Global Career ID and build your verified professional identity
+                {t('register.joinSubtitle')}
               </p>
             </div>
 
@@ -285,11 +287,11 @@ export default function Register() {
                 <TabsList className="grid w-full grid-cols-2 mb-8">
                   <TabsTrigger value="jobseeker" className="gap-2">
                     <UserCheck className="w-4 h-4" />
-                    Career Individual
+                    {t('register.careerIndividual')}
                   </TabsTrigger>
                   <TabsTrigger value="employer" className="gap-2">
                     <Building2 className="w-4 h-4" />
-                    Organization
+                    {t('register.organization')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -324,7 +326,7 @@ export default function Register() {
                             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                           />
                         </svg>
-                        Sign up with Google
+                        {t('register.signUpWithGoogle')}
                       </>
                     )}
                   </Button>
@@ -334,14 +336,14 @@ export default function Register() {
                       <span className="w-full border-t border-border" />
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
+                      <span className="bg-background px-2 text-muted-foreground">{t('register.orContinueWithEmail')}</span>
                     </div>
                   </div>
 
                   <form onSubmit={handleJobSeekerSubmit} className="space-y-5">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
+                        <Label htmlFor="firstName">{t('register.firstName')}</Label>
                         <div className="relative">
                           <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <Input
@@ -356,7 +358,7 @@ export default function Register() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
+                        <Label htmlFor="lastName">{t('register.lastName')}</Label>
                         <Input
                           id="lastName"
                           placeholder="Doe"
@@ -369,7 +371,7 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{t('register.email')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -386,7 +388,7 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">{t('register.phoneNumber')}</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -403,10 +405,10 @@ export default function Register() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country of Residence</Label>
+                        <Label htmlFor="country">{t('register.countryOfResidence')}</Label>
                         <AutocompleteInput
                           suggestions={countries}
-                          placeholder="Start typing..."
+                           placeholder={t('register.startTyping')}
                           value={jobSeekerForm.country}
                           onValueChange={(v) => setJobSeekerForm({ ...jobSeekerForm, country: v })}
                           icon={<MapPin className="w-4 h-4" />}
@@ -414,10 +416,10 @@ export default function Register() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="citizenship">Citizenship</Label>
+                        <Label htmlFor="citizenship">{t('register.citizenship')}</Label>
                         <AutocompleteInput
                           suggestions={countries}
-                          placeholder="Start typing..."
+                           placeholder={t('register.startTyping')}
                           value={jobSeekerForm.citizenship}
                           onValueChange={(v) => setJobSeekerForm({ ...jobSeekerForm, citizenship: v })}
                           icon={<Globe className="w-4 h-4" />}
@@ -428,7 +430,7 @@ export default function Register() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="nationalId">National ID <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="nationalId">{t('register.nationalId')} <span className="text-destructive">*</span></Label>
                         <Input
                           id="nationalId"
                           placeholder="National ID number"
@@ -439,10 +441,10 @@ export default function Register() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="passportNumber">Passport Number</Label>
+                        <Label htmlFor="passportNumber">{t('register.passportNumber')}</Label>
                         <Input
                           id="passportNumber"
-                          placeholder="Optional"
+                          placeholder={t('register.optional')}
                           value={jobSeekerForm.passportNumber}
                           onChange={(e) => setJobSeekerForm({ ...jobSeekerForm, passportNumber: e.target.value })}
                           disabled={isLoading}
@@ -451,26 +453,26 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="gender">Gender <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="gender">{t('register.gender')} <span className="text-destructive">*</span></Label>
                       <Select
                         value={jobSeekerForm.gender}
                         onValueChange={(v) => setJobSeekerForm({ ...jobSeekerForm, gender: v })}
                         disabled={isLoading}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="male">Male</SelectItem>
-                          <SelectItem value="female">Female</SelectItem>
-                          <SelectItem value="non_binary">Non-binary</SelectItem>
-                          <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                           <SelectValue placeholder={t('register.selectGender')} />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="male">{t('register.male')}</SelectItem>
+                           <SelectItem value="female">{t('register.female')}</SelectItem>
+                           <SelectItem value="non_binary">{t('register.nonBinary')}</SelectItem>
+                           <SelectItem value="prefer_not_to_say">{t('register.preferNotToSay')}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="dateOfBirth">Date of Birth <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="dateOfBirth">{t('register.dateOfBirth')} <span className="text-destructive">*</span></Label>
                       <Input
                         id="dateOfBirth"
                         type="date"
@@ -484,13 +486,13 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="password">{t('register.password')}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                           id="password"
                           type="password"
-                          placeholder="Create a strong password"
+                          placeholder={t('register.createStrongPassword')}
                           className="pl-10"
                           value={jobSeekerForm.password}
                           onChange={(e) => setJobSeekerForm({ ...jobSeekerForm, password: e.target.value })}
@@ -501,13 +503,13 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <Label htmlFor="confirmPassword">{t('register.confirmPassword')}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                           id="confirmPassword"
                           type="password"
-                          placeholder="Confirm your password"
+                           placeholder={t('register.confirmYourPassword')}
                           className="pl-10"
                           value={jobSeekerForm.confirmPassword}
                           onChange={(e) => setJobSeekerForm({ ...jobSeekerForm, confirmPassword: e.target.value })}
@@ -521,8 +523,8 @@ export default function Register() {
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        <>
-                          Create Profile
+                       <>
+                          {t('register.createProfile')}
                           <ArrowRight className="w-5 h-5" />
                         </>
                       )}
@@ -533,7 +535,7 @@ export default function Register() {
                 <TabsContent value="employer">
                   <form onSubmit={handleEmployerSubmit} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName">Company Name <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="companyName">{t('register.companyName')} <span className="text-destructive">*</span></Label>
                       <div className="relative">
                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -550,7 +552,7 @@ export default function Register() {
 
                     {/* Company Logo Upload */}
                     <div className="space-y-2">
-                      <Label>Company Logo <span className="text-destructive">*</span></Label>
+                      <Label>{t('register.companyLogo')} <span className="text-destructive">*</span></Label>
                       <div className="flex items-center gap-4">
                         <label
                           htmlFor="companyLogo"
@@ -571,15 +573,15 @@ export default function Register() {
                           />
                         </label>
                         <div className="text-sm text-muted-foreground">
-                          <p>Upload your company logo</p>
-                          <p className="text-xs">PNG, JPG up to 2MB</p>
+                           <p>{t('register.uploadLogo')}</p>
+                           <p className="text-xs">{t('register.logoSize')}</p>
                         </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="registrationNumber">Registration Number <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="registrationNumber">{t('register.registrationNumber')} <span className="text-destructive">*</span></Label>
                         <Input
                           id="registrationNumber"
                           placeholder="Company reg #"
@@ -590,10 +592,10 @@ export default function Register() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country <span className="text-destructive">*</span></Label>
-                        <AutocompleteInput
-                          suggestions={countries}
-                          placeholder="Start typing..."
+                         <Label htmlFor="country">{t('register.country')} <span className="text-destructive">*</span></Label>
+                         <AutocompleteInput
+                           suggestions={countries}
+                           placeholder={t('register.startTyping')}
                           value={employerForm.country}
                           onValueChange={(v) => setEmployerForm({ ...employerForm, country: v })}
                           icon={<MapPin className="w-4 h-4" />}
@@ -603,7 +605,7 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="industry">Industry <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="industry">{t('register.industry')} <span className="text-destructive">*</span></Label>
                       <AutocompleteInput
                         suggestions={industries}
                         placeholder="Start typing: Technology, Finance..."
@@ -616,7 +618,7 @@ export default function Register() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="companyPhone">Company Phone <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="companyPhone">{t('register.companyPhone')} <span className="text-destructive">*</span></Label>
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <Input
@@ -632,7 +634,7 @@ export default function Register() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="companyWebsite">Website <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="companyWebsite">{t('register.website')} <span className="text-destructive">*</span></Label>
                         <div className="relative">
                           <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <Input
@@ -650,7 +652,7 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="employerEmail">Company Email</Label>
+                      <Label htmlFor="employerEmail">{t('register.companyEmail')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -667,13 +669,13 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="employerPassword">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="employerPassword"
-                          type="password"
-                          placeholder="Create a secure password"
+                       <Label htmlFor="employerPassword">{t('register.password')}</Label>
+                       <div className="relative">
+                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                         <Input
+                           id="employerPassword"
+                           type="password"
+                           placeholder={t('register.createStrongPassword')}
                           className="pl-10"
                           value={employerForm.password}
                           onChange={(e) => setEmployerForm({ ...employerForm, password: e.target.value })}
@@ -684,13 +686,13 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="employerConfirmPassword">Confirm Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="employerConfirmPassword"
-                          type="password"
-                          placeholder="Confirm your password"
+                       <Label htmlFor="employerConfirmPassword">{t('register.confirmPassword')}</Label>
+                       <div className="relative">
+                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                         <Input
+                           id="employerConfirmPassword"
+                           type="password"
+                           placeholder={t('register.confirmYourPassword')}
                           className="pl-10"
                           value={employerForm.confirmPassword}
                           onChange={(e) => setEmployerForm({ ...employerForm, confirmPassword: e.target.value })}
@@ -701,19 +703,18 @@ export default function Register() {
                     </div>
 
                     <div className="p-4 bg-muted/30 rounded-lg border border-border">
-                      <p className="text-sm text-muted-foreground">
-                        <strong className="text-foreground">Note:</strong> Company registration requires verification. 
-                        You'll be able to add employment records once your company is approved (typically 24-48 hours).
-                      </p>
+                       <p className="text-sm text-muted-foreground">
+                         <strong className="text-foreground">{t('register.note')}:</strong> {t('register.verificationNote')}
+                       </p>
                     </div>
 
                     <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isLoading}>
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        <>
-                          Register Company
-                          <ArrowRight className="w-5 h-5" />
+                         <>
+                           {t('register.registerCompany')}
+                           <ArrowRight className="w-5 h-5" />
                         </>
                       )}
                     </Button>
@@ -721,11 +722,11 @@ export default function Register() {
                 </TabsContent>
               </Tabs>
 
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
-                  Sign in
-                </Link>
+               <p className="mt-6 text-center text-sm text-muted-foreground">
+                 {t('register.alreadyHaveAccount')}{' '}
+                 <Link to="/login" className="text-primary hover:underline font-medium">
+                   {t('register.signIn')}
+                 </Link>
               </p>
             </div>
           </div>

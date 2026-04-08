@@ -6,6 +6,7 @@ import { VerifiedBadge } from '@/components/VerifiedBadge';
 import { AIChatWidget } from '@/components/AIChatWidget';
 import { Shield, UserCheck, Building2, Search, QrCode, Lock, CheckCircle, ArrowRight, Users, FileCheck, Clock, Mail, Quote, Star } from 'lucide-react';
 import { HeroBackground } from '@/components/HeroBackground';
+import { useTranslation } from 'react-i18next';
 import testimonialAmina from '@/assets/testimonial-amina.jpg';
 import testimonialDavid from '@/assets/testimonial-david.jpg';
 import testimonialPatricia from '@/assets/testimonial-patricia.jpg';
@@ -71,53 +72,55 @@ const testimonials = [
 ];
 import ceoPhoto from '@/assets/ceo-photo.jpg';
 
-const features = [{
-  icon: Shield,
-  title: 'Employer-Verified Records',
-  description: 'Only verified employers can add employment history. Individuals cannot edit their own work experience.'
-}, {
-  icon: QrCode,
-  title: 'Instant Profile Sharing',
-  description: 'Share your verified work history with a unique Profile ID or QR code. No more CV submissions.'
-}, {
-  icon: Lock,
-  title: 'You Control Access',
-  description: 'Your data, your rules. Choose who can view your verified profile and revoke access anytime.'
-}, {
-  icon: FileCheck,
-  title: 'AI-Powered Assistance',
-  description: 'Get smart skill suggestions, career guidance, and instant answers from our AI assistant—for both job seekers and employers.'
-}];
-
-const stats = [{
-  value: '100%',
-  label: 'Verified Records'
-}, {
-  value: '0',
-  label: 'CV Fraud Risk'
-}, {
-  value: '<2min',
-  label: 'Verification Time'
-}];
-
-const howItWorks = [{
-  step: '01',
-  title: 'Create Your Profile',
-  description: 'Register once, receive a unique Profile ID. Your professional identity starts here.',
-  icon: UserCheck
-}, {
-  step: '02',
-  title: 'Employers Add Records',
-  description: 'When hired, your employer adds the role to your profile. When you leave, they close the record.',
-  icon: Building2
-}, {
-  step: '03',
-  title: 'Share & Get Hired',
-  description: 'Share your Profile ID with recruiters. They see your verified history instantly.',
-  icon: Search
-}];
-
 export default function Index() {
+  const { t } = useTranslation();
+
+  const features = [{
+    icon: Shield,
+    title: t('features.employerVerifiedRecords'),
+    description: t('features.employerVerifiedRecordsDesc')
+  }, {
+    icon: QrCode,
+    title: t('features.instantProfileSharing'),
+    description: t('features.instantProfileSharingDesc')
+  }, {
+    icon: Lock,
+    title: t('features.youControlAccess'),
+    description: t('features.youControlAccessDesc')
+  }, {
+    icon: FileCheck,
+    title: t('features.aiPoweredAssistance'),
+    description: t('features.aiPoweredAssistanceDesc')
+  }];
+
+  const stats = [{
+    value: '100%',
+    label: t('hero.verifiedRecords')
+  }, {
+    value: '0',
+    label: t('hero.cvFraudRisk')
+  }, {
+    value: '<2min',
+    label: t('hero.verificationTime')
+  }];
+
+  const howItWorks = [{
+    step: '01',
+    title: t('howItWorksSection.step1Title'),
+    description: t('howItWorksSection.step1Desc'),
+    icon: UserCheck
+  }, {
+    step: '02',
+    title: t('howItWorksSection.step2Title'),
+    description: t('howItWorksSection.step2Desc'),
+    icon: Building2
+  }, {
+    step: '03',
+    title: t('howItWorksSection.step3Title'),
+    description: t('howItWorksSection.step3Desc'),
+    icon: Search
+  }];
+
   return <div className="min-h-screen bg-background">
       <Header />
       
@@ -127,7 +130,7 @@ export default function Index() {
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <VerifiedBadge variant="large" label="Trusted Verification Platform" />
+            <VerifiedBadge variant="large" label={t('hero.trustedPlatform')} />
             
             <h1 className="mt-8 text-5xl md:text-7xl lg:text-8xl font-display font-bold text-foreground leading-tight">
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-secondary-foreground">
@@ -136,25 +139,24 @@ export default function Index() {
             </h1>
             
             <p className="mt-6 text-2xl md:text-3xl lg:text-4xl font-display font-semibold text-foreground/90">
-              One ID. Every role. Verified.
+              {t('hero.tagline')}
             </p>
             
             <p className="mt-6 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              A centralized system where work experience is verified by employers—not written by applicants. 
-              Make fake CVs obsolete.
+              {t('hero.subtitle')}
             </p>
 
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button variant="hero" size="xl" asChild>
                 <Link to="/register">
-                  Create Your Profile
+                  {t('hero.createProfile')}
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" className="bg-background/50 backdrop-blur-sm" asChild>
                 <Link to="/verify">
                   <Search className="w-5 h-5" />
-                  Verify a Profile
+                  {t('hero.verifyProfile')}
                 </Link>
               </Button>
             </div>
@@ -176,19 +178,19 @@ export default function Index() {
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-16 text-muted-foreground">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-verified" />
-              <span className="text-sm font-medium">Employer Verified</span>
+              <span className="text-sm font-medium">{t('trust.employerVerified')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Lock className="w-5 h-5 text-verified" />
-              <span className="text-sm font-medium">Privacy First</span>
+              <span className="text-sm font-medium">{t('trust.privacyFirst')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-verified" />
-              <span className="text-sm font-medium">Consent Driven</span>
+              <span className="text-sm font-medium">{t('trust.consentDriven')}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-verified" />
-              <span className="text-sm font-medium">Instant Access</span>
+              <span className="text-sm font-medium">{t('trust.instantAccess')}</span>
             </div>
           </div>
         </div>
@@ -198,9 +200,9 @@ export default function Index() {
       <section className="py-24 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">How Global Career ID Works</h2>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">{t('howItWorksSection.title')}</h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              A simple, fair process that puts verified truth at the center of hiring
+              {t('howItWorksSection.subtitle')}
             </p>
           </div>
 
@@ -230,10 +232,10 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
-              Built on Trust, Not Claims
+              {t('features.title')}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Every feature designed to make verification fair, fast, and fraud-proof
+              {t('features.subtitle')}
             </p>
           </div>
 
@@ -260,15 +262,15 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
-              What Our Users Say
+              {t('testimonials.title')}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Trusted by employers and job seekers across industries
+              {t('testimonials.subtitle')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {testimonials.map((t, index) => (
+            {testimonials.map((testimonial, index) => (
               <div
                 key={index}
                 className="glass-card rounded-2xl p-6 flex flex-col justify-between hover:shadow-elevated transition-shadow duration-300 animate-fade-in"
@@ -278,28 +280,28 @@ export default function Index() {
                   <div className="flex items-center gap-2 mb-4">
                     <Quote className="w-5 h-5 text-primary/40" />
                     <span className={`text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                      t.type === 'employer' 
+                      testimonial.type === 'employer' 
                         ? 'bg-accent/10 text-accent' 
                         : 'bg-primary/10 text-primary'
                     }`}>
-                      {t.type === 'employer' ? 'Employer' : 'Job Seeker'}
+                      {testimonial.type === 'employer' ? t('testimonials.employer') : t('testimonials.jobSeeker')}
                     </span>
                   </div>
                   <p className="text-muted-foreground leading-relaxed italic">
-                    "{t.quote}"
+                    "{testimonial.quote}"
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-border flex items-center gap-3">
-                  <img src={t.image} alt={t.name} className="w-11 h-11 rounded-full object-cover border-2 border-primary/20 flex-shrink-0" />
+                  <img src={testimonial.image} alt={testimonial.name} className="w-11 h-11 rounded-full object-cover border-2 border-primary/20 flex-shrink-0" />
                   <div>
                     <div className="flex items-center gap-1 mb-0.5">
-                      {Array.from({ length: t.rating }).map((_, i) => (
+                      {Array.from({ length: testimonial.rating }).map((_, i) => (
                         <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       ))}
                     </div>
-                    <p className="font-semibold text-foreground text-sm">{t.name}</p>
+                    <p className="font-semibold text-foreground text-sm">{testimonial.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {t.role}{t.company ? `, ${t.company}` : ''}
+                      {testimonial.role}{testimonial.company ? `, ${testimonial.company}` : ''}
                     </p>
                   </div>
                 </div>
@@ -313,23 +315,23 @@ export default function Index() {
       <section className="py-24 bg-gradient-to-br from-primary via-primary to-accent text-primary-foreground">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-display font-bold">
-            Ready to Build Trust?
+            {t('cta.readyToBuildTrust')}
           </h2>
           <p className="mt-4 text-lg text-primary-foreground/80 max-w-xl mx-auto">
-            Join thousands of professionals and employers who've made the switch to verified hiring—now with AI-powered assistance.
+            {t('cta.joinThousands')}
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" className="bg-primary-foreground text-primary hover:bg-primary-foreground/90" asChild>
               <Link to="/register">
                 <UserCheck className="w-5 h-5" />
-                I'm a Job Seeker
+                {t('cta.imJobSeeker')}
               </Link>
             </Button>
             <Button size="lg" variant="cta-secondary" asChild>
               <Link to="/register?type=employer">
                 <Building2 className="w-5 h-5" />
-                I'm an Employer
+                {t('cta.imEmployer')}
               </Link>
             </Button>
           </div>
@@ -341,7 +343,7 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-12">
-              Meet the Founder
+              {t('founder.meetTheFounder')}
             </h2>
             <div className="glass-card rounded-2xl p-8 md:p-12">
               <div className="flex flex-col items-center">
@@ -356,11 +358,10 @@ export default function Index() {
                   Mr. Derrick Reuben Owino
                 </h3>
                 <p className="text-lg text-primary font-semibold mt-2">
-                  CEO & Founder
+                  {t('founder.ceoFounder')}
                 </p>
                 <p className="mt-6 text-muted-foreground max-w-2xl">
-                  Passionate about transforming the way employment verification works globally. 
-                  Building a future where trust and transparency are at the heart of every hiring decision.
+                  {t('founder.founderBio')}
                 </p>
                 <div className="flex items-center gap-4 mt-6">
                   <a 
@@ -372,14 +373,14 @@ export default function Index() {
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                     </svg>
-                    Connect on LinkedIn
+                    {t('founder.connectLinkedIn')}
                   </a>
                   <a 
                     href="mailto:derrickreuben96@gmail.com"
                     className="inline-flex items-center gap-2 px-5 py-2.5 border border-primary text-primary rounded-lg font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
                     <Mail className="w-5 h-5" />
-                    Contact
+                    {t('founder.contact')}
                   </a>
                 </div>
               </div>

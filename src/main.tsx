@@ -5,6 +5,7 @@ import { initAnalytics } from "./lib/analytics";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import App from "./App.tsx";
+import "./i18n";
 import "./index.css";
 
 // Initialize Sentry before React render

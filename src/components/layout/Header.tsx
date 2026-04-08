@@ -3,13 +3,16 @@ import { Button } from '@/components/ui/button';
 import { NotificationBell } from '@/components/NotificationBell';
 import { Menu, X, Settings, Building2, User, ChevronDown, LogOut, Shield } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import logoImage from '@/assets/logo.png';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export function Header() {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const { user, roles, profile, signOut, authStatus } = useAuth();
@@ -100,21 +103,21 @@ export function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              How It Works
+              {t('nav.howItWorks')}
             </Link>
             
             {/* For Employers Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                For Employers
+                {t('nav.forEmployers')}
                 <ChevronDown className="w-3 h-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-64">
                 <DropdownMenuItem asChild>
                   <Link to="/for-employers" className="cursor-pointer">
                     <div>
-                      <p className="font-medium">Employers & Recruiters</p>
-                      <p className="text-xs text-muted-foreground">Verify talent and manage records</p>
+                      <p className="font-medium">{t('nav.employersRecruiters')}</p>
+                      <p className="text-xs text-muted-foreground">{t('nav.verifyTalent')}</p>
                     </div>
                   </Link>
                 </DropdownMenuItem>
@@ -124,15 +127,15 @@ export function Header() {
             {/* For Job Seekers Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                For Job Seekers
+                {t('nav.forJobSeekers')}
                 <ChevronDown className="w-3 h-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-64">
                 <DropdownMenuItem asChild>
                   <Link to="/for-job-seekers" className="cursor-pointer">
                     <div>
-                      <p className="font-medium">Employees & Job Seekers</p>
-                      <p className="text-xs text-muted-foreground">Build your verified career identity</p>
+                      <p className="font-medium">{t('nav.employeesJobSeekers')}</p>
+                      <p className="text-xs text-muted-foreground">{t('nav.buildCareerIdentity')}</p>
                     </div>
                   </Link>
                 </DropdownMenuItem>
@@ -142,12 +145,13 @@ export function Header() {
             {isAdmin && (
               <Link to="/admin" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
                 <Shield className="w-4 h-4" />
-                Admin
+                {t('nav.admin')}
               </Link>
             )}
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <ThemeToggle />
             {isSessionConfirmed && <NotificationBell />}
             {isSessionConfirmed ? (
@@ -164,8 +168,8 @@ export function Header() {
                       <Link to="/admin" className="cursor-pointer flex items-center gap-2">
                         <Shield className="w-4 h-4" />
                         <div>
-                          <p className="font-medium">Admin Dashboard</p>
-                          <p className="text-xs text-muted-foreground">Manage platform</p>
+                          <p className="font-medium">{t('nav.adminDashboard')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.managePlatform')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -179,8 +183,8 @@ export function Header() {
                           <Building2 className="w-4 h-4" />
                         )}
                         <div>
-                          <p className="font-medium">Employer Dashboard</p>
-                          <p className="text-xs text-muted-foreground">Manage company</p>
+                          <p className="font-medium">{t('nav.employerDashboard')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.manageCompany')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -190,8 +194,8 @@ export function Header() {
                       <Link to="/dashboard" className="cursor-pointer flex items-center gap-2">
                         <User className="w-4 h-4" />
                         <div>
-                          <p className="font-medium">My Profile</p>
-                          <p className="text-xs text-muted-foreground">View your career ID</p>
+                          <p className="font-medium">{t('nav.myProfile')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.viewCareerID')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -199,19 +203,19 @@ export function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                     <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
+                    {t('nav.signOut')}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to="/login">Log In</Link>
+                  <Link to="/login">{t('nav.logIn')}</Link>
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button size="sm" className="flex items-center gap-1">
-                      Get Started
+                      {t('nav.getStarted')}
                       <ChevronDown className="w-3 h-3" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -220,8 +224,8 @@ export function Header() {
                       <Link to="/register" className="cursor-pointer">
                         <User className="w-4 h-4 mr-2" />
                         <div>
-                          <p className="font-medium">Create Your Profile</p>
-                          <p className="text-xs text-muted-foreground">For job seekers & employees</p>
+                          <p className="font-medium">{t('nav.createYourProfile')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.forJobSeekersEmployees')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -229,8 +233,8 @@ export function Header() {
                       <Link to="/register?tab=employer" className="cursor-pointer">
                         <Building2 className="w-4 h-4 mr-2" />
                         <div>
-                          <p className="font-medium">Register Your Company</p>
-                          <p className="text-xs text-muted-foreground">For employers & recruiters</p>
+                          <p className="font-medium">{t('nav.registerYourCompany')}</p>
+                          <p className="text-xs text-muted-foreground">{t('nav.forEmployersRecruiters')}</p>
                         </div>
                       </Link>
                     </DropdownMenuItem>
@@ -251,18 +255,18 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
             <nav className="flex flex-col gap-4">
               <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                How It Works
+                {t('nav.howItWorks')}
               </Link>
               <Link to="/for-employers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                For Employers & Recruiters
+                {t('nav.forEmployersAndRecruiters')}
               </Link>
               <Link to="/for-job-seekers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                For Job Seekers & Employees
+                {t('nav.forJobSeekersAndEmployees')}
               </Link>
               {isAdmin && (
                 <Link to="/admin" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
                   <Shield className="w-4 h-4" />
-                  Admin Dashboard
+                  {t('nav.adminDashboard')}
                 </Link>
               )}
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
@@ -278,7 +282,7 @@ export function Header() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/admin" className="flex items-center gap-2">
                           <Shield className="w-4 h-4" />
-                          Admin Dashboard
+                          {t('nav.adminDashboard')}
                         </Link>
                       </Button>
                     )}
@@ -286,7 +290,7 @@ export function Header() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/employer" className="flex items-center gap-2">
                           <Building2 className="w-4 h-4" />
-                          Employer Dashboard
+                          {t('nav.employerDashboard')}
                         </Link>
                       </Button>
                     )}
@@ -294,30 +298,30 @@ export function Header() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/dashboard" className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          My Profile
+                          {t('nav.myProfile')}
                         </Link>
                       </Button>
                     )}
                     <Button variant="destructive" size="sm" onClick={handleSignOut} className="flex items-center gap-2">
                       <LogOut className="w-4 h-4" />
-                      Sign Out
+                      {t('nav.signOut')}
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to="/login">Log In</Link>
+                      <Link to="/login">{t('nav.logIn')}</Link>
                     </Button>
                     <Button size="sm" asChild>
                       <Link to="/register" className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        Create Your Profile
+                        {t('nav.createYourProfile')}
                       </Link>
                     </Button>
                     <Button variant="secondary" size="sm" asChild>
                       <Link to="/register?tab=employer" className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
-                        Register Your Company
+                        {t('nav.registerYourCompany')}
                       </Link>
                     </Button>
                   </>
