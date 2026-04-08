@@ -17,6 +17,7 @@ const CONSENT_TYPES = [
 
 export function CookieConsent() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
   const [preferences, setPreferences] = useState<Record<string, boolean>>({
     marketing: false,
@@ -97,18 +98,18 @@ export function CookieConsent() {
           <div className="flex items-start gap-3 flex-1">
             <Cookie className="w-5 h-5 mt-0.5 text-primary shrink-0" />
             <p className="text-sm text-muted-foreground">
-              We use cookies and similar technologies to improve your experience. You can manage your preferences anytime.
+              {t('common.cookieMessage')}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 shrink-0">
             <Button size="sm" variant="outline" onClick={handleRejectAll}>
-              Reject All
+              {t('common.rejectAll')}
             </Button>
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
               <SheetTrigger asChild>
                 <Button size="sm" variant="outline" className="gap-1.5">
                   <Settings2 className="w-3.5 h-3.5" />
-                  Manage
+                  {t('common.manage')}
                 </Button>
               </SheetTrigger>
               <SheetContent>
@@ -140,7 +141,7 @@ export function CookieConsent() {
               </SheetContent>
             </Sheet>
             <Button size="sm" onClick={handleAcceptAll}>
-              Accept All
+              {t('common.acceptAll')}
             </Button>
           </div>
         </CardContent>
