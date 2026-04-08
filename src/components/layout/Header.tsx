@@ -255,18 +255,18 @@ export function Header() {
           <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
             <nav className="flex flex-col gap-4">
               <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                How It Works
+                {t('nav.howItWorks')}
               </Link>
               <Link to="/for-employers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                For Employers & Recruiters
+                {t('nav.forEmployersAndRecruiters')}
               </Link>
               <Link to="/for-job-seekers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                For Job Seekers & Employees
+                {t('nav.forJobSeekersAndEmployees')}
               </Link>
               {isAdmin && (
                 <Link to="/admin" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
                   <Shield className="w-4 h-4" />
-                  Admin Dashboard
+                  {t('nav.adminDashboard')}
                 </Link>
               )}
               <div className="flex flex-col gap-2 pt-4 border-t border-border/50">
@@ -282,7 +282,7 @@ export function Header() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/admin" className="flex items-center gap-2">
                           <Shield className="w-4 h-4" />
-                          Admin Dashboard
+                          {t('nav.adminDashboard')}
                         </Link>
                       </Button>
                     )}
@@ -290,7 +290,7 @@ export function Header() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/employer" className="flex items-center gap-2">
                           <Building2 className="w-4 h-4" />
-                          Employer Dashboard
+                          {t('nav.employerDashboard')}
                         </Link>
                       </Button>
                     )}
@@ -298,30 +298,30 @@ export function Header() {
                       <Button variant="outline" size="sm" asChild>
                         <Link to="/dashboard" className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          My Profile
+                          {t('nav.myProfile')}
                         </Link>
                       </Button>
                     )}
                     <Button variant="destructive" size="sm" onClick={handleSignOut} className="flex items-center gap-2">
                       <LogOut className="w-4 h-4" />
-                      Sign Out
+                      {t('nav.signOut')}
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button variant="outline" size="sm" asChild>
-                      <Link to="/login">Log In</Link>
+                      <Link to="/login">{t('nav.logIn')}</Link>
                     </Button>
                     <Button size="sm" asChild>
                       <Link to="/register" className="flex items-center gap-2">
                         <User className="w-4 h-4" />
-                        Create Your Profile
+                        {t('nav.createYourProfile')}
                       </Link>
                     </Button>
                     <Button variant="secondary" size="sm" asChild>
                       <Link to="/register?tab=employer" className="flex items-center gap-2">
                         <Building2 className="w-4 h-4" />
-                        Register Your Company
+                        {t('nav.registerYourCompany')}
                       </Link>
                     </Button>
                   </>
