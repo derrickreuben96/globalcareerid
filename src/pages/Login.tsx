@@ -270,7 +270,7 @@ export default function Login() {
                       {isResetting ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        {t('login.sendResetLink')}
+                        t('login.sendResetLink')
                       )}
                     </Button>
                   </form>
