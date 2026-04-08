@@ -535,7 +535,7 @@ export default function Register() {
                 <TabsContent value="employer">
                   <form onSubmit={handleEmployerSubmit} className="space-y-5">
                     <div className="space-y-2">
-                      <Label htmlFor="companyName">Company Name <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="companyName">{t('register.companyName')} <span className="text-destructive">*</span></Label>
                       <div className="relative">
                         <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -552,7 +552,7 @@ export default function Register() {
 
                     {/* Company Logo Upload */}
                     <div className="space-y-2">
-                      <Label>Company Logo <span className="text-destructive">*</span></Label>
+                      <Label>{t('register.companyLogo')} <span className="text-destructive">*</span></Label>
                       <div className="flex items-center gap-4">
                         <label
                           htmlFor="companyLogo"
@@ -573,15 +573,15 @@ export default function Register() {
                           />
                         </label>
                         <div className="text-sm text-muted-foreground">
-                          <p>Upload your company logo</p>
-                          <p className="text-xs">PNG, JPG up to 2MB</p>
+                           <p>{t('register.uploadLogo')}</p>
+                           <p className="text-xs">{t('register.logoSize')}</p>
                         </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="registrationNumber">Registration Number <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="registrationNumber">{t('register.registrationNumber')} <span className="text-destructive">*</span></Label>
                         <Input
                           id="registrationNumber"
                           placeholder="Company reg #"
@@ -592,10 +592,10 @@ export default function Register() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country <span className="text-destructive">*</span></Label>
-                        <AutocompleteInput
-                          suggestions={countries}
-                          placeholder="Start typing..."
+                         <Label htmlFor="country">{t('register.country')} <span className="text-destructive">*</span></Label>
+                         <AutocompleteInput
+                           suggestions={countries}
+                           placeholder={t('register.startTyping')}
                           value={employerForm.country}
                           onValueChange={(v) => setEmployerForm({ ...employerForm, country: v })}
                           icon={<MapPin className="w-4 h-4" />}
@@ -605,7 +605,7 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="industry">Industry <span className="text-destructive">*</span></Label>
+                      <Label htmlFor="industry">{t('register.industry')} <span className="text-destructive">*</span></Label>
                       <AutocompleteInput
                         suggestions={industries}
                         placeholder="Start typing: Technology, Finance..."
@@ -618,7 +618,7 @@ export default function Register() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="companyPhone">Company Phone <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="companyPhone">{t('register.companyPhone')} <span className="text-destructive">*</span></Label>
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <Input
@@ -634,7 +634,7 @@ export default function Register() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="companyWebsite">Website <span className="text-destructive">*</span></Label>
+                        <Label htmlFor="companyWebsite">{t('register.website')} <span className="text-destructive">*</span></Label>
                         <div className="relative">
                           <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                           <Input
@@ -652,7 +652,7 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="employerEmail">Company Email</Label>
+                      <Label htmlFor="employerEmail">{t('register.companyEmail')}</Label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
@@ -669,13 +669,13 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="employerPassword">Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="employerPassword"
-                          type="password"
-                          placeholder="Create a secure password"
+                       <Label htmlFor="employerPassword">{t('register.password')}</Label>
+                       <div className="relative">
+                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                         <Input
+                           id="employerPassword"
+                           type="password"
+                           placeholder={t('register.createStrongPassword')}
                           className="pl-10"
                           value={employerForm.password}
                           onChange={(e) => setEmployerForm({ ...employerForm, password: e.target.value })}
@@ -686,13 +686,13 @@ export default function Register() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="employerConfirmPassword">Confirm Password</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="employerConfirmPassword"
-                          type="password"
-                          placeholder="Confirm your password"
+                       <Label htmlFor="employerConfirmPassword">{t('register.confirmPassword')}</Label>
+                       <div className="relative">
+                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                         <Input
+                           id="employerConfirmPassword"
+                           type="password"
+                           placeholder={t('register.confirmYourPassword')}
                           className="pl-10"
                           value={employerForm.confirmPassword}
                           onChange={(e) => setEmployerForm({ ...employerForm, confirmPassword: e.target.value })}
@@ -703,19 +703,18 @@ export default function Register() {
                     </div>
 
                     <div className="p-4 bg-muted/30 rounded-lg border border-border">
-                      <p className="text-sm text-muted-foreground">
-                        <strong className="text-foreground">Note:</strong> Company registration requires verification. 
-                        You'll be able to add employment records once your company is approved (typically 24-48 hours).
-                      </p>
+                       <p className="text-sm text-muted-foreground">
+                         <strong className="text-foreground">{t('register.note')}:</strong> {t('register.verificationNote')}
+                       </p>
                     </div>
 
                     <Button type="submit" variant="hero" size="lg" className="w-full" disabled={isLoading}>
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
                       ) : (
-                        <>
-                          Register Company
-                          <ArrowRight className="w-5 h-5" />
+                         <>
+                           {t('register.registerCompany')}
+                           <ArrowRight className="w-5 h-5" />
                         </>
                       )}
                     </Button>
@@ -723,11 +722,11 @@ export default function Register() {
                 </TabsContent>
               </Tabs>
 
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                Already have an account?{' '}
-                <Link to="/login" className="text-primary hover:underline font-medium">
-                  Sign in
-                </Link>
+               <p className="mt-6 text-center text-sm text-muted-foreground">
+                 {t('register.alreadyHaveAccount')}{' '}
+                 <Link to="/login" className="text-primary hover:underline font-medium">
+                   {t('register.signIn')}
+                 </Link>
               </p>
             </div>
           </div>
