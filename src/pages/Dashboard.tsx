@@ -241,12 +241,12 @@ export default function Dashboard() {
     }
     
     if (skills.includes(trimmedSkill)) {
-      toast.error('Skill already exists');
+      toast.error(t('dashboard.skillAlreadyExists'));
       return;
     }
     
     if (skills.length >= 50) {
-      toast.error('Maximum 50 skills allowed');
+      toast.error(t('dashboard.maxSkills'));
       return;
     }
     
@@ -259,7 +259,7 @@ export default function Dashboard() {
       .update({ skills: updatedSkills })
       .eq('user_id', user.id);
     
-    toast.success('Skill added');
+    toast.success(t('dashboard.skillAdded'));
     
     // Send profile update email
     if (profile) {
@@ -287,7 +287,7 @@ export default function Dashboard() {
       .update({ skills: updatedSkills })
       .eq('user_id', user.id);
     
-    toast.success('Skill removed');
+    toast.success(t('dashboard.skillRemoved'));
     
     // Send profile update email
     if (profile) {
@@ -326,11 +326,11 @@ export default function Dashboard() {
     });
 
     if (error) {
-      toast.error('Failed to submit dispute');
+      toast.error(t('dashboard.disputeFailed'));
       return;
     }
 
-    toast.success('Dispute submitted for review');
+    toast.success(t('dashboard.disputeSubmitted'));
     setDisputeOpen(false);
     setDisputeReason('');
     setDisputeRecordId(null);
