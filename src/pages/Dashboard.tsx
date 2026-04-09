@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ProfileIdCard } from '@/components/ProfileIdCard';
@@ -72,6 +73,7 @@ interface EmploymentRecord {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     user: authUser,
     session,
@@ -239,12 +241,12 @@ export default function Dashboard() {
     }
     
     if (skills.includes(trimmedSkill)) {
-      toast.error('Skill already exists');
+      toast.error(t('dashboard.skillAlreadyExists'));
       return;
     }
     
     if (skills.length >= 50) {
-      toast.error('Maximum 50 skills allowed');
+      toast.error(t('dashboard.maxSkills'));
       return;
     }
     
@@ -257,7 +259,7 @@ export default function Dashboard() {
       .update({ skills: updatedSkills })
       .eq('user_id', user.id);
     
-    toast.success('Skill added');
+    toast.success(t('dashboard.skillAdded'));
     
     // Send profile update email
     if (profile) {
@@ -285,7 +287,7 @@ export default function Dashboard() {
       .update({ skills: updatedSkills })
       .eq('user_id', user.id);
     
-    toast.success('Skill removed');
+    toast.success(t('dashboard.skillRemoved'));
     
     // Send profile update email
     if (profile) {
@@ -324,11 +326,11 @@ export default function Dashboard() {
     });
 
     if (error) {
-      toast.error('Failed to submit dispute');
+      toast.error(t('dashboard.disputeFailed'));
       return;
     }
 
-    toast.success('Dispute submitted for review');
+    toast.success(t('dashboard.disputeSubmitted'));
     setDisputeOpen(false);
     setDisputeReason('');
     setDisputeRecordId(null);
@@ -344,7 +346,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading your profile...</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.loadingProfile')}</p>
         </div>
       </div>
     );
@@ -355,17 +357,17 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Setting up your profile...</p>
+          <p className="text-muted-foreground">{t('dashboard.settingUpProfile')}</p>
           <p className="text-xs text-muted-foreground">
-            {profileRecoveryFailed ? 'We found your session, but your profile data is still loading.' : 'This may take a moment'}
+            {profileRecoveryFailed ? t('dashboard.sessionFoundLoading') : t('dashboard.thisMayTakeMoment')}
           </p>
           <div className="flex items-center justify-center gap-2">
             <Button variant="outline" size="sm" onClick={() => refreshProfile()} disabled={isRecoveringProfile}>
-              Retry
+              {t('dashboard.retry')}
             </Button>
             {profileRecoveryFailed && (
               <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
-                Reload session
+                {t('dashboard.reloadSession')}
               </Button>
             )}
           </div>
@@ -400,15 +402,15 @@ export default function Dashboard() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-display font-bold text-foreground">
-                Welcome{isJobSeeker && !isEmployer ? `, ${profile.first_name}` : ''}
+                {t('dashboard.welcome')}{isJobSeeker && !isEmployer ? `, ${profile.first_name}` : ''}
               </h1>
               <p className="text-muted-foreground mt-1">
-                {isAdmin ? 'Platform Administration' : isEmployer ? 'Employer Dashboard' : 'Manage your verified professional profile'}
+                {isAdmin ? t('dashboard.platformAdmin') : isEmployer ? t('dashboard.employerDashboard') : t('dashboard.manageProfile')}
               </p>
             </div>
             <Button variant="outline" onClick={handleSignOut}>
               <LogOut className="w-4 h-4" />
-              Sign Out
+              {t('dashboard.signOut')}
             </Button>
           </div>
 
@@ -426,16 +428,16 @@ export default function Dashboard() {
 
               {/* Quick Stats */}
               <div className="glass-card rounded-2xl p-6">
-                <h3 className="font-semibold text-foreground mb-4">Profile Overview</h3>
+                <h3 className="font-semibold text-foreground mb-4">{t('dashboard.profileOverview')}</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Verified Records</span>
+                    <span className="text-muted-foreground">{t('dashboard.verifiedRecords')}</span>
                     <span className="font-semibold text-foreground">{records.filter(r => r.status === 'active' || r.status === 'ended').length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Current Status</span>
+                    <span className="text-muted-foreground">{t('dashboard.currentStatus')}</span>
                     <Badge variant="default" className="bg-verified text-verified-foreground">
-                      {records.some(r => r.status === 'active') ? 'Employed' : 'Available'}
+                      {records.some(r => r.status === 'active') ? t('dashboard.employed') : t('dashboard.available')}
                     </Badge>
                   </div>
                 </div>
@@ -449,40 +451,40 @@ export default function Dashboard() {
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="timeline" className="gap-2">
                       <Briefcase className="w-4 h-4" />
-                      Employer Records
+                      {t('dashboard.employerRecords')}
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="analytics" className="gap-2">
                       <TrendingUp className="w-4 h-4" />
-                      Analytics
+                      {t('dashboard.analytics')}
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="work-history" className="gap-2">
                       <Building2 className="w-4 h-4" />
-                      Work History
+                      {t('dashboard.workHistory')}
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="referral-letters" className="gap-2">
                       <Award className="w-4 h-4" />
-                      Referral Letters
+                      {t('dashboard.referralLetters')}
                     </TabsTrigger>
                   )}
                   <TabsTrigger value="profile" className="gap-2">
                     <User className="w-4 h-4" />
-                    Profile
+                    {t('dashboard.profile')}
                   </TabsTrigger>
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="sharing" className="gap-2">
                       <Share2 className="w-4 h-4" />
-                      Sharing
+                      {t('dashboard.sharing')}
                     </TabsTrigger>
                   )}
                   <TabsTrigger value="settings" className="gap-2">
                     <Settings className="w-4 h-4" />
-                    Settings
+                    {t('dashboard.settings')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -492,13 +494,13 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <h2 className="text-xl font-display font-semibold text-foreground">
-                            Employment Timeline
+                            {t('dashboard.employmentTimeline')}
                           </h2>
                           <p className="text-sm text-muted-foreground">
-                            Verified records added by your employers
+                            {t('dashboard.verifiedRecordsByEmployers')}
                           </p>
                         </div>
-                        {records.length > 0 && <VerifiedBadge label="All Verified" />}
+                        {records.length > 0 && <VerifiedBadge label={t('dashboard.allVerified')} />}
                       </div>
                       
                       {isLoadingRecords ? (
@@ -514,8 +516,8 @@ export default function Dashboard() {
                       ) : (
                         <div className="text-center py-12 text-muted-foreground">
                           <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>No employment records yet.</p>
-                          <p className="text-sm">Records will appear here when employers add them.</p>
+                          <p>{t('dashboard.noEmploymentRecords')}</p>
+                          <p className="text-sm">{t('dashboard.recordsWillAppear')}</p>
                         </div>
                       )}
                       
@@ -576,7 +578,7 @@ export default function Dashboard() {
                 <TabsContent value="profile">
                   <div className="glass-card rounded-2xl p-6">
                     <h2 className="text-xl font-display font-semibold text-foreground mb-6">
-                      Your Profile
+                      {t('dashboard.yourProfile')}
                     </h2>
                     {isJobSeeker && !isEmployer && !isAdmin && (
                       <div className="mb-6">
@@ -618,67 +620,67 @@ export default function Dashboard() {
                        {isJobSeeker && !isEmployer && !isAdmin && (
                          <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <Label className="text-muted-foreground">First Name</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.firstNameLabel')}</Label>
                             <p className="font-medium text-foreground">{profile.first_name}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Last Name</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.lastNameLabel')}</Label>
                             <p className="font-medium text-foreground">{profile.last_name}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Email</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.emailLabel')}</Label>
                             <p className="font-medium text-foreground">{profile.email}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Phone</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.phoneLabel')}</Label>
                             <p className={`font-medium ${profile.phone ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.phone || '⚠ Not provided'}
+                              {profile.phone || `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">National ID</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.nationalIdLabel')}</Label>
                             <p className={`font-medium ${profile.national_id ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.national_id ? maskId(profile.national_id) : '⚠ Required'}
+                              {profile.national_id ? maskId(profile.national_id) : `⚠ ${t('dashboard.required')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Passport Number</Label>
-                            <p className="font-medium text-foreground">{profile.passport_number ? maskId(profile.passport_number) : 'Not provided'}</p>
+                            <Label className="text-muted-foreground">{t('dashboard.passportNumberLabel')}</Label>
+                            <p className="font-medium text-foreground">{profile.passport_number ? maskId(profile.passport_number) : t('dashboard.notProvided')}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Country of Residence</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.countryLabel')}</Label>
                             <p className={`font-medium ${profile.country ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.country || '⚠ Not provided'}
+                              {profile.country || `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Citizenship</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.citizenshipLabel')}</Label>
                             <p className={`font-medium ${profile.citizenship ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.citizenship || '⚠ Not provided'}
+                              {profile.citizenship || `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Gender</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.genderLabel')}</Label>
                             <p className={`font-medium ${(profile as any).gender ? 'text-foreground' : 'text-warning'}`}>
-                              {(profile as any).gender ? ((profile as any).gender === 'prefer_not_to_say' ? 'Prefer not to say' : (profile as any).gender === 'non_binary' ? 'Non-binary' : (profile as any).gender.charAt(0).toUpperCase() + (profile as any).gender.slice(1)) : '⚠ Not provided'}
+                              {(profile as any).gender ? ((profile as any).gender === 'prefer_not_to_say' ? t('register.preferNotToSay') : (profile as any).gender === 'non_binary' ? t('register.nonBinary') : (profile as any).gender.charAt(0).toUpperCase() + (profile as any).gender.slice(1)) : `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Date of Birth</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.dateOfBirthLabel')}</Label>
                             <p className={`font-medium ${(profile as any).date_of_birth ? 'text-foreground' : 'text-warning'}`}>
-                              {(profile as any).date_of_birth ? new Date((profile as any).date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '⚠ Not provided'}
+                              {(profile as any).date_of_birth ? new Date((profile as any).date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Availability</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.availabilityLabel')}</Label>
                             <p className="font-medium text-foreground">
-                              {(profile as any).availability === 'open_to_offers' ? 'Open to Opportunities' : (profile as any).availability === 'actively_looking' ? 'Actively Looking' : 'Not Looking'}
+                              {(profile as any).availability === 'open_to_offers' ? t('dashboard.openToOpportunities') : (profile as any).availability === 'actively_looking' ? t('dashboard.activelyLooking') : t('dashboard.notLooking')}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Experience Level</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.experienceLevelLabel')}</Label>
                             <p className="font-medium text-foreground">
-                              {(profile as any).experience_level === 'entry' ? 'Entry Level' : (profile as any).experience_level === 'mid' ? 'Mid Level' : (profile as any).experience_level === 'senior' ? 'Senior Level' : (profile as any).experience_level === 'lead' ? 'Lead / Principal' : (profile as any).experience_level === 'executive' ? 'Executive' : 'Entry Level'}
+                              {(profile as any).experience_level === 'entry' ? t('dashboard.entryLevel') : (profile as any).experience_level === 'mid' ? t('dashboard.midLevel') : (profile as any).experience_level === 'senior' ? t('dashboard.seniorLevel') : (profile as any).experience_level === 'lead' ? t('dashboard.leadPrincipal') : (profile as any).experience_level === 'executive' ? t('dashboard.executive') : t('dashboard.entryLevel')}
                             </p>
                           </div>
                           {(!profile.national_id || !(profile as any).gender || !(profile as any).date_of_birth) && (
@@ -689,7 +691,7 @@ export default function Dashboard() {
                                 onClick={() => setShowMissingFields(true)}
                               >
                                 <AlertTriangle className="w-4 h-4" />
-                                Complete Missing Fields
+                                {t('dashboard.completeMissingFields')}
                               </Button>
                             </div>
                           )}
@@ -700,12 +702,12 @@ export default function Dashboard() {
                       {isAdmin && (
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <Label className="text-muted-foreground">Admin Email</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.adminEmail')}</Label>
                             <p className="font-medium text-foreground">{profile.email}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Role</Label>
-                            <p className="font-medium text-foreground">Platform Administrator</p>
+                            <Label className="text-muted-foreground">{t('dashboard.role')}</Label>
+                            <p className="font-medium text-foreground">{t('dashboard.platformAdministrator')}</p>
                           </div>
                         </div>
                       )}
@@ -714,17 +716,17 @@ export default function Dashboard() {
                       {isEmployer && !isAdmin && (
                         <div className="text-center py-8">
                           <p className="text-muted-foreground mb-4">
-                            As an employer, your company profile is managed in the Employer Dashboard.
+                            {t('dashboard.employerProfileNotice')}
                           </p>
                           <Button onClick={() => navigate('/employer')}>
-                            Go to Employer Dashboard
+                            {t('dashboard.goToEmployerDashboard')}
                           </Button>
                         </div>
                       )}
 
                       {isJobSeeker && !isAdmin && !isEmployer && (
                         <div className="border-t border-border pt-6">
-                          <Label className="text-muted-foreground mb-3 block">Skills</Label>
+                          <Label className="text-muted-foreground mb-3 block">{t('dashboard.skills')}</Label>
                           <div className="flex flex-wrap gap-2 mb-4">
                             {skills.map(skill => (
                               <Badge 
@@ -744,7 +746,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex gap-2 mb-4">
                             <Input
-                              placeholder="Add a skill..."
+                              placeholder={t('dashboard.addSkill')}
                               value={newSkill}
                               onChange={(e) => setNewSkill(e.target.value)}
                               onKeyPress={(e) => e.key === 'Enter' && addSkill()}
@@ -778,19 +780,19 @@ export default function Dashboard() {
                   <TabsContent value="sharing">
                     <div className="glass-card rounded-2xl p-6">
                       <h2 className="text-xl font-display font-semibold text-foreground mb-2">
-                        Share Your Profile
+                        {t('dashboard.shareYourProfile')}
                       </h2>
                       <p className="text-muted-foreground mb-6">
-                        Control who can view your verified work history
+                        {t('dashboard.controlWhoViews')}
                       </p>
 
                       <div className="space-y-6">
                         <div className="p-4 border border-border rounded-xl">
                           <div className="flex items-center justify-between mb-4">
                             <div>
-                              <p className="font-medium text-foreground">Profile ID</p>
+                              <p className="font-medium text-foreground">{t('dashboard.profileId')}</p>
                               <p className="text-sm text-muted-foreground">
-                                Share this ID with recruiters for instant verification
+                                {t('dashboard.shareIdWithRecruiters')}
                               </p>
                             </div>
                           </div>
@@ -802,18 +804,18 @@ export default function Dashboard() {
                               variant="outline"
                               onClick={() => {
                                 navigator.clipboard.writeText(profile.profile_id);
-                                toast.success('Copied to clipboard');
+                                toast.success(t('dashboard.copiedToClipboard'));
                               }}
                             >
-                              Copy
+                              {t('dashboard.copy')}
                             </Button>
                           </div>
                         </div>
 
                         <div className="p-4 border border-border rounded-xl">
-                          <p className="font-medium text-foreground mb-2">Verification Link</p>
+                          <p className="font-medium text-foreground mb-2">{t('dashboard.verificationLink')}</p>
                           <p className="text-sm text-muted-foreground mb-4">
-                            Send this link directly to recruiters
+                            {t('dashboard.sendLinkToRecruiters')}
                           </p>
                           <div className="flex items-center gap-3">
                             <code className="flex-1 px-4 py-3 bg-muted rounded-lg text-sm overflow-hidden text-ellipsis">
@@ -823,10 +825,10 @@ export default function Dashboard() {
                               variant="outline"
                               onClick={() => {
                                 navigator.clipboard.writeText(`${window.location.origin}/verify/${profile.profile_id}`);
-                                toast.success('Link copied');
+                                toast.success(t('dashboard.linkCopied'));
                               }}
                             >
-                              Copy
+                              {t('dashboard.copy')}
                             </Button>
                           </div>
                         </div>
@@ -845,7 +847,7 @@ export default function Dashboard() {
                     
                     <div className="glass-card rounded-2xl p-6">
                       <h2 className="text-xl font-display font-semibold text-foreground mb-6">
-                        Account Security
+                        {t('dashboard.accountSecurity')}
                       </h2>
                       <TwoFactorSettings />
                     </div>
@@ -856,13 +858,13 @@ export default function Dashboard() {
 
                     <div className="glass-card rounded-2xl p-6">
                       <h2 className="text-xl font-display font-semibold text-foreground mb-2">
-                        Privacy & Data
+                        {t('dashboard.privacyAndData')}
                       </h2>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Manage your data exports, consent preferences, and account deletion.
+                        {t('dashboard.manageDataExports')}
                       </p>
                       <a href="/settings/privacy" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
-                        Go to Privacy Settings →
+                        {t('dashboard.goToPrivacySettings')}
                       </a>
                     </div>
                   </div>
@@ -879,16 +881,15 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-warning" />
-              Report an Issue
+              {t('dashboard.reportAnIssue')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
-              If you believe this employment record contains incorrect information, 
-              please describe the issue below. Our team will review your dispute.
+              {t('dashboard.disputeDescription')}
             </p>
             <Textarea
-              placeholder="Describe the issue with this record..."
+              placeholder={t('dashboard.describeIssue')}
               value={disputeReason}
               onChange={(e) => setDisputeReason(e.target.value)}
               rows={4}
@@ -896,10 +897,10 @@ export default function Dashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDisputeOpen(false)}>
-              Cancel
+              {t('dashboard.cancel')}
             </Button>
             <Button onClick={submitDispute}>
-              Submit Dispute
+              {t('dashboard.submitDispute')}
             </Button>
           </DialogFooter>
         </DialogContent>
