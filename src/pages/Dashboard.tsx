@@ -346,7 +346,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-muted-foreground">Loading your profile...</p>
+          <p className="text-sm text-muted-foreground">{t('dashboard.loadingProfile')}</p>
         </div>
       </div>
     );
@@ -357,17 +357,17 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Setting up your profile...</p>
+          <p className="text-muted-foreground">{t('dashboard.settingUpProfile')}</p>
           <p className="text-xs text-muted-foreground">
-            {profileRecoveryFailed ? 'We found your session, but your profile data is still loading.' : 'This may take a moment'}
+            {profileRecoveryFailed ? t('dashboard.sessionFoundLoading') : t('dashboard.thisMayTakeMoment')}
           </p>
           <div className="flex items-center justify-center gap-2">
             <Button variant="outline" size="sm" onClick={() => refreshProfile()} disabled={isRecoveringProfile}>
-              Retry
+              {t('dashboard.retry')}
             </Button>
             {profileRecoveryFailed && (
               <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
-                Reload session
+                {t('dashboard.reloadSession')}
               </Button>
             )}
           </div>
@@ -402,15 +402,15 @@ export default function Dashboard() {
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-display font-bold text-foreground">
-                Welcome{isJobSeeker && !isEmployer ? `, ${profile.first_name}` : ''}
+                {t('dashboard.welcome')}{isJobSeeker && !isEmployer ? `, ${profile.first_name}` : ''}
               </h1>
               <p className="text-muted-foreground mt-1">
-                {isAdmin ? 'Platform Administration' : isEmployer ? 'Employer Dashboard' : 'Manage your verified professional profile'}
+                {isAdmin ? t('dashboard.platformAdmin') : isEmployer ? t('dashboard.employerDashboard') : t('dashboard.manageProfile')}
               </p>
             </div>
             <Button variant="outline" onClick={handleSignOut}>
               <LogOut className="w-4 h-4" />
-              Sign Out
+              {t('dashboard.signOut')}
             </Button>
           </div>
 
@@ -428,16 +428,16 @@ export default function Dashboard() {
 
               {/* Quick Stats */}
               <div className="glass-card rounded-2xl p-6">
-                <h3 className="font-semibold text-foreground mb-4">Profile Overview</h3>
+                <h3 className="font-semibold text-foreground mb-4">{t('dashboard.profileOverview')}</h3>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Verified Records</span>
+                    <span className="text-muted-foreground">{t('dashboard.verifiedRecords')}</span>
                     <span className="font-semibold text-foreground">{records.filter(r => r.status === 'active' || r.status === 'ended').length}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Current Status</span>
+                    <span className="text-muted-foreground">{t('dashboard.currentStatus')}</span>
                     <Badge variant="default" className="bg-verified text-verified-foreground">
-                      {records.some(r => r.status === 'active') ? 'Employed' : 'Available'}
+                      {records.some(r => r.status === 'active') ? t('dashboard.employed') : t('dashboard.available')}
                     </Badge>
                   </div>
                 </div>
@@ -451,40 +451,40 @@ export default function Dashboard() {
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="timeline" className="gap-2">
                       <Briefcase className="w-4 h-4" />
-                      Employer Records
+                      {t('dashboard.employerRecords')}
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="analytics" className="gap-2">
                       <TrendingUp className="w-4 h-4" />
-                      Analytics
+                      {t('dashboard.analytics')}
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="work-history" className="gap-2">
                       <Building2 className="w-4 h-4" />
-                      Work History
+                      {t('dashboard.workHistory')}
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="referral-letters" className="gap-2">
                       <Award className="w-4 h-4" />
-                      Referral Letters
+                      {t('dashboard.referralLetters')}
                     </TabsTrigger>
                   )}
                   <TabsTrigger value="profile" className="gap-2">
                     <User className="w-4 h-4" />
-                    Profile
+                    {t('dashboard.profile')}
                   </TabsTrigger>
                   {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="sharing" className="gap-2">
                       <Share2 className="w-4 h-4" />
-                      Sharing
+                      {t('dashboard.sharing')}
                     </TabsTrigger>
                   )}
                   <TabsTrigger value="settings" className="gap-2">
                     <Settings className="w-4 h-4" />
-                    Settings
+                    {t('dashboard.settings')}
                   </TabsTrigger>
                 </TabsList>
 
@@ -494,13 +494,13 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between mb-6">
                         <div>
                           <h2 className="text-xl font-display font-semibold text-foreground">
-                            Employment Timeline
+                            {t('dashboard.employmentTimeline')}
                           </h2>
                           <p className="text-sm text-muted-foreground">
-                            Verified records added by your employers
+                            {t('dashboard.verifiedRecordsByEmployers')}
                           </p>
                         </div>
-                        {records.length > 0 && <VerifiedBadge label="All Verified" />}
+                        {records.length > 0 && <VerifiedBadge label={t('dashboard.allVerified')} />}
                       </div>
                       
                       {isLoadingRecords ? (
@@ -516,8 +516,8 @@ export default function Dashboard() {
                       ) : (
                         <div className="text-center py-12 text-muted-foreground">
                           <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                          <p>No employment records yet.</p>
-                          <p className="text-sm">Records will appear here when employers add them.</p>
+                          <p>{t('dashboard.noEmploymentRecords')}</p>
+                          <p className="text-sm">{t('dashboard.recordsWillAppear')}</p>
                         </div>
                       )}
                       
