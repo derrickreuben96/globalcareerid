@@ -881,16 +881,15 @@ export default function Dashboard() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-warning" />
-              Report an Issue
+              {t('dashboard.reportAnIssue')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <p className="text-sm text-muted-foreground">
-              If you believe this employment record contains incorrect information, 
-              please describe the issue below. Our team will review your dispute.
+              {t('dashboard.disputeDescription')}
             </p>
             <Textarea
-              placeholder="Describe the issue with this record..."
+              placeholder={t('dashboard.describeIssue')}
               value={disputeReason}
               onChange={(e) => setDisputeReason(e.target.value)}
               rows={4}
@@ -898,10 +897,10 @@ export default function Dashboard() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDisputeOpen(false)}>
-              Cancel
+              {t('dashboard.cancel')}
             </Button>
             <Button onClick={submitDispute}>
-              Submit Dispute
+              {t('dashboard.submitDispute')}
             </Button>
           </DialogFooter>
         </DialogContent>
