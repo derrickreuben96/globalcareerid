@@ -702,12 +702,12 @@ export default function Dashboard() {
                       {isAdmin && (
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <Label className="text-muted-foreground">Admin Email</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.adminEmail')}</Label>
                             <p className="font-medium text-foreground">{profile.email}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Role</Label>
-                            <p className="font-medium text-foreground">Platform Administrator</p>
+                            <Label className="text-muted-foreground">{t('dashboard.role')}</Label>
+                            <p className="font-medium text-foreground">{t('dashboard.platformAdministrator')}</p>
                           </div>
                         </div>
                       )}
@@ -716,17 +716,17 @@ export default function Dashboard() {
                       {isEmployer && !isAdmin && (
                         <div className="text-center py-8">
                           <p className="text-muted-foreground mb-4">
-                            As an employer, your company profile is managed in the Employer Dashboard.
+                            {t('dashboard.employerProfileNotice')}
                           </p>
                           <Button onClick={() => navigate('/employer')}>
-                            Go to Employer Dashboard
+                            {t('dashboard.goToEmployerDashboard')}
                           </Button>
                         </div>
                       )}
 
                       {isJobSeeker && !isAdmin && !isEmployer && (
                         <div className="border-t border-border pt-6">
-                          <Label className="text-muted-foreground mb-3 block">Skills</Label>
+                          <Label className="text-muted-foreground mb-3 block">{t('dashboard.skills')}</Label>
                           <div className="flex flex-wrap gap-2 mb-4">
                             {skills.map(skill => (
                               <Badge 
@@ -746,7 +746,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex gap-2 mb-4">
                             <Input
-                              placeholder="Add a skill..."
+                              placeholder={t('dashboard.addSkill')}
                               value={newSkill}
                               onChange={(e) => setNewSkill(e.target.value)}
                               onKeyPress={(e) => e.key === 'Enter' && addSkill()}
