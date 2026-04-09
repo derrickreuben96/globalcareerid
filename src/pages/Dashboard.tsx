@@ -780,19 +780,19 @@ export default function Dashboard() {
                   <TabsContent value="sharing">
                     <div className="glass-card rounded-2xl p-6">
                       <h2 className="text-xl font-display font-semibold text-foreground mb-2">
-                        Share Your Profile
+                        {t('dashboard.shareYourProfile')}
                       </h2>
                       <p className="text-muted-foreground mb-6">
-                        Control who can view your verified work history
+                        {t('dashboard.controlWhoViews')}
                       </p>
 
                       <div className="space-y-6">
                         <div className="p-4 border border-border rounded-xl">
                           <div className="flex items-center justify-between mb-4">
                             <div>
-                              <p className="font-medium text-foreground">Profile ID</p>
+                              <p className="font-medium text-foreground">{t('dashboard.profileId')}</p>
                               <p className="text-sm text-muted-foreground">
-                                Share this ID with recruiters for instant verification
+                                {t('dashboard.shareIdWithRecruiters')}
                               </p>
                             </div>
                           </div>
@@ -804,18 +804,18 @@ export default function Dashboard() {
                               variant="outline"
                               onClick={() => {
                                 navigator.clipboard.writeText(profile.profile_id);
-                                toast.success('Copied to clipboard');
+                                toast.success(t('dashboard.copiedToClipboard'));
                               }}
                             >
-                              Copy
+                              {t('dashboard.copy')}
                             </Button>
                           </div>
                         </div>
 
                         <div className="p-4 border border-border rounded-xl">
-                          <p className="font-medium text-foreground mb-2">Verification Link</p>
+                          <p className="font-medium text-foreground mb-2">{t('dashboard.verificationLink')}</p>
                           <p className="text-sm text-muted-foreground mb-4">
-                            Send this link directly to recruiters
+                            {t('dashboard.sendLinkToRecruiters')}
                           </p>
                           <div className="flex items-center gap-3">
                             <code className="flex-1 px-4 py-3 bg-muted rounded-lg text-sm overflow-hidden text-ellipsis">
@@ -825,10 +825,10 @@ export default function Dashboard() {
                               variant="outline"
                               onClick={() => {
                                 navigator.clipboard.writeText(`${window.location.origin}/verify/${profile.profile_id}`);
-                                toast.success('Link copied');
+                                toast.success(t('dashboard.linkCopied'));
                               }}
                             >
-                              Copy
+                              {t('dashboard.copy')}
                             </Button>
                           </div>
                         </div>
@@ -847,7 +847,7 @@ export default function Dashboard() {
                     
                     <div className="glass-card rounded-2xl p-6">
                       <h2 className="text-xl font-display font-semibold text-foreground mb-6">
-                        Account Security
+                        {t('dashboard.accountSecurity')}
                       </h2>
                       <TwoFactorSettings />
                     </div>
@@ -858,13 +858,13 @@ export default function Dashboard() {
 
                     <div className="glass-card rounded-2xl p-6">
                       <h2 className="text-xl font-display font-semibold text-foreground mb-2">
-                        Privacy & Data
+                        {t('dashboard.privacyAndData')}
                       </h2>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Manage your data exports, consent preferences, and account deletion.
+                        {t('dashboard.manageDataExports')}
                       </p>
                       <a href="/settings/privacy" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
-                        Go to Privacy Settings →
+                        {t('dashboard.goToPrivacySettings')}
                       </a>
                     </div>
                   </div>
