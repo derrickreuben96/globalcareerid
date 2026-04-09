@@ -73,6 +73,7 @@ interface EmploymentRecord {
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     user: authUser,
     session,
