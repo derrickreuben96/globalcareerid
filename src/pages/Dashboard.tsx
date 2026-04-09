@@ -578,7 +578,7 @@ export default function Dashboard() {
                 <TabsContent value="profile">
                   <div className="glass-card rounded-2xl p-6">
                     <h2 className="text-xl font-display font-semibold text-foreground mb-6">
-                      Your Profile
+                      {t('dashboard.yourProfile')}
                     </h2>
                     {isJobSeeker && !isEmployer && !isAdmin && (
                       <div className="mb-6">
@@ -620,67 +620,67 @@ export default function Dashboard() {
                        {isJobSeeker && !isEmployer && !isAdmin && (
                          <div className="grid md:grid-cols-2 gap-4">
                           <div>
-                            <Label className="text-muted-foreground">First Name</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.firstNameLabel')}</Label>
                             <p className="font-medium text-foreground">{profile.first_name}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Last Name</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.lastNameLabel')}</Label>
                             <p className="font-medium text-foreground">{profile.last_name}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Email</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.emailLabel')}</Label>
                             <p className="font-medium text-foreground">{profile.email}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Phone</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.phoneLabel')}</Label>
                             <p className={`font-medium ${profile.phone ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.phone || '⚠ Not provided'}
+                              {profile.phone || `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">National ID</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.nationalIdLabel')}</Label>
                             <p className={`font-medium ${profile.national_id ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.national_id ? maskId(profile.national_id) : '⚠ Required'}
+                              {profile.national_id ? maskId(profile.national_id) : `⚠ ${t('dashboard.required')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Passport Number</Label>
-                            <p className="font-medium text-foreground">{profile.passport_number ? maskId(profile.passport_number) : 'Not provided'}</p>
+                            <Label className="text-muted-foreground">{t('dashboard.passportNumberLabel')}</Label>
+                            <p className="font-medium text-foreground">{profile.passport_number ? maskId(profile.passport_number) : t('dashboard.notProvided')}</p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Country of Residence</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.countryLabel')}</Label>
                             <p className={`font-medium ${profile.country ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.country || '⚠ Not provided'}
+                              {profile.country || `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Citizenship</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.citizenshipLabel')}</Label>
                             <p className={`font-medium ${profile.citizenship ? 'text-foreground' : 'text-warning'}`}>
-                              {profile.citizenship || '⚠ Not provided'}
+                              {profile.citizenship || `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Gender</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.genderLabel')}</Label>
                             <p className={`font-medium ${(profile as any).gender ? 'text-foreground' : 'text-warning'}`}>
-                              {(profile as any).gender ? ((profile as any).gender === 'prefer_not_to_say' ? 'Prefer not to say' : (profile as any).gender === 'non_binary' ? 'Non-binary' : (profile as any).gender.charAt(0).toUpperCase() + (profile as any).gender.slice(1)) : '⚠ Not provided'}
+                              {(profile as any).gender ? ((profile as any).gender === 'prefer_not_to_say' ? t('register.preferNotToSay') : (profile as any).gender === 'non_binary' ? t('register.nonBinary') : (profile as any).gender.charAt(0).toUpperCase() + (profile as any).gender.slice(1)) : `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Date of Birth</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.dateOfBirthLabel')}</Label>
                             <p className={`font-medium ${(profile as any).date_of_birth ? 'text-foreground' : 'text-warning'}`}>
-                              {(profile as any).date_of_birth ? new Date((profile as any).date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '⚠ Not provided'}
+                              {(profile as any).date_of_birth ? new Date((profile as any).date_of_birth).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : `⚠ ${t('dashboard.notProvided')}`}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Availability</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.availabilityLabel')}</Label>
                             <p className="font-medium text-foreground">
-                              {(profile as any).availability === 'open_to_offers' ? 'Open to Opportunities' : (profile as any).availability === 'actively_looking' ? 'Actively Looking' : 'Not Looking'}
+                              {(profile as any).availability === 'open_to_offers' ? t('dashboard.openToOpportunities') : (profile as any).availability === 'actively_looking' ? t('dashboard.activelyLooking') : t('dashboard.notLooking')}
                             </p>
                           </div>
                           <div>
-                            <Label className="text-muted-foreground">Experience Level</Label>
+                            <Label className="text-muted-foreground">{t('dashboard.experienceLevelLabel')}</Label>
                             <p className="font-medium text-foreground">
-                              {(profile as any).experience_level === 'entry' ? 'Entry Level' : (profile as any).experience_level === 'mid' ? 'Mid Level' : (profile as any).experience_level === 'senior' ? 'Senior Level' : (profile as any).experience_level === 'lead' ? 'Lead / Principal' : (profile as any).experience_level === 'executive' ? 'Executive' : 'Entry Level'}
+                              {(profile as any).experience_level === 'entry' ? t('dashboard.entryLevel') : (profile as any).experience_level === 'mid' ? t('dashboard.midLevel') : (profile as any).experience_level === 'senior' ? t('dashboard.seniorLevel') : (profile as any).experience_level === 'lead' ? t('dashboard.leadPrincipal') : (profile as any).experience_level === 'executive' ? t('dashboard.executive') : t('dashboard.entryLevel')}
                             </p>
                           </div>
                           {(!profile.national_id || !(profile as any).gender || !(profile as any).date_of_birth) && (
@@ -691,7 +691,7 @@ export default function Dashboard() {
                                 onClick={() => setShowMissingFields(true)}
                               >
                                 <AlertTriangle className="w-4 h-4" />
-                                Complete Missing Fields
+                                {t('dashboard.completeMissingFields')}
                               </Button>
                             </div>
                           )}
