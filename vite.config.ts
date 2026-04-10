@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -10,17 +9,6 @@ export default defineConfig(({ mode }) => {
     react(),
     mode === "development" && componentTagger(),
   ].filter(Boolean);
-
-  // Add Sentry plugin for source map uploads only when auth token is present
-  if (process.env.VITE_SENTRY_AUTH_TOKEN) {
-    plugins.push(
-      sentryVitePlugin({
-        authToken: process.env.VITE_SENTRY_AUTH_TOKEN,
-        org: process.env.VITE_SENTRY_ORG,
-        project: process.env.VITE_SENTRY_PROJECT,
-      })
-    );
-  }
 
   return {
     server: {
@@ -59,8 +47,6 @@ export default defineConfig(({ mode }) => {
       ],
       dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
     },
-    build: {
-      sourcemap: !!process.env.VITE_SENTRY_AUTH_TOKEN,
-    },
+    build: {},
   };
 });
