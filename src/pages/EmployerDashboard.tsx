@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -84,6 +85,7 @@ interface EmploymentRecord {
 export default function EmployerDashboard() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, authStatus, signOut } = useAuth();
+  const { i18n } = useTranslation();
   const [employer, setEmployer] = useState<Employer | null>(null);
   const [employees, setEmployees] = useState<EmploymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -288,6 +290,7 @@ export default function EmployerDashboard() {
           writerDesignation: writerDetails.designation,
           writerContact: writerDetails.contactNumber,
           writerAddress: writerDetails.address,
+          language: i18n.language,
         },
       });
 
@@ -315,11 +318,31 @@ export default function EmployerDashboard() {
 
     setIsSavingLetter(true);
     try {
+      let finalContent = referralContent.trim();
+
+      // For manual letters in non-English, translate to English and append
+      if (referralMode === 'manual' && i18n.language !== 'en' && !finalContent.includes('===ENGLISH TRANSLATION===')) {
+        try {
+          const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-referral-letter', {
+            body: {
+              content: finalContent,
+              language: i18n.language,
+            },
+          });
+          if (!translateError && translateData?.translation) {
+            finalContent = finalContent + '\n\n===ENGLISH TRANSLATION===\n\n' + translateData.translation;
+          }
+        } catch {
+          // If translation fails, save without translation
+          console.warn('Translation failed, saving original content only');
+        }
+      }
+
       const { error } = await supabase.from('referral_letters').insert({
         employment_record_id: selectedRecord!,
         employer_id: employer.id,
         employee_user_id: emp.user_id,
-        content: referralContent.trim(),
+        content: finalContent,
         generated_by: referralMode || 'manual',
       });
 
