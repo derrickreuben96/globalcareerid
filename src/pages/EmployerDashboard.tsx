@@ -289,6 +289,7 @@ export default function EmployerDashboard() {
           writerDesignation: writerDetails.designation,
           writerContact: writerDetails.contactNumber,
           writerAddress: writerDetails.address,
+          language: i18n.language,
         },
       });
 
