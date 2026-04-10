@@ -47,8 +47,6 @@ export default defineConfig(({ mode }) => {
       ],
       dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
     },
-    build: {
-      sourcemap: !!process.env.VITE_SENTRY_AUTH_TOKEN,
-    },
+    build: {},
   };
 });
