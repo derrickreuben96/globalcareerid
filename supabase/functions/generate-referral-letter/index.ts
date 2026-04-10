@@ -11,6 +11,15 @@ function validateStringField(value: unknown, maxLength: number): string {
   return value.slice(0, maxLength).trim();
 }
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  zh: "Chinese (Simplified)",
+  hi: "Hindi",
+  es: "Spanish",
+  fr: "French",
+  ar: "Arabic",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -70,6 +79,7 @@ serve(async (req) => {
     const writerDesignation = validateStringField(body.writerDesignation, 200);
     const writerContact = validateStringField(body.writerContact, 100);
     const writerAddress = validateStringField(body.writerAddress, 500);
+    const language = validateStringField(body.language, 10) || "en";
 
     if (!employeeName || !jobTitle || !companyName || !startDate || !endDate) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -78,8 +88,10 @@ serve(async (req) => {
       });
     }
 
-    const prompt = `Write a professional referral/recommendation letter for an employee with the following details:
+    const isNonEnglish = language !== "en" && LANGUAGE_NAMES[language];
+    const langName = LANGUAGE_NAMES[language] || "English";
 
+    const baseDetails = `
 - Employee Name: ${employeeName}
 - Job Title: ${jobTitle}
 - Department: ${department || 'Not specified'}
@@ -91,7 +103,34 @@ The letter is being written by:
 - Name: ${writerName || 'Not specified'}
 - Designation: ${writerDesignation || 'Not specified'}
 ${writerContact ? `- Contact: ${writerContact}` : ''}
-${writerAddress ? `- Address: ${writerAddress}` : ''}
+${writerAddress ? `- Address: ${writerAddress}` : ''}`;
+
+    let prompt: string;
+
+    if (isNonEnglish) {
+      prompt = `Write a professional referral/recommendation letter for an employee with the following details:
+${baseDetails}
+
+IMPORTANT: You must produce TWO versions of the letter separated by the exact line:
+===ENGLISH TRANSLATION===
+
+First, write the FULL letter in ${langName}.
+Then write the separator line: ===ENGLISH TRANSLATION===
+Then write the FULL letter again in English.
+
+Both versions should:
+1. Be addressed "To Whom It May Concern"
+2. Include the current date at the top
+3. Confirm the employment details
+4. Highlight positive professional qualities
+5. Recommend the employee for future opportunities
+6. Do NOT include a signature block at the end — it will be added separately
+7. Be concise but thorough (about 250-350 words each)
+
+Do NOT use placeholder brackets like [Name] — use the actual details provided.`;
+    } else {
+      prompt = `Write a professional referral/recommendation letter for an employee with the following details:
+${baseDetails}
 
 Write a formal, professional referral letter. The letter should:
 1. Be addressed "To Whom It May Concern"
@@ -103,6 +142,7 @@ Write a formal, professional referral letter. The letter should:
 7. Be concise but thorough (about 250-350 words)
 
 Do NOT use placeholder brackets like [Name] — use the actual details provided.`;
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -113,7 +153,7 @@ Do NOT use placeholder brackets like [Name] — use the actual details provided.
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are a professional HR letter writer. Write clear, formal referral letters." },
+          { role: "system", content: "You are a professional HR letter writer. Write clear, formal referral letters. Follow language instructions exactly." },
           { role: "user", content: prompt },
         ],
       }),
