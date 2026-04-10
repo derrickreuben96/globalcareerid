@@ -237,24 +237,72 @@ export function ReferralLettersViewer() {
       yPos += 10;
 
       // --- LETTER CONTENT ---
+      const TRANSLATION_SEPARATOR = '===ENGLISH TRANSLATION===';
+      const hasBilingual = letter.content.includes(TRANSLATION_SEPARATOR);
+      const [originalContent, englishContent] = hasBilingual
+        ? letter.content.split(TRANSLATION_SEPARATOR).map(s => s.trim())
+        : [letter.content, null];
+
       pdf.setFontSize(11);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(33, 33, 33);
 
-      const lines = pdf.splitTextToSize(letter.content, contentWidth);
-      const lineHeight = 5.5;
+      const renderTextBlock = (text: string, startY: number): number => {
+        let y = startY;
+        const blockLines = pdf.splitTextToSize(text, contentWidth);
+        const lineHeight = 5.5;
+        for (const line of blockLines) {
+          if (y + lineHeight > pageHeight - 55) {
+            pdf.addPage();
+            addWatermarks(pdf);
+            y = margin + 5;
+            pdf.setFontSize(11);
+            pdf.setFont('helvetica', 'normal');
+            pdf.setTextColor(33, 33, 33);
+          }
+          pdf.text(line, margin, y);
+          y += lineHeight;
+        }
+        return y;
+      };
 
-      for (const line of lines) {
-        if (yPos + lineHeight > pageHeight - 55) {
+      // Render original language content
+      yPos = renderTextBlock(originalContent, yPos);
+
+      // If bilingual, add separator and English translation
+      if (englishContent) {
+        yPos += 8;
+
+        // Check if we need a new page for the separator
+        if (yPos + 20 > pageHeight - 55) {
           pdf.addPage();
           addWatermarks(pdf);
           yPos = margin + 5;
-          pdf.setFontSize(11);
-          pdf.setFont('helvetica', 'normal');
-          pdf.setTextColor(33, 33, 33);
         }
-        pdf.text(line, margin, yPos);
-        yPos += lineHeight;
+
+        // Separator line
+        pdf.setDrawColor(0, 100, 180);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 6;
+
+        // "English Translation" heading
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(0, 80, 160);
+        pdf.text('English Translation', pageWidth / 2, yPos, { align: 'center' });
+        yPos += 4;
+
+        pdf.setDrawColor(0, 100, 180);
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 8;
+
+        // Render English content
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(33, 33, 33);
+        yPos = renderTextBlock(englishContent, yPos);
       }
 
       yPos += 10;
