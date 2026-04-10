@@ -85,6 +85,7 @@ interface EmploymentRecord {
 export default function EmployerDashboard() {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, authStatus, signOut } = useAuth();
+  const { i18n } = useTranslation();
   const [employer, setEmployer] = useState<Employer | null>(null);
   const [employees, setEmployees] = useState<EmploymentRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
