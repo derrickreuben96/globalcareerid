@@ -1046,7 +1046,7 @@ export default function EmployerDashboard() {
                 </div>
               </div>
               <DialogFooter className="flex-col gap-2 sm:flex-row">
-                <Button variant="outline" onClick={() => setReferralStep('ask')}>
+                <Button variant="outline" onClick={() => setReferralStep(referralMode === 'manual' ? 'language' : 'ask')}>
                   Back
                 </Button>
                 <Button
