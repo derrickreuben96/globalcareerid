@@ -96,10 +96,11 @@ export default function EmployerDashboard() {
   const [isAddingEmployee, setIsAddingEmployee] = useState(false);
   
   // Referral letter states
-  const [referralStep, setReferralStep] = useState<'end' | 'ask' | 'writer' | 'write'>('end');
+  const [referralStep, setReferralStep] = useState<'end' | 'ask' | 'language' | 'writer' | 'write'>('end');
   const [referralMode, setReferralMode] = useState<'ai' | 'manual' | null>(null);
   const [referralContent, setReferralContent] = useState('');
   const [referralNotes, setReferralNotes] = useState('');
+  const [manualLetterLanguage, setManualLetterLanguage] = useState(i18n.language || 'en');
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
   const [isSavingLetter, setIsSavingLetter] = useState(false);
   const [writerDetails, setWriterDetails] = useState({
@@ -321,12 +322,12 @@ export default function EmployerDashboard() {
       let finalContent = referralContent.trim();
 
       // For manual letters in non-English, translate to English and append
-      if (referralMode === 'manual' && i18n.language !== 'en' && !finalContent.includes('===ENGLISH TRANSLATION===')) {
+      if (referralMode === 'manual' && manualLetterLanguage !== 'en' && !finalContent.includes('===ENGLISH TRANSLATION===')) {
         try {
           const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-referral-letter', {
             body: {
               content: finalContent,
-              language: i18n.language,
+              language: manualLetterLanguage,
             },
           });
           if (!translateError && translateData?.translation) {
@@ -365,6 +366,7 @@ export default function EmployerDashboard() {
     setReferralContent('');
     setReferralNotes('');
     setWriterDetails({ name: '', designation: '', contactNumber: '', address: '' });
+    setManualLetterLanguage(i18n.language || 'en');
   };
 
   const handleSignOut = async () => {
@@ -942,7 +944,8 @@ export default function EmployerDashboard() {
                   variant="outline"
                   onClick={() => {
                     setReferralMode('manual');
-                    setReferralStep('writer');
+                    setManualLetterLanguage(i18n.language || 'en');
+                    setReferralStep('language');
                   }}
                   className="gap-2"
                 >
@@ -958,6 +961,48 @@ export default function EmployerDashboard() {
                 >
                   <Sparkles className="w-4 h-4" />
                   Generate with AI
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 2b: Language selection for manual letters */}
+          {referralStep === 'language' && (
+            <>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Which language will you write the referral letter in? If you choose a language other than English, an English translation will be automatically included in the PDF.
+                </p>
+                <div className="space-y-2">
+                  <Label>Letter Language</Label>
+                  <Select value={manualLetterLanguage} onValueChange={setManualLetterLanguage}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">🇬🇧 English</SelectItem>
+                      <SelectItem value="zh">🇨🇳 中文 (Chinese)</SelectItem>
+                      <SelectItem value="hi">🇮🇳 हिन्दी (Hindi)</SelectItem>
+                      <SelectItem value="es">🇪🇸 Español (Spanish)</SelectItem>
+                      <SelectItem value="fr">🇫🇷 Français (French)</SelectItem>
+                      <SelectItem value="ar">🇸🇦 العربية (Arabic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {manualLetterLanguage !== 'en' && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+                    <Globe className="w-4 h-4 inline mr-1" />
+                    The PDF will include your letter in the selected language along with an English translation.
+                  </div>
+                )}
+              </div>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setReferralStep('ask')}>
+                  Back
+                </Button>
+                <Button onClick={() => setReferralStep('writer')} className="gap-2">
+                  <PenLine className="w-4 h-4" />
+                  Continue
                 </Button>
               </DialogFooter>
             </>
@@ -1001,7 +1046,7 @@ export default function EmployerDashboard() {
                 </div>
               </div>
               <DialogFooter className="flex-col gap-2 sm:flex-row">
-                <Button variant="outline" onClick={() => setReferralStep('ask')}>
+                <Button variant="outline" onClick={() => setReferralStep(referralMode === 'manual' ? 'language' : 'ask')}>
                   Back
                 </Button>
                 <Button
