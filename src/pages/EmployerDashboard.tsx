@@ -96,10 +96,11 @@ export default function EmployerDashboard() {
   const [isAddingEmployee, setIsAddingEmployee] = useState(false);
   
   // Referral letter states
-  const [referralStep, setReferralStep] = useState<'end' | 'ask' | 'writer' | 'write'>('end');
+  const [referralStep, setReferralStep] = useState<'end' | 'ask' | 'language' | 'writer' | 'write'>('end');
   const [referralMode, setReferralMode] = useState<'ai' | 'manual' | null>(null);
   const [referralContent, setReferralContent] = useState('');
   const [referralNotes, setReferralNotes] = useState('');
+  const [manualLetterLanguage, setManualLetterLanguage] = useState(i18n.language || 'en');
   const [isGeneratingLetter, setIsGeneratingLetter] = useState(false);
   const [isSavingLetter, setIsSavingLetter] = useState(false);
   const [writerDetails, setWriterDetails] = useState({
@@ -321,12 +322,12 @@ export default function EmployerDashboard() {
       let finalContent = referralContent.trim();
 
       // For manual letters in non-English, translate to English and append
-      if (referralMode === 'manual' && i18n.language !== 'en' && !finalContent.includes('===ENGLISH TRANSLATION===')) {
+      if (referralMode === 'manual' && manualLetterLanguage !== 'en' && !finalContent.includes('===ENGLISH TRANSLATION===')) {
         try {
           const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-referral-letter', {
             body: {
               content: finalContent,
-              language: i18n.language,
+              language: manualLetterLanguage,
             },
           });
           if (!translateError && translateData?.translation) {
@@ -365,6 +366,7 @@ export default function EmployerDashboard() {
     setReferralContent('');
     setReferralNotes('');
     setWriterDetails({ name: '', designation: '', contactNumber: '', address: '' });
+    setManualLetterLanguage(i18n.language || 'en');
   };
 
   const handleSignOut = async () => {
@@ -942,7 +944,8 @@ export default function EmployerDashboard() {
                   variant="outline"
                   onClick={() => {
                     setReferralMode('manual');
-                    setReferralStep('writer');
+                    setManualLetterLanguage(i18n.language || 'en');
+                    setReferralStep('language');
                   }}
                   className="gap-2"
                 >
