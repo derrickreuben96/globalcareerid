@@ -966,6 +966,48 @@ export default function EmployerDashboard() {
             </>
           )}
 
+          {/* Step 2b: Language selection for manual letters */}
+          {referralStep === 'language' && (
+            <>
+              <div className="space-y-4 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Which language will you write the referral letter in? If you choose a language other than English, an English translation will be automatically included in the PDF.
+                </p>
+                <div className="space-y-2">
+                  <Label>Letter Language</Label>
+                  <Select value={manualLetterLanguage} onValueChange={setManualLetterLanguage}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">🇬🇧 English</SelectItem>
+                      <SelectItem value="zh">🇨🇳 中文 (Chinese)</SelectItem>
+                      <SelectItem value="hi">🇮🇳 हिन्दी (Hindi)</SelectItem>
+                      <SelectItem value="es">🇪🇸 Español (Spanish)</SelectItem>
+                      <SelectItem value="fr">🇫🇷 Français (French)</SelectItem>
+                      <SelectItem value="ar">🇸🇦 العربية (Arabic)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {manualLetterLanguage !== 'en' && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+                    <Globe className="w-4 h-4 inline mr-1" />
+                    The PDF will include your letter in the selected language along with an English translation.
+                  </div>
+                )}
+              </div>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
+                <Button variant="outline" onClick={() => setReferralStep('ask')}>
+                  Back
+                </Button>
+                <Button onClick={() => setReferralStep('writer')} className="gap-2">
+                  <PenLine className="w-4 h-4" />
+                  Continue
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
           {/* Step 3: Writer details */}
           {referralStep === 'writer' && (
             <>
