@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@4.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -9,22 +10,65 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Require authentication
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { email, first_name, update_type, details } = await req.json();
 
-    if (!email) {
+    if (!email || typeof email !== "string") {
       return new Response(
         JSON.stringify({ error: "email is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const name = first_name || "there";
+    // Verify the requested email matches the authenticated user's email
+    if (email.toLowerCase() !== (userData.user.email || "").toLowerCase()) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const safeName = typeof first_name === "string" ? escapeHtml(first_name.slice(0, 100)) : "";
+    const name = safeName || "there";
+    const safeDetails = typeof details === "string" ? escapeHtml(details.slice(0, 500)) : "";
 
     let subject: string;
     let detailsHtml: string;
@@ -47,10 +91,10 @@ const handler = async (req: Request): Promise<Response> => {
           <p style="color: #334155; font-size: 14px; line-height: 1.6;">
             Your skills on Global Career ID have been updated successfully.
           </p>
-          ${details ? `
+          ${safeDetails ? `
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 24px 0;">
             <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #0f172a;">Updated Skills</p>
-            <p style="margin: 0; color: #334155; font-size: 13px;">${details}</p>
+            <p style="margin: 0; color: #334155; font-size: 13px;">${safeDetails}</p>
           </div>` : ""}
         `;
         break;
@@ -58,7 +102,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject = "🔒 Profile Visibility Updated";
         detailsHtml = `
           <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-            Your profile visibility settings have been changed${details ? ` to <strong>${details}</strong>` : ""}.
+            Your profile visibility settings have been changed${safeDetails ? ` to <strong>${safeDetails}</strong>` : ""}.
           </p>
         `;
         break;
@@ -67,7 +111,7 @@ const handler = async (req: Request): Promise<Response> => {
         subject = "🔄 Your Profile Has Been Updated";
         detailsHtml = `
           <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-            Your Global Career ID profile has been updated successfully.${details ? ` Changes: ${details}` : ""}
+            Your Global Career ID profile has been updated successfully.${safeDetails ? ` Changes: ${safeDetails}` : ""}
           </p>
         `;
         break;
@@ -102,14 +146,14 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Profile update email sent:", emailResponse);
 
-    return new Response(JSON.stringify({ success: true, emailResponse }), {
+    return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in notify-profile-update:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

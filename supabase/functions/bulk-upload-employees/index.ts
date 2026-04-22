@@ -111,9 +111,20 @@ Deno.serve(async (req) => {
       employerId: string;
     };
 
-    if (!rows || !employerId) {
+    const MAX_ROWS = 500;
+    if (!rows || !Array.isArray(rows) || rows.length === 0 || !employerId) {
       return new Response(
         JSON.stringify({ error: "Missing rows or employerId" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (rows.length > MAX_ROWS) {
+      return new Response(
+        JSON.stringify({ error: `Too many rows. Maximum ${MAX_ROWS} rows allowed per upload.` }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
