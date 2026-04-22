@@ -188,7 +188,7 @@ Do NOT use placeholder brackets like [Name] — use the actual details provided.
     });
   } catch (e) {
     console.error("generate-referral-letter error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
