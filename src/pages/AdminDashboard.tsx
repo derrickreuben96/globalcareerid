@@ -210,6 +210,8 @@ export default function AdminDashboard() {
         return <AdminActivityLog />;
       case "duplicate-risks":
         return <AdminDuplicateRisks />;
+      case "consent-log":
+        return <AdminConsentLog />;
       default:
         return <AdminOverview employers={employers} disputes={disputes} userCount={userCount} />;
     }
