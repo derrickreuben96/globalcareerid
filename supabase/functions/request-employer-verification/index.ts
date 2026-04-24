@@ -72,12 +72,22 @@ Deno.serve(async (req) => {
     const token = crypto.randomUUID() + "-" + crypto.randomUUID();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
+    // Hash the token before storing — only the hash is persisted.
+    // The raw token is sent in the email link and never written to the database.
+    const tokenHashBuf = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(token),
+    );
+    const tokenHash = Array.from(new Uint8Array(tokenHashBuf))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
     const { error: insertError } = await supabase
       .from("verification_requests")
       .insert({
         work_history_id,
         employer_email,
-        token,
+        token_hash: tokenHash,
         expires_at: expiresAt.toISOString(),
         status: "pending",
       });

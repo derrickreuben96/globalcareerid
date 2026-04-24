@@ -951,7 +951,7 @@ export type Database = {
           expires_at: string
           id: string
           status: string
-          token: string
+          token_hash: string
           work_history_id: string
         }
         Insert: {
@@ -960,7 +960,7 @@ export type Database = {
           expires_at: string
           id?: string
           status?: string
-          token: string
+          token_hash: string
           work_history_id: string
         }
         Update: {
@@ -969,7 +969,7 @@ export type Database = {
           expires_at?: string
           id?: string
           status?: string
-          token?: string
+          token_hash?: string
           work_history_id?: string
         }
         Relationships: [

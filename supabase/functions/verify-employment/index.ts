@@ -35,10 +35,19 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Hash the incoming token and look up by hash — plaintext tokens are never stored.
+  const tokenHashBuf = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(token),
+  );
+  const tokenHash = Array.from(new Uint8Array(tokenHashBuf))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
   const { data: request, error } = await supabase
     .from("verification_requests")
     .select("*, work_history:work_history!inner(*)")
-    .eq("token", token)
+    .eq("token_hash", tokenHash)
     .single();
 
   if (error || !request) {
