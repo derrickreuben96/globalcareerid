@@ -10,6 +10,7 @@ import {
   FileText,
   Edit,
   Fingerprint,
+  ScrollText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -41,6 +42,7 @@ const navItems = [
   { title: "Experience Requests", url: "experience-requests", icon: Edit },
   { title: "Duplicate Risks", url: "duplicate-risks", icon: Fingerprint },
   { title: "Document Reviews", url: "documents", icon: FileText },
+  { title: "Consent Log", url: "consent-log", icon: ScrollText },
   { title: "AI Assistant", url: "ai-chat", icon: MessageSquareText },
   { title: "Activity Log", url: "activity", icon: Activity },
 ];
