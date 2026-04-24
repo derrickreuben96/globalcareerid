@@ -1069,6 +1069,27 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_consent_logs_admin: {
+        Args: {
+          consent_type_filter?: string
+          end_date?: string
+          granted_filter?: boolean
+          result_limit?: number
+          result_offset?: number
+          search_term?: string
+          start_date?: string
+        }
+        Returns: {
+          consent_type: string
+          created_at: string
+          granted: boolean
+          id: string
+          ip_address: string
+          user_agent: string
+          user_email: string
+          user_id: string
+        }[]
+      }
       get_employer_audit_logs: {
         Args: { employer_id_param: string }
         Returns: {
