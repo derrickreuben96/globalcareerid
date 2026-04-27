@@ -680,6 +680,192 @@ export type Database = {
         }
         Relationships: []
       }
+      project_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          performed_by: string | null
+          project_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+          project_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_audit_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_dispute_log: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          raised_by: string
+          reason: string
+          resolution_note: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          raised_by: string
+          reason: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          raised_by?: string
+          reason?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_dispute_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_skills: {
+        Row: {
+          ai_extracted: boolean
+          created_at: string
+          id: string
+          project_id: string
+          skill: string
+        }
+        Insert: {
+          ai_extracted?: boolean
+          created_at?: string
+          id?: string
+          project_id: string
+          skill: string
+        }
+        Update: {
+          ai_extracted?: boolean
+          created_at?: string
+          id?: string
+          project_id?: string
+          skill?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_skills_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          added_by: string
+          budget_range: string | null
+          created_at: string
+          description: string
+          employee_confirmed_at: string | null
+          employer_id: string
+          employer_sealed_at: string | null
+          end_date: string | null
+          id: string
+          measurable_outcome: string | null
+          profile_id: string
+          raw_notes: string | null
+          scope: string | null
+          signed_jwt: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          added_by: string
+          budget_range?: string | null
+          created_at?: string
+          description: string
+          employee_confirmed_at?: string | null
+          employer_id: string
+          employer_sealed_at?: string | null
+          end_date?: string | null
+          id?: string
+          measurable_outcome?: string | null
+          profile_id: string
+          raw_notes?: string | null
+          scope?: string | null
+          signed_jwt?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string
+          budget_range?: string | null
+          created_at?: string
+          description?: string
+          employee_confirmed_at?: string | null
+          employer_id?: string
+          employer_sealed_at?: string | null
+          end_date?: string | null
+          id?: string
+          measurable_outcome?: string | null
+          profile_id?: string
+          raw_notes?: string | null
+          scope?: string | null
+          signed_jwt?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["project_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       promotion_requests: {
         Row: {
           created_at: string
@@ -1260,6 +1446,8 @@ export type Database = {
         Args: { employer_id_param: string; user_id_param: string }
         Returns: boolean
       }
+      is_project_employer: { Args: { _project_id: string }; Returns: boolean }
+      is_project_owner: { Args: { _project_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           event_type_param: string
@@ -1302,6 +1490,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "job_seeker" | "employer"
+      project_status:
+        | "draft"
+        | "pending_employee_confirmation"
+        | "active"
+        | "sealed"
+        | "disputed"
       promotion_type: "initial" | "promotion" | "lateral" | "demotion"
     }
     CompositeTypes: {
@@ -1431,6 +1625,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "job_seeker", "employer"],
+      project_status: [
+        "draft",
+        "pending_employee_confirmation",
+        "active",
+        "sealed",
+        "disputed",
+      ],
       promotion_type: ["initial", "promotion", "lateral", "demotion"],
     },
   },

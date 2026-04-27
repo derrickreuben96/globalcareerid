@@ -36,6 +36,9 @@ const VerifyCredential = lazy(() => import("./pages/VerifyCredential"));
 const PrivacySettings = lazy(() => import("./pages/settings/PrivacySettings"));
 const AnalyticsDashboard = lazy(() => import("./pages/admin/AnalyticsDashboard"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const EmployerProjects = lazy(() => import("./pages/employer/Projects"));
+const AddProject = lazy(() => import("./pages/employer/AddProject"));
+const PendingProjects = lazy(() => import("./pages/employee/PendingProjects"));
 
 const queryClient = new QueryClient();
 
