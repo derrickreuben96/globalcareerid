@@ -25,7 +25,8 @@ async function callAssistant<T>(action: string, body: Record<string, unknown>): 
 
 export function useExpandProject() {
   return useMutation({
-    mutationFn: (input: ExpandInput) => callAssistant<ExpandResult>("expand", input),
+    mutationFn: (input: ExpandInput) =>
+      callAssistant<ExpandResult>("expand", { ...input }),
   });
 }
 
