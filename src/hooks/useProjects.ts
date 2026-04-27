@@ -36,7 +36,7 @@ export function useEmployerProjects(employerId: string | null | undefined) {
     queryKey: ["projects", "employer", employerId],
     enabled: !!employerId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("projects" as never)
         .select("*")
         .eq("employer_id", employerId)
@@ -53,7 +53,7 @@ export function useEmployeeProjects() {
     queryKey: ["projects", "employee", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("projects" as never)
         .select("*")
         .eq("user_id", user!.id)
@@ -71,7 +71,7 @@ export function usePendingProjects() {
     queryKey: ["projects", "pending", user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("projects" as never)
         .select("*")
         .eq("user_id", user!.id)
@@ -89,8 +89,8 @@ export function useProjectById(id: string | null | undefined) {
     enabled: !!id,
     queryFn: async () => {
       const [projectRes, skillsRes] = await Promise.all([
-        supabase.from("projects" as never).select("*").eq("id", id).single(),
-        supabase.from("project_skills" as never).select("*").eq("project_id", id),
+        (supabase as any).from("projects" as never).select("*").eq("id", id).single(),
+        (supabase as any).from("project_skills" as never).select("*").eq("project_id", id),
       ]);
       if (projectRes.error) throw projectRes.error;
       return {
@@ -124,7 +124,7 @@ export function useAddProject() {
     mutationFn: async (input: AddProjectInput) => {
       if (!user) throw new Error("Not authenticated");
       const { skills, ...projectData } = input;
-      const { data: project, error } = await supabase
+      const { data: project, error } = await (supabase as any)
         .from("projects" as never)
         .insert({ ...projectData, added_by: user.id })
         .select("*")
@@ -132,7 +132,7 @@ export function useAddProject() {
       if (error) throw error;
       const proj = project as unknown as ProjectRow;
       if (skills.length > 0) {
-        const { error: skillsError } = await supabase
+        const { error: skillsError } = await (supabase as any)
           .from("project_skills" as never)
           .insert(skills.map((s) => ({ project_id: proj.id, skill: s, ai_extracted: false })));
         if (skillsError) throw skillsError;
@@ -149,7 +149,7 @@ export function useUpdateProjectStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: ProjectStatus }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("projects" as never)
         .update({ status })
         .eq("id", id);
@@ -164,13 +164,13 @@ export function useConfirmProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("projects" as never)
         .update({ status: "active", employee_confirmed_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;
       if (user) {
-        await supabase.from("project_audit_log" as never).insert({
+        await (supabase as any).from("project_audit_log" as never).insert({
           project_id: id,
           action: "employee_confirmed",
           performed_by: user.id,
@@ -187,11 +187,11 @@ export function useDisputeProject() {
   return useMutation({
     mutationFn: async ({ id, reason }: { id: string; reason: string }) => {
       if (!user) throw new Error("Not authenticated");
-      const { error: insErr } = await supabase
+      const { error: insErr } = await (supabase as any)
         .from("project_dispute_log" as never)
         .insert({ project_id: id, raised_by: user.id, reason });
       if (insErr) throw insErr;
-      const { error: updErr } = await supabase
+      const { error: updErr } = await (supabase as any)
         .from("projects" as never)
         .update({ status: "disputed" })
         .eq("id", id);
@@ -205,7 +205,7 @@ export function useDeleteProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("projects" as never).delete().eq("id", id);
+      const { error } = await (supabase as any).from("projects" as never).delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }),
