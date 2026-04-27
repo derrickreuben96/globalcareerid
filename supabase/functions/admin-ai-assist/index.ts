@@ -187,7 +187,7 @@ Provide a helpful, concise response. If the question is about platform operation
     });
   } catch (error) {
     console.error("Edge function error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
