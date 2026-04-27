@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, ShieldCheck, Calendar, Building2, Target, Sparkles, AlertTriangle } from "lucide-react";
+import { ProjectSignatureVerifier } from "@/components/projects/ProjectSignatureVerifier";
+import { ShareProfileDialog } from "@/components/projects/ShareProfileDialog";
+import { ProjectDisputeDialog } from "@/components/projects/ProjectDisputeDialog";
 
 interface ProjectView {
   id: string;
@@ -184,10 +187,20 @@ export default function PublicProject() {
               </footer>
             )}
 
-            <div>
-              <Button asChild variant="outline" size="sm">
-                <Link to="/verify-credential">Verify signature</Link>
-              </Button>
+            <div className="flex flex-wrap gap-2 pt-2">
+              {project.signed_jwt && (
+                <ProjectSignatureVerifier
+                  signedJwt={project.signed_jwt}
+                  expectedTitle={project.title}
+                />
+              )}
+              {employee && (
+                <ShareProfileDialog
+                  profileId={employee.profile_id}
+                  employeeName={`${employee.first_name} ${employee.last_name}`}
+                />
+              )}
+              <ProjectDisputeDialog projectId={project.id} isSealed />
             </div>
           </article>
         )}
