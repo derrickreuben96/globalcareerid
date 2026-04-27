@@ -39,6 +39,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const EmployerProjects = lazy(() => import("./pages/employer/Projects"));
 const AddProject = lazy(() => import("./pages/employer/AddProject"));
 const PendingProjects = lazy(() => import("./pages/employee/PendingProjects"));
+const PublicProject = lazy(() => import("./pages/PublicProject"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +80,10 @@ const App = () => {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/settings/privacy" element={<ProtectedRoute><PrivacySettings /></ProtectedRoute>} />
             <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin']}><AnalyticsDashboard /></ProtectedRoute>} />
+            <Route path="/employer/projects" element={<ProtectedRoute allowedRoles={['employer']}><EmployerProjects /></ProtectedRoute>} />
+            <Route path="/employer/projects/new" element={<ProtectedRoute allowedRoles={['employer']}><AddProject /></ProtectedRoute>} />
+            <Route path="/dashboard/pending-projects" element={<ProtectedRoute><PendingProjects /></ProtectedRoute>} />
+            <Route path="/project/:projectId" element={<PublicProject />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
