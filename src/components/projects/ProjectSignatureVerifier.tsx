@@ -2,12 +2,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Loader2, XCircle, FileSignature } from "lucide-react";
+import { ShieldCheck, Loader2, XCircle, FileSignature, Copy, Download } from "lucide-react";
 import { verifyCredential } from "@/lib/verifyCredential";
+import { toast } from "sonner";
 
 interface Props {
   signedJwt: string;
   expectedTitle?: string;
+  /** Optional context shown in the downloadable report. */
+  projectTitle?: string;
+  projectId?: string;
 }
 
 type State =
@@ -16,7 +20,7 @@ type State =
   | { phase: "valid"; payload: Record<string, unknown> }
   | { phase: "invalid"; reason: string };
 
-export function ProjectSignatureVerifier({ signedJwt, expectedTitle }: Props) {
+export function ProjectSignatureVerifier({ signedJwt, expectedTitle, projectTitle, projectId }: Props) {
   const [state, setState] = useState<State>({ phase: "idle" });
   const [open, setOpen] = useState(false);
 
@@ -28,6 +32,58 @@ export function ProjectSignatureVerifier({ signedJwt, expectedTitle }: Props) {
     } else {
       setState({ phase: "invalid", reason: result.reason ?? "Verification failed" });
     }
+  };
+
+  const copyJwt = async () => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(signedJwt);
+        toast.success("Signed JWT copied to clipboard");
+      } else {
+        toast.error("Clipboard not available");
+      }
+    } catch {
+      toast.error("Failed to copy JWT");
+    }
+  };
+
+  const downloadReport = () => {
+    if (state.phase !== "valid") return;
+    const titleMatches =
+      !expectedTitle ||
+      (typeof state.payload.title === "string" && state.payload.title === expectedTitle);
+
+    const report = {
+      report: "Global Career ID — Verification Report",
+      generated_at: new Date().toISOString(),
+      project: {
+        id: projectId,
+        title: projectTitle,
+      },
+      verification: {
+        algorithm: "ES256",
+        issuer: "globalcareerid",
+        signature_valid: true,
+        revoked: false,
+        title_matches_signed_payload: titleMatches,
+      },
+      signed_payload: state.payload,
+      signed_jwt: signedJwt,
+      instructions:
+        "To independently verify, fetch the platform's public key at /functions/v1/get-public-key and validate signed_jwt with any ES256/JWT library (issuer=globalcareerid).",
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeTitle = (projectTitle ?? "verification").replace(/[^a-z0-9-_]+/gi, "_").slice(0, 40);
+    a.href = url;
+    a.download = `${safeTitle}_verification_report.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Verification report downloaded");
   };
 
   const reasonLabels: Record<string, string> = {
@@ -90,6 +146,16 @@ export function ProjectSignatureVerifier({ signedJwt, expectedTitle }: Props) {
                   Warning: signed title does not match displayed title.
                 </p>
               )}
+
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <Button variant="outline" size="sm" onClick={copyJwt} className="gap-2">
+                <Copy className="w-4 h-4" /> Copy signed JWT
+              </Button>
+              <Button variant="outline" size="sm" onClick={downloadReport} className="gap-2">
+                <Download className="w-4 h-4" /> Download report
+              </Button>
+            </div>
+
             <p className="text-xs text-muted-foreground">
               Issued by Global Career ID · ES256
             </p>
@@ -105,9 +171,14 @@ export function ProjectSignatureVerifier({ signedJwt, expectedTitle }: Props) {
             <p className="text-sm text-muted-foreground">
               {reasonLabels[state.reason] ?? state.reason}
             </p>
-            <Button variant="outline" size="sm" onClick={runVerification}>
-              Try again
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={runVerification}>
+                Try again
+              </Button>
+              <Button variant="ghost" size="sm" onClick={copyJwt} className="gap-2">
+                <Copy className="w-4 h-4" /> Copy raw JWT
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>

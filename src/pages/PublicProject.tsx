@@ -192,6 +192,8 @@ export default function PublicProject() {
                 <ProjectSignatureVerifier
                   signedJwt={project.signed_jwt}
                   expectedTitle={project.title}
+                  projectTitle={project.title}
+                  projectId={project.id}
                 />
               )}
               {employee && (

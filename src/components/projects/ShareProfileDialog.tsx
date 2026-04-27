@@ -3,39 +3,45 @@ import { Copy, Share2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { buildVerifyProfileUrl } from "@/lib/shareUrl";
 
 interface Props {
   profileId: string;
   employeeName: string;
+  /** Override origin — useful for SSR/tests. Falls back to env or window. */
+  origin?: string;
 }
 
-export function ShareProfileDialog({ profileId, employeeName }: Props) {
-  const verifyUrl = `${window.location.origin}/verify/${profileId}`;
+export function ShareProfileDialog({ profileId, employeeName, origin }: Props) {
+  const verifyUrl = buildVerifyProfileUrl(profileId, origin);
 
-  const copyId = () => {
-    navigator.clipboard.writeText(profileId);
-    toast.success("Profile ID copied");
-  };
-
-  const copyLink = () => {
-    navigator.clipboard.writeText(verifyUrl);
-    toast.success("Verification link copied");
+  const copyText = async (text: string, msg: string) => {
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        toast.success(msg);
+      } else {
+        toast.error("Clipboard not available in this environment");
+      }
+    } catch {
+      toast.error("Failed to copy");
+    }
   };
 
   const share = async () => {
-    if (navigator.share) {
+    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
       try {
         await navigator.share({
           title: `Verified work record — ${employeeName}`,
           text: `Verify ${employeeName}'s work record on Global Career ID`,
           url: verifyUrl,
         });
+        return;
       } catch {
-        copyLink();
+        /* fall through to copy */
       }
-    } else {
-      copyLink();
     }
+    copyText(verifyUrl, "Verification link copied");
   };
 
   return (
@@ -66,7 +72,12 @@ export function ShareProfileDialog({ profileId, employeeName }: Props) {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" size="sm" onClick={copyId} className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => copyText(profileId, "Profile ID copied")}
+              className="gap-2"
+            >
               <Copy className="w-4 h-4" /> Copy ID
             </Button>
             <Button variant="outline" size="sm" onClick={share} className="gap-2">
