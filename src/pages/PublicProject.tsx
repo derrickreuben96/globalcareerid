@@ -9,6 +9,7 @@ import { Loader2, ShieldCheck, Calendar, Building2, Target, Sparkles, AlertTrian
 import { ProjectSignatureVerifier } from "@/components/projects/ProjectSignatureVerifier";
 import { ShareProfileDialog } from "@/components/projects/ShareProfileDialog";
 import { ProjectDisputeDialog } from "@/components/projects/ProjectDisputeDialog";
+import { ProjectQRCode } from "@/components/projects/ProjectQRCode";
 
 interface ProjectView {
   id: string;
@@ -202,6 +203,7 @@ export default function PublicProject() {
                   employeeName={`${employee.first_name} ${employee.last_name}`}
                 />
               )}
+              <ProjectQRCode projectId={project.id} projectTitle={project.title} />
               <ProjectDisputeDialog projectId={project.id} isSealed />
             </div>
           </article>
