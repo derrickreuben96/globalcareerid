@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
     const revoked = data?.revoked_at != null;
 
     return new Response(
-      JSON.stringify({ revoked }),
+      JSON.stringify({ revoked, revoked_at: data?.revoked_at ?? null }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

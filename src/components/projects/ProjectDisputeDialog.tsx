@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, Flag, Loader2, Clock } from "lucide-react";
+import { AlertTriangle, Flag, Loader2, Clock, ChevronLeft, Download, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -76,6 +76,17 @@ function friendlyError(err: unknown): string {
   return msg || "Failed to submit dispute. Please try again.";
 }
 
+interface SubmittedReceipt {
+  disputeId: string | null;
+  projectId: string;
+  raisedBy: string;
+  reason: string;
+  submittedAt: string;
+  isSealed: boolean;
+}
+
+type Step = "compose" | "review" | "done";
+
 export function ProjectDisputeDialog({
   projectId,
   isSealed = false,
@@ -86,9 +97,11 @@ export function ProjectDisputeDialog({
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<Step>("compose");
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [throttleUntil, setThrottleUntil] = useState<number | null>(null);
+  const [receipt, setReceipt] = useState<SubmittedReceipt | null>(null);
   const [, force] = useState(0);
 
   // Re-evaluate throttle whenever dialog opens or user changes.
@@ -101,6 +114,15 @@ export function ProjectDisputeDialog({
     setThrottleUntil(last ? last + THROTTLE_MS : null);
   }, [user, projectId, open]);
 
+  // Reset to compose step whenever the dialog re-opens (unless we're showing the receipt)
+  useEffect(() => {
+    if (open) {
+      if (step === "done" && receipt) return;
+      setStep("compose");
+      setError(null);
+    }
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Tick to refresh remaining-time label every minute while throttled & open.
   useEffect(() => {
     if (!open || !throttleUntil) return;
@@ -109,10 +131,10 @@ export function ProjectDisputeDialog({
   }, [open, throttleUntil]);
 
   const remaining = throttleUntil ? Math.max(0, throttleUntil - Date.now()) : 0;
-  const isThrottled = remaining > 0;
+  const isThrottled = remaining > 0 && step !== "done";
 
   const submit = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<SubmittedReceipt> => {
       if (!user) throw new Error("You must be signed in to flag this record.");
 
       // Client-side throttle gate
@@ -151,9 +173,11 @@ export function ProjectDisputeDialog({
         );
       }
 
-      const { error: insErr } = await (supabase as any)
+      const { data: inserted, error: insErr } = await (supabase as any)
         .from("project_dispute_log" as never)
-        .insert({ project_id: projectId, raised_by: user.id, reason: parsed.data });
+        .insert({ project_id: projectId, raised_by: user.id, reason: parsed.data })
+        .select("id, created_at")
+        .maybeSingle();
       if (insErr) throw insErr;
 
       if (changeStatus && !isSealed) {
@@ -164,20 +188,72 @@ export function ProjectDisputeDialog({
       }
 
       writeLastSubmission(projectId, user.id);
+
+      return {
+        disputeId: (inserted as any)?.id ?? null,
+        projectId,
+        raisedBy: user.id,
+        reason: parsed.data,
+        submittedAt: (inserted as any)?.created_at ?? new Date().toISOString(),
+        isSealed,
+      };
     },
-    onSuccess: () => {
+    onSuccess: (r) => {
       toast.success("Dispute submitted. Our team will review shortly.");
       qc.invalidateQueries({ queryKey: ["projects"] });
-      setOpen(false);
-      setReason("");
+      setReceipt(r);
+      setStep("done");
       setError(null);
       if (user) setThrottleUntil(Date.now() + THROTTLE_MS);
     },
     onError: (e: unknown) => setError(friendlyError(e)),
   });
 
+  const downloadEvidence = () => {
+    if (!receipt) return;
+    const bundle = {
+      bundle: "Global Career ID — Dispute Evidence",
+      generated_at: new Date().toISOString(),
+      dispute: {
+        id: receipt.disputeId,
+        project_id: receipt.projectId,
+        raised_by: receipt.raisedBy,
+        submitted_at: receipt.submittedAt,
+        sealed_record: receipt.isSealed,
+        reason: receipt.reason,
+      },
+      verification_url:
+        typeof window !== "undefined"
+          ? `${window.location.origin}/project/${receipt.projectId}`
+          : `/project/${receipt.projectId}`,
+      notes:
+        "Sealed records are immutable. This dispute has been logged for admin review and does not modify the cryptographically signed record. Retain this file as evidence of submission.",
+    };
+    const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeId = (receipt.disputeId ?? receipt.projectId).slice(0, 12);
+    a.href = url;
+    a.download = `dispute_evidence_${safeId}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Evidence bundle downloaded");
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    // Reset receipt only after the dialog has closed
+    setTimeout(() => {
+      setReceipt(null);
+      setReason("");
+      setStep("compose");
+    }, 200);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => (o ? setOpen(true) : handleClose())}>
       <DialogTrigger asChild>
         <Button variant={triggerVariant} size="sm" className="gap-2">
           <Flag className="w-4 h-4" /> {triggerLabel}
@@ -185,10 +261,19 @@ export function ProjectDisputeDialog({
       </DialogTrigger>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Flag an inaccuracy</DialogTitle>
+          <DialogTitle>
+            {step === "review"
+              ? "Review your dispute"
+              : step === "done"
+              ? "Dispute submitted"
+              : "Flag an inaccuracy"}
+          </DialogTitle>
           <DialogDescription>
-            Submit a dispute to flag incorrect information. The original employer-authored
-            record is not modified — admins will investigate and resolve.
+            {step === "review"
+              ? "Confirm the details below before submitting. This will be sent to our review team."
+              : step === "done"
+              ? "Your dispute has been logged. Download an evidence bundle for your records."
+              : "Submit a dispute to flag incorrect information. The original employer-authored record is not modified — admins will investigate and resolve."}
           </DialogDescription>
         </DialogHeader>
 
@@ -211,7 +296,7 @@ export function ProjectDisputeDialog({
               <strong>{formatRemaining(remaining)}</strong>.
             </AlertDescription>
           </Alert>
-        ) : (
+        ) : step === "compose" ? (
           <div className="space-y-3">
             <div>
               <Label htmlFor="dispute-reason">What is inaccurate?</Label>
@@ -239,20 +324,118 @@ export function ProjectDisputeDialog({
             )}
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
+        ) : step === "review" ? (
+          <div className="space-y-3">
+            <div className="rounded-lg border bg-muted/40 p-3 text-xs space-y-2">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Project ID</span>
+                <code className="font-mono break-all text-right">{projectId}</code>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Submitted by</span>
+                <code className="font-mono break-all text-right">{user.id}</code>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Record type</span>
+                <span>{isSealed ? "Sealed (immutable)" : "Editable"}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Will be sent at</span>
+                <span>{new Date().toLocaleString()}</span>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Reason</Label>
+              <div className="mt-1 rounded-lg border bg-background p-3 text-sm whitespace-pre-wrap max-h-40 overflow-auto">
+                {reason.trim()}
+              </div>
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+        ) : (
+          // step === "done"
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-verified">
+              <CheckCircle2 className="w-5 h-5" />
+              <p className="font-medium">Dispute logged successfully</p>
+            </div>
+            {receipt && (
+              <div className="rounded-lg border bg-muted/40 p-3 text-xs space-y-2">
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Dispute ID</span>
+                  <code className="font-mono break-all text-right">
+                    {receipt.disputeId ?? "—"}
+                  </code>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Project ID</span>
+                  <code className="font-mono break-all text-right">{receipt.projectId}</code>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Submitted at</span>
+                  <span>{new Date(receipt.submittedAt).toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Save the evidence bundle as proof of submission. Our team will follow up via your
+              registered email.
+            </p>
+          </div>
         )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>
-            {isThrottled ? "Close" : "Cancel"}
-          </Button>
-          {!isThrottled && (
-            <Button
-              onClick={() => submit.mutate()}
-              disabled={!user || submit.isPending || reason.trim().length < 20}
-            >
-              {submit.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
-              Submit dispute
-            </Button>
+          {step === "compose" && (
+            <>
+              <Button variant="ghost" onClick={handleClose}>
+                {isThrottled ? "Close" : "Cancel"}
+              </Button>
+              {!isThrottled && (
+                <Button
+                  onClick={() => {
+                    const parsed = reasonSchema.safeParse(reason);
+                    if (!parsed.success) {
+                      setError(parsed.error.issues[0]?.message ?? "Invalid reason");
+                      return;
+                    }
+                    setError(null);
+                    setStep("review");
+                  }}
+                  disabled={!user || reason.trim().length < 20}
+                >
+                  Review
+                </Button>
+              )}
+            </>
+          )}
+
+          {step === "review" && (
+            <>
+              <Button
+                variant="ghost"
+                onClick={() => setStep("compose")}
+                disabled={submit.isPending}
+                className="gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" /> Edit
+              </Button>
+              <Button
+                onClick={() => submit.mutate()}
+                disabled={submit.isPending}
+              >
+                {submit.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+                Confirm & submit
+              </Button>
+            </>
+          )}
+
+          {step === "done" && (
+            <>
+              <Button variant="outline" onClick={downloadEvidence} className="gap-2">
+                <Download className="w-4 h-4" /> Download evidence
+              </Button>
+              <Button onClick={handleClose}>Close</Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
