@@ -25,7 +25,7 @@ export function ProjectQRCode({ projectId, projectTitle, origin }: Props) {
 
   const handleDownload = () => {
     if (typeof document === "undefined") return;
-    const svg = document.getElementById(`project-qr-${projectId}`) as SVGSVGElement | null;
+    const svg = document.getElementById(`project-qr-${projectId}`) as unknown as SVGSVGElement | null;
     if (!svg) return;
     const xml = new XMLSerializer().serializeToString(svg);
     const blob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
