@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { buildVerifyProfileUrl } from "@/lib/shareUrl";
+import { copyToClipboard } from "@/lib/clipboard";
 
 interface Props {
   profileId: string;
@@ -16,16 +17,9 @@ export function ShareProfileDialog({ profileId, employeeName, origin }: Props) {
   const verifyUrl = buildVerifyProfileUrl(profileId, origin);
 
   const copyText = async (text: string, msg: string) => {
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        toast.success(msg);
-      } else {
-        toast.error("Clipboard not available in this environment");
-      }
-    } catch {
-      toast.error("Failed to copy");
-    }
+    const ok = await copyToClipboard(text);
+    if (ok) toast.success(msg);
+    else toast.error("Failed to copy");
   };
 
   const share = async () => {
