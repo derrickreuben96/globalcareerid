@@ -2,8 +2,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { ShieldCheck, Loader2, XCircle, FileSignature, Copy, Download } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ShieldCheck, Loader2, XCircle, FileSignature, Copy, Download, ShieldAlert, ShieldOff } from "lucide-react";
 import { verifyCredential } from "@/lib/verifyCredential";
+import { copyToClipboard } from "@/lib/clipboard";
+import { useRevocationStatus } from "@/hooks/useRevocationStatus";
 import { toast } from "sonner";
 
 interface Props {
@@ -23,6 +26,7 @@ type State =
 export function ProjectSignatureVerifier({ signedJwt, expectedTitle, projectTitle, projectId }: Props) {
   const [state, setState] = useState<State>({ phase: "idle" });
   const [open, setOpen] = useState(false);
+  const revocation = useRevocationStatus(signedJwt, open);
 
   const runVerification = async () => {
     setState({ phase: "verifying" });
@@ -35,16 +39,9 @@ export function ProjectSignatureVerifier({ signedJwt, expectedTitle, projectTitl
   };
 
   const copyJwt = async () => {
-    try {
-      if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(signedJwt);
-        toast.success("Signed JWT copied to clipboard");
-      } else {
-        toast.error("Clipboard not available");
-      }
-    } catch {
-      toast.error("Failed to copy JWT");
-    }
+    const ok = await copyToClipboard(signedJwt);
+    if (ok) toast.success("Signed JWT copied to clipboard");
+    else toast.error("Failed to copy JWT");
   };
 
   const downloadReport = () => {
@@ -64,7 +61,8 @@ export function ProjectSignatureVerifier({ signedJwt, expectedTitle, projectTitl
         algorithm: "ES256",
         issuer: "globalcareerid",
         signature_valid: true,
-        revoked: false,
+        revoked: revocation.phase === "revoked",
+        revoked_at: revocation.phase === "revoked" ? revocation.at ?? null : null,
         title_matches_signed_payload: titleMatches,
       },
       signed_payload: state.payload,
@@ -122,11 +120,46 @@ export function ProjectSignatureVerifier({ signedJwt, expectedTitle, projectTitl
 
         {state.phase === "valid" && (
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge className="bg-verified/10 text-verified gap-1">
                 <ShieldCheck className="w-3.5 h-3.5" /> Signature valid
               </Badge>
+
+              {revocation.phase === "checking" && (
+                <Badge variant="secondary" className="gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Checking revocation…
+                </Badge>
+              )}
+              {revocation.phase === "active" && (
+                <Badge className="bg-verified/10 text-verified gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Not revoked
+                </Badge>
+              )}
+              {revocation.phase === "revoked" && (
+                <Badge variant="destructive" className="gap-1">
+                  <ShieldOff className="w-3.5 h-3.5" /> Revoked
+                </Badge>
+              )}
+              {revocation.phase === "error" && (
+                <Badge variant="secondary" className="gap-1">
+                  <ShieldAlert className="w-3.5 h-3.5" /> Status unknown
+                </Badge>
+              )}
             </div>
+
+            {revocation.phase === "revoked" && (
+              <Alert variant="destructive">
+                <ShieldOff className="w-4 h-4" />
+                <AlertDescription className="text-xs">
+                  This signed record has been revoked or superseded by the issuer.
+                  {revocation.at && (
+                    <> Revoked at {new Date(revocation.at).toLocaleString()}.</>
+                  )}{" "}
+                  Treat the displayed information as no longer authoritative.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="rounded-lg bg-muted/50 p-3 space-y-2 text-xs">
               {Object.entries(state.payload)
                 .filter(([k]) => !["iat", "exp", "iss"].includes(k))
