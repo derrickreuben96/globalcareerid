@@ -119,7 +119,7 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
       gender: form.gender || null,
       date_of_birth: form.date_of_birth || null,
       availability: form.availability || 'not_looking',
-      experience_level: form.experience_level || 'entry',
+      // experience_level intentionally omitted — auto-calculated from work history
     };
 
     // Mark profile complete if all mandatory fields are present
