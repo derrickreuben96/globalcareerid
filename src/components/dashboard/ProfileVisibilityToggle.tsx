@@ -6,11 +6,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Briefcase } from 'lucide-react';
+import { Eye, EyeOff, Briefcase, TrendingUp } from 'lucide-react';
+import { useAutoExperienceLevel } from '@/hooks/useAutoExperienceLevel';
+import { experienceLevelLabel } from '@/lib/experienceLevel';
 
 export function ProfileVisibilityToggle() {
   const { profile, refreshProfile } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
+  const { totalMonths, level: autoLevel, loading: autoLoading } = useAutoExperienceLevel(
+    profile?.user_id,
+    (profile as any)?.experience_level,
+    refreshProfile
+  );
 
   const isPublic = profile?.visibility === 'public';
 
@@ -52,24 +59,7 @@ export function ProfileVisibilityToggle() {
     setIsUpdating(false);
   };
 
-  const handleExperienceChange = async (value: string) => {
-    if (!profile) return;
-    
-    setIsUpdating(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ experience_level: value })
-      .eq('user_id', profile.user_id);
-
-    if (error) {
-      toast.error('Failed to update experience level');
-      console.error(error);
-    } else {
-      toast.success('Experience level updated');
-      refreshProfile();
-    }
-    setIsUpdating(false);
-  };
+  // Experience level is auto-calculated from work history — no manual setter.
 
   return (
     <div className="glass-card rounded-2xl p-6 space-y-6">
@@ -134,25 +124,28 @@ export function ProfileVisibilityToggle() {
         </Select>
       </div>
 
-      {/* Experience Level */}
+      {/* Experience Level (auto-calculated from work history) */}
       <div className="space-y-2">
-        <Label>Experience Level</Label>
-        <Select
-          value={(profile as any)?.experience_level || 'entry'}
-          onValueChange={handleExperienceChange}
-          disabled={isUpdating}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select experience level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="entry">Entry Level (0-2 years)</SelectItem>
-            <SelectItem value="mid">Mid Level (3-5 years)</SelectItem>
-            <SelectItem value="senior">Senior (6-10 years)</SelectItem>
-            <SelectItem value="lead">Lead / Principal (10+ years)</SelectItem>
-            <SelectItem value="executive">Executive / C-Level</SelectItem>
-          </SelectContent>
-        </Select>
+        <Label className="flex items-center gap-2">
+          <TrendingUp className="w-4 h-4" />
+          Experience Level
+        </Label>
+        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-xl">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              {autoLoading ? 'Calculating…' : experienceLevelLabel(autoLevel)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {autoLoading
+                ? 'Reading your verified employment history'
+                : `Based on ${totalMonths} month${totalMonths === 1 ? '' : 's'} of verified work history`}
+            </p>
+          </div>
+          <Badge variant="secondary" className="capitalize">{autoLevel}</Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          This level updates automatically as your verified employment grows.
+        </p>
       </div>
     </div>
   );
