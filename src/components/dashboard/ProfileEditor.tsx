@@ -259,35 +259,21 @@ export function ProfileEditor({ userId, profile, onUpdate }: ProfileEditorProps)
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Availability</Label>
-                <Select value={form.availability} onValueChange={(v) => setForm({ ...form, availability: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select availability" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="not_looking">Not Looking</SelectItem>
-                    <SelectItem value="open_to_offers">Open to Opportunities</SelectItem>
-                    <SelectItem value="actively_looking">Actively Looking</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Experience Level</Label>
-                <Select value={form.experience_level} onValueChange={(v) => setForm({ ...form, experience_level: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entry">Entry Level</SelectItem>
-                    <SelectItem value="mid">Mid Level</SelectItem>
-                    <SelectItem value="senior">Senior Level</SelectItem>
-                    <SelectItem value="lead">Lead / Principal</SelectItem>
-                    <SelectItem value="executive">Executive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Availability</Label>
+              <Select value={form.availability} onValueChange={(v) => setForm({ ...form, availability: v })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select availability" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="not_looking">Not Looking</SelectItem>
+                  <SelectItem value="open_to_offers">Open to Opportunities</SelectItem>
+                  <SelectItem value="actively_looking">Actively Looking</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Experience level is auto-calculated from your verified work history.
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Bio</Label>
