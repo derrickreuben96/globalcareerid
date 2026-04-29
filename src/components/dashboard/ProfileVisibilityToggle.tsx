@@ -13,6 +13,11 @@ import { experienceLevelLabel } from '@/lib/experienceLevel';
 export function ProfileVisibilityToggle() {
   const { profile, refreshProfile } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
+  const { totalMonths, level: autoLevel, loading: autoLoading } = useAutoExperienceLevel(
+    profile?.user_id,
+    (profile as any)?.experience_level,
+    refreshProfile
+  );
 
   const isPublic = profile?.visibility === 'public';
 
@@ -54,24 +59,7 @@ export function ProfileVisibilityToggle() {
     setIsUpdating(false);
   };
 
-  const handleExperienceChange = async (value: string) => {
-    if (!profile) return;
-    
-    setIsUpdating(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ experience_level: value })
-      .eq('user_id', profile.user_id);
-
-    if (error) {
-      toast.error('Failed to update experience level');
-      console.error(error);
-    } else {
-      toast.success('Experience level updated');
-      refreshProfile();
-    }
-    setIsUpdating(false);
-  };
+  // Experience level is auto-calculated from work history — no manual setter.
 
   return (
     <div className="glass-card rounded-2xl p-6 space-y-6">
