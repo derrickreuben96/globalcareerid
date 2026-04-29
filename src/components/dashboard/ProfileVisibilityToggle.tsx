@@ -6,7 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { Eye, EyeOff, Briefcase } from 'lucide-react';
+import { Eye, EyeOff, Briefcase, TrendingUp } from 'lucide-react';
+import { useAutoExperienceLevel } from '@/hooks/useAutoExperienceLevel';
+import { experienceLevelLabel } from '@/lib/experienceLevel';
 
 export function ProfileVisibilityToggle() {
   const { profile, refreshProfile } = useAuth();
