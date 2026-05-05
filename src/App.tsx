@@ -85,6 +85,7 @@ const App = () => {
             <Route path="/employer/projects/new" element={<ProtectedRoute allowedRoles={['employer']}><AddProject /></ProtectedRoute>} />
             <Route path="/dashboard/pending-projects" element={<ProtectedRoute><PendingProjects /></ProtectedRoute>} />
             <Route path="/project/:projectId" element={<PublicProject />} />
+            <Route path="/apply" element={<Apply />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
