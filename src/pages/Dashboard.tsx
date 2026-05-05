@@ -19,6 +19,7 @@ import { PromotionRequestForm } from '@/components/dashboard/PromotionRequestFor
 import { CareerAnalytics } from '@/components/dashboard/CareerAnalytics';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
 import { NotificationSettings } from '@/components/dashboard/NotificationSettings';
+import { AppliedJobsTracker } from '@/components/dashboard/AppliedJobsTracker';
 import { TwoFactorSettings } from '@/components/dashboard/TwoFactorSettings';
 import { AdminSettings } from '@/components/dashboard/AdminSettings';
 import { AIChatWidget } from '@/components/AIChatWidget';
