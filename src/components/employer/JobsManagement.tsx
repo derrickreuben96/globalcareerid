@@ -324,14 +324,25 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 maxLength={150}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Role Category</Label>
-              <Input
-                placeholder="e.g., Engineering / Marketing / Operations"
-                value={form.role_category}
-                onChange={(e) => setForm({ ...form, role_category: e.target.value })}
-                maxLength={80}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Role Category</Label>
+                <Input
+                  placeholder="e.g., Engineering"
+                  value={form.role_category}
+                  onChange={(e) => setForm({ ...form, role_category: e.target.value })}
+                  maxLength={80}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Input
+                  placeholder="e.g., Kuwait City / Remote"
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  maxLength={120}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Description *</Label>
