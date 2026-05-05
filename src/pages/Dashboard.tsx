@@ -468,6 +468,12 @@ export default function Dashboard() {
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="applications" className="gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      Applications
+                    </TabsTrigger>
+                  )}
+                  {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="referral-letters" className="gap-2">
                       <Award className="w-4 h-4" />
                       {t('dashboard.referralLetters')}
