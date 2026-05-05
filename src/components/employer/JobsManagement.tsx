@@ -11,21 +11,25 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
+import { generateJobPosterImage, extractResponsibilities } from '@/lib/jobPosterImage';
 
 interface Job {
   id: string;
   title: string;
   description: string;
   role_category: string | null;
+  location?: string | null;
   hires_needed: number;
   screening_quota: number;
   status: 'draft' | 'open' | 'closed';
   created_at: string;
   applicant_count?: number;
+  job_post_text?: string | null;
+  application_deadline?: string | null;
 }
 
 interface JobsManagementProps {
