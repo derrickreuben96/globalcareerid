@@ -184,7 +184,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     }
     // Replace placeholder apply URL with real job ID in saved post (best-effort)
     if (inserted?.id && form.job_post_text?.includes('job_id=PENDING')) {
-      const finalText = form.job_post_text.replaceAll('job_id=PENDING', `job_id=${inserted.id}`);
+      const finalText = form.job_post_text.split('job_id=PENDING').join(`job_id=${inserted.id}`);
       await supabase.from('jobs').update({ job_post_text: finalText }).eq('id', inserted.id);
     }
     toast.success('Job created');
