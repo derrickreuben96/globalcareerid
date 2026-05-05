@@ -373,6 +373,49 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 <p className="text-xs text-muted-foreground">Top Y candidates surfaced as Recommended</p>
               </div>
             </div>
+
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label className="text-sm">AI-Generated Job Post</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Shareable post for LinkedIn, WhatsApp, etc. Editable below.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleGeneratePost}
+                  disabled={generatingPost}
+                >
+                  {generatingPost ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" />Generating...</>
+                  ) : (
+                    <><Sparkles className="w-3.5 h-3.5" />Generate Job Post</>
+                  )}
+                </Button>
+              </div>
+              {form.job_post_text && (
+                <>
+                  <Textarea
+                    rows={10}
+                    value={form.job_post_text}
+                    onChange={(e) => setForm({ ...form, job_post_text: e.target.value })}
+                    className="font-mono text-xs"
+                  />
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Apply link is finalized after the job is created.
+                    </p>
+                    <Button type="button" size="sm" variant="ghost" onClick={handleCopyPost}>
+                      <ClipboardCopy className="w-3.5 h-3.5" />
+                      Copy to Clipboard
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
