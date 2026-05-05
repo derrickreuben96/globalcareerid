@@ -19,6 +19,7 @@ import { PromotionRequestForm } from '@/components/dashboard/PromotionRequestFor
 import { CareerAnalytics } from '@/components/dashboard/CareerAnalytics';
 import { AISkillSuggestions } from '@/components/AISkillSuggestions';
 import { NotificationSettings } from '@/components/dashboard/NotificationSettings';
+import { AppliedJobsTracker } from '@/components/dashboard/AppliedJobsTracker';
 import { TwoFactorSettings } from '@/components/dashboard/TwoFactorSettings';
 import { AdminSettings } from '@/components/dashboard/AdminSettings';
 import { AIChatWidget } from '@/components/AIChatWidget';
@@ -467,6 +468,12 @@ export default function Dashboard() {
                     </TabsTrigger>
                   )}
                   {isJobSeeker && !isAdmin && (
+                    <TabsTrigger value="applications" className="gap-2">
+                      <Briefcase className="w-4 h-4" />
+                      Applications
+                    </TabsTrigger>
+                  )}
+                  {isJobSeeker && !isAdmin && (
                     <TabsTrigger value="referral-letters" className="gap-2">
                       <Award className="w-4 h-4" />
                       {t('dashboard.referralLetters')}
@@ -566,6 +573,12 @@ export default function Dashboard() {
                 {isJobSeeker && !isAdmin && (
                   <TabsContent value="work-history">
                     <WorkHistory />
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
+                  <TabsContent value="applications">
+                    <AppliedJobsTracker userId={user!.id} />
                   </TabsContent>
                 )}
 

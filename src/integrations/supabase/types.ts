@@ -14,6 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          ai_explanation: string | null
+          ai_score: number | null
+          applicant_profile_id: string
+          applicant_user_id: string
+          confidence_score: number | null
+          created_at: string
+          employer_id: string
+          employment_snapshot: Json
+          id: string
+          job_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_explanation?: string | null
+          ai_score?: number | null
+          applicant_profile_id: string
+          applicant_user_id: string
+          confidence_score?: number | null
+          created_at?: string
+          employer_id: string
+          employment_snapshot?: Json
+          id?: string
+          job_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_explanation?: string | null
+          ai_score?: number | null
+          applicant_profile_id?: string
+          applicant_user_id?: string
+          confidence_score?: number | null
+          created_at?: string
+          employer_id?: string
+          employment_snapshot?: Json
+          id?: string
+          job_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -509,6 +562,48 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          employer_id: string
+          hires_needed: number
+          id: string
+          role_category: string | null
+          screening_quota: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description: string
+          employer_id: string
+          hires_needed?: number
+          id?: string
+          role_category?: string | null
+          screening_quota?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          employer_id?: string
+          hires_needed?: number
+          id?: string
+          role_category?: string | null
+          screening_quota?: number
+          status?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }

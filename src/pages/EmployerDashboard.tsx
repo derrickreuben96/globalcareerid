@@ -53,6 +53,7 @@ import { PendingPromotions } from '@/components/employer/PendingPromotions';
 import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
 import { ReferralLetterVerifier } from '@/components/employer/ReferralLetterVerifier';
 import { RequestVerification } from '@/components/employer/RequestVerification';
+import { JobsManagement } from '@/components/employer/JobsManagement';
 
 interface Employer {
   id: string;
@@ -112,7 +113,7 @@ export default function EmployerDashboard() {
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
-  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics' | 'verify'>('employees');
+  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'jobs' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics' | 'verify'>('employees');
   
   const [newEmployee, setNewEmployee] = useState({
     profileId: '',
@@ -529,6 +530,14 @@ export default function EmployerDashboard() {
               All Records
             </Button>
             <Button 
+              variant={activeSection === 'jobs' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('jobs')}
+              className="gap-2"
+            >
+              <Briefcase className="w-4 h-4" />
+              Jobs
+            </Button>
+            <Button 
               variant={activeSection === 'talent' ? 'default' : 'outline'}
               onClick={() => setActiveSection('talent')}
               className="gap-2"
@@ -722,6 +731,12 @@ export default function EmployerDashboard() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeSection === 'jobs' && (
+            <div className="glass-card rounded-2xl p-6">
+              <JobsManagement employerId={employer.id} isVerified={employer.is_verified} />
             </div>
           )}
 
