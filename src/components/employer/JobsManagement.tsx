@@ -314,6 +314,16 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {viewing && (
+        <ViewApplicationsDialog
+          open={!!viewing}
+          onOpenChange={(o) => { if (!o) setViewing(null); }}
+          jobId={viewing.id}
+          jobTitle={viewing.title}
+          screeningQuota={viewing.screening_quota}
+        />
+      )}
     </div>
   );
 }
