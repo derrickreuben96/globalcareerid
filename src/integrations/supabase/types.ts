@@ -1445,6 +1445,17 @@ export type Database = {
           is_verified: boolean
         }[]
       }
+      get_public_job_for_apply: {
+        Args: { employer_id_param: string; job_id_param: string }
+        Returns: {
+          description: string
+          employer_id: string
+          id: string
+          role_category: string
+          status: string
+          title: string
+        }[]
+      }
       get_public_profile_by_id: {
         Args: { profile_id_param: string }
         Returns: {
