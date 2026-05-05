@@ -734,6 +734,12 @@ export default function EmployerDashboard() {
             </div>
           )}
 
+          {activeSection === 'jobs' && (
+            <div className="glass-card rounded-2xl p-6">
+              <JobsManagement employerId={employer.id} isVerified={employer.is_verified} />
+            </div>
+          )}
+
           {activeSection === 'talent' && (
             <div className="glass-card rounded-2xl p-6">
               <h2 className="text-xl font-display font-semibold text-foreground mb-6">
