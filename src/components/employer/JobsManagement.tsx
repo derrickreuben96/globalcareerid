@@ -307,7 +307,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       </div>
 
       <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) resetForm(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Job</DialogTitle>
             <DialogDescription>
