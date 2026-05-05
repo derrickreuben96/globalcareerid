@@ -11,21 +11,25 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
+import { generateJobPosterImage, extractResponsibilities } from '@/lib/jobPosterImage';
 
 interface Job {
   id: string;
   title: string;
   description: string;
   role_category: string | null;
+  location?: string | null;
   hires_needed: number;
   screening_quota: number;
   status: 'draft' | 'open' | 'closed';
   created_at: string;
   applicant_count?: number;
+  job_post_text?: string | null;
+  application_deadline?: string | null;
 }
 
 interface JobsManagementProps {
@@ -196,6 +200,39 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const buildApplyUrl = (jobId: string) =>
     `${window.location.origin}/apply?job_id=${jobId}&company_id=${employerId}`;
 
+  const handleGeneratePoster = async (job: Job) => {
+    if (!companyName) { toast.error('Company name not loaded yet'); return; }
+    try {
+      const responsibilities = extractResponsibilities(job.description, job.job_post_text);
+      if (responsibilities.length < 1) {
+        toast.error('Add a more detailed job description first');
+        return;
+      }
+      const blob = await generateJobPosterImage({
+        companyName,
+        jobTitle: job.title,
+        responsibilities,
+        deadline: job.application_deadline
+          ? new Date(job.application_deadline).toLocaleDateString()
+          : undefined,
+        applyUrl: buildApplyUrl(job.id),
+        location: job.location || undefined,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.title.replace(/[^\w]+/g, '_')}_poster.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Poster downloaded');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to generate poster');
+    }
+  };
+
   const handleCopyLink = async (jobId: string) => {
     const ok = await copyToClipboard(buildApplyUrl(jobId));
     if (ok) toast.success('Apply link copied');
@@ -287,6 +324,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                     <Button size="sm" variant="outline" onClick={() => handleCopyLink(job.id)}>
                       <Copy className="w-3.5 h-3.5" />
                       Copy Apply Link
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleGeneratePoster(job)}>
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Generate Image Poster
                     </Button>
                     {job.status === 'open' ? (
                       <Button size="sm" variant="outline" onClick={() => handleClose(job.id)}>
