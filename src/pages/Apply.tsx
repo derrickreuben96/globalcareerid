@@ -53,12 +53,11 @@ export default function Apply() {
     }
 
     const load = async () => {
-      const { data: jobData } = await supabase
-        .from('jobs')
-        .select('id, title, description, role_category, status, employer_id')
-        .eq('id', jobId)
-        .eq('employer_id', companyId)
-        .maybeSingle();
+      const { data: jobRows } = await supabase.rpc('get_public_job_for_apply', {
+        job_id_param: jobId,
+        employer_id_param: companyId,
+      });
+      const jobData = Array.isArray(jobRows) && jobRows.length > 0 ? jobRows[0] : null;
 
       if (!jobData) { setLoading(false); return; }
       setJob(jobData as JobView);
