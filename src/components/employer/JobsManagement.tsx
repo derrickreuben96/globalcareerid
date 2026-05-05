@@ -223,7 +223,8 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" disabled title="Coming in next phase">
+                    <Button size="sm" variant="outline" onClick={() => setViewing(job)}>
+                      <Eye className="w-3.5 h-3.5" />
                       View Applications
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleCopyLink(job.id)}>
