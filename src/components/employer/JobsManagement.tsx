@@ -38,6 +38,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [viewing, setViewing] = useState<Job | null>(null);
 
   const [form, setForm] = useState({
     title: '',
