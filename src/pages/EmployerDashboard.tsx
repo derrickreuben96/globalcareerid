@@ -53,6 +53,7 @@ import { PendingPromotions } from '@/components/employer/PendingPromotions';
 import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
 import { ReferralLetterVerifier } from '@/components/employer/ReferralLetterVerifier';
 import { RequestVerification } from '@/components/employer/RequestVerification';
+import { JobsManagement } from '@/components/employer/JobsManagement';
 
 interface Employer {
   id: string;
