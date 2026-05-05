@@ -11,7 +11,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
