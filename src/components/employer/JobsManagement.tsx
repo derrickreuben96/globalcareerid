@@ -11,9 +11,10 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
+import { ViewApplicationsDialog } from './ViewApplicationsDialog';
 
 interface Job {
   id: string;
@@ -37,6 +38,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [viewing, setViewing] = useState<Job | null>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -221,7 +223,8 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2 flex-wrap">
-                    <Button size="sm" variant="outline" disabled title="Coming in next phase">
+                    <Button size="sm" variant="outline" onClick={() => setViewing(job)}>
+                      <Eye className="w-3.5 h-3.5" />
                       View Applications
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleCopyLink(job.id)}>
@@ -311,6 +314,16 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {viewing && (
+        <ViewApplicationsDialog
+          open={!!viewing}
+          onOpenChange={(o) => { if (!o) setViewing(null); }}
+          jobId={viewing.id}
+          jobTitle={viewing.title}
+          screeningQuota={viewing.screening_quota}
+        />
+      )}
     </div>
   );
 }

@@ -40,6 +40,7 @@ const EmployerProjects = lazy(() => import("./pages/employer/Projects"));
 const AddProject = lazy(() => import("./pages/employer/AddProject"));
 const PendingProjects = lazy(() => import("./pages/employee/PendingProjects"));
 const PublicProject = lazy(() => import("./pages/PublicProject"));
+const Apply = lazy(() => import("./pages/Apply"));
 
 const queryClient = new QueryClient();
 
@@ -84,6 +85,7 @@ const App = () => {
             <Route path="/employer/projects/new" element={<ProtectedRoute allowedRoles={['employer']}><AddProject /></ProtectedRoute>} />
             <Route path="/dashboard/pending-projects" element={<ProtectedRoute><PendingProjects /></ProtectedRoute>} />
             <Route path="/project/:projectId" element={<PublicProject />} />
+            <Route path="/apply" element={<Apply />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
