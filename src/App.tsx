@@ -40,6 +40,7 @@ const EmployerProjects = lazy(() => import("./pages/employer/Projects"));
 const AddProject = lazy(() => import("./pages/employer/AddProject"));
 const PendingProjects = lazy(() => import("./pages/employee/PendingProjects"));
 const PublicProject = lazy(() => import("./pages/PublicProject"));
+const Apply = lazy(() => import("./pages/Apply"));
 
 const queryClient = new QueryClient();
 
