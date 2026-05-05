@@ -577,6 +577,12 @@ export default function Dashboard() {
                 )}
 
                 {isJobSeeker && !isAdmin && (
+                  <TabsContent value="applications">
+                    <AppliedJobsTracker userId={user!.id} />
+                  </TabsContent>
+                )}
+
+                {isJobSeeker && !isAdmin && (
                   <TabsContent value="referral-letters">
                     <ReferralLettersViewer />
                   </TabsContent>
