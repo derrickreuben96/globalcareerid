@@ -44,9 +44,18 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     title: '',
     description: '',
     role_category: '',
+    location: '',
     hires_needed: 1,
     screening_quota: 10,
+    job_post_text: '',
   });
+  const [generatingPost, setGeneratingPost] = useState(false);
+  const [companyName, setCompanyName] = useState<string>('');
+
+  useEffect(() => {
+    supabase.from('organization_profiles').select('company_name').eq('user_id', employerId).maybeSingle()
+      .then(({ data }) => { if (data?.company_name) setCompanyName(data.company_name); });
+  }, [employerId]);
 
   const fetchJobs = async () => {
     setLoading(true);
