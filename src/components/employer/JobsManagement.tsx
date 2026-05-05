@@ -11,7 +11,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
@@ -44,9 +44,18 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     title: '',
     description: '',
     role_category: '',
+    location: '',
     hires_needed: 1,
     screening_quota: 10,
+    job_post_text: '',
   });
+  const [generatingPost, setGeneratingPost] = useState(false);
+  const [companyName, setCompanyName] = useState<string>('');
+
+  useEffect(() => {
+    supabase.from('organization_profiles').select('company_name').eq('user_id', employerId).maybeSingle()
+      .then(({ data }) => { if (data?.company_name) setCompanyName(data.company_name); });
+  }, [employerId]);
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -96,8 +105,49 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   }, [employerId]);
 
   const resetForm = () => setForm({
-    title: '', description: '', role_category: '', hires_needed: 1, screening_quota: 10,
+    title: '', description: '', role_category: '', location: '', hires_needed: 1, screening_quota: 10, job_post_text: '',
   });
+
+  const handleGeneratePost = async () => {
+    const title = form.title.trim();
+    const description = form.description.trim();
+    if (!title || !description) {
+      toast.error('Enter job title and description first');
+      return;
+    }
+    if (!companyName) {
+      toast.error('Company name not loaded yet');
+      return;
+    }
+    setGeneratingPost(true);
+    // Use a placeholder apply URL — real job ID assigned on save. We tell users link is finalized after creation.
+    const placeholderApplyUrl = `${window.location.origin}/apply?job_id=PENDING&company_id=${employerId}`;
+    const { data, error } = await supabase.functions.invoke('generate-job-post', {
+      body: {
+        company_name: companyName,
+        job_title: title,
+        description,
+        role_category: form.role_category.trim() || undefined,
+        location: form.location.trim() || undefined,
+        apply_url: placeholderApplyUrl,
+      },
+    });
+    setGeneratingPost(false);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message || 'Failed to generate job post';
+      toast.error(msg);
+      return;
+    }
+    setForm((f) => ({ ...f, job_post_text: (data as { job_post_text: string }).job_post_text }));
+    toast.success('Job post generated — review & edit before saving');
+  };
+
+  const handleCopyPost = async () => {
+    if (!form.job_post_text) return;
+    const ok = await copyToClipboard(form.job_post_text);
+    if (ok) toast.success('Job post copied');
+    else toast.error('Could not copy');
+  };
 
   const handleCreate = async () => {
     const title = form.title.trim();
@@ -114,21 +164,28 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSubmitting(false); return; }
 
-    const { error } = await supabase.from('jobs').insert({
+    const { data: inserted, error } = await supabase.from('jobs').insert({
       employer_id: employerId,
       created_by: user.id,
       title,
       description,
       role_category: form.role_category.trim() || null,
+      location: form.location.trim() || null,
       hires_needed: form.hires_needed,
       screening_quota: form.screening_quota,
       status: 'open',
-    });
+      job_post_text: form.job_post_text || null,
+    }).select('id').single();
     setSubmitting(false);
     if (error) {
       if (error.code === '42501') toast.error('Your company must be verified to create jobs');
       else toast.error('Failed to create job');
       return;
+    }
+    // Replace placeholder apply URL with real job ID in saved post (best-effort)
+    if (inserted?.id && form.job_post_text?.includes('job_id=PENDING')) {
+      const finalText = form.job_post_text.split('job_id=PENDING').join(`job_id=${inserted.id}`);
+      await supabase.from('jobs').update({ job_post_text: finalText }).eq('id', inserted.id);
     }
     toast.success('Job created');
     setCreateOpen(false);
@@ -250,7 +307,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       </div>
 
       <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) resetForm(); }}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Job</DialogTitle>
             <DialogDescription>
@@ -267,14 +324,25 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 maxLength={150}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Role Category</Label>
-              <Input
-                placeholder="e.g., Engineering / Marketing / Operations"
-                value={form.role_category}
-                onChange={(e) => setForm({ ...form, role_category: e.target.value })}
-                maxLength={80}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Role Category</Label>
+                <Input
+                  placeholder="e.g., Engineering"
+                  value={form.role_category}
+                  onChange={(e) => setForm({ ...form, role_category: e.target.value })}
+                  maxLength={80}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Input
+                  placeholder="e.g., Kuwait City / Remote"
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
+                  maxLength={120}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Description *</Label>
@@ -304,6 +372,49 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 />
                 <p className="text-xs text-muted-foreground">Top Y candidates surfaced as Recommended</p>
               </div>
+            </div>
+
+            <div className="space-y-2 border-t border-border pt-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <Label className="text-sm">AI-Generated Job Post</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Shareable post for LinkedIn, WhatsApp, etc. Editable below.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleGeneratePost}
+                  disabled={generatingPost}
+                >
+                  {generatingPost ? (
+                    <><Loader2 className="w-3.5 h-3.5 animate-spin" />Generating...</>
+                  ) : (
+                    <><Sparkles className="w-3.5 h-3.5" />Generate Job Post</>
+                  )}
+                </Button>
+              </div>
+              {form.job_post_text && (
+                <>
+                  <Textarea
+                    rows={10}
+                    value={form.job_post_text}
+                    onChange={(e) => setForm({ ...form, job_post_text: e.target.value })}
+                    className="font-mono text-xs"
+                  />
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Apply link is finalized after the job is created.
+                    </p>
+                    <Button type="button" size="sm" variant="ghost" onClick={handleCopyPost}>
+                      <ClipboardCopy className="w-3.5 h-3.5" />
+                      Copy to Clipboard
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <DialogFooter>

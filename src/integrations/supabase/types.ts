@@ -573,6 +573,8 @@ export type Database = {
           employer_id: string
           hires_needed: number
           id: string
+          job_post_text: string | null
+          location: string | null
           role_category: string | null
           screening_quota: number
           status: string
@@ -586,6 +588,8 @@ export type Database = {
           employer_id: string
           hires_needed?: number
           id?: string
+          job_post_text?: string | null
+          location?: string | null
           role_category?: string | null
           screening_quota?: number
           status?: string
@@ -599,6 +603,8 @@ export type Database = {
           employer_id?: string
           hires_needed?: number
           id?: string
+          job_post_text?: string | null
+          location?: string | null
           role_category?: string | null
           screening_quota?: number
           status?: string
