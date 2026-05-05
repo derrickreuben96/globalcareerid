@@ -530,6 +530,14 @@ export default function EmployerDashboard() {
               All Records
             </Button>
             <Button 
+              variant={activeSection === 'jobs' ? 'default' : 'outline'}
+              onClick={() => setActiveSection('jobs')}
+              className="gap-2"
+            >
+              <Briefcase className="w-4 h-4" />
+              Jobs
+            </Button>
+            <Button 
               variant={activeSection === 'talent' ? 'default' : 'outline'}
               onClick={() => setActiveSection('talent')}
               className="gap-2"
