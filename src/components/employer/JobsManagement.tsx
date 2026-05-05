@@ -325,6 +325,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                       <Copy className="w-3.5 h-3.5" />
                       Copy Apply Link
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleGeneratePoster(job)}>
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      Generate Image Poster
+                    </Button>
                     {job.status === 'open' ? (
                       <Button size="sm" variant="outline" onClick={() => handleClose(job.id)}>
                         <XCircle className="w-3.5 h-3.5" />
