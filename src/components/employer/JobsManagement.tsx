@@ -105,8 +105,49 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   }, [employerId]);
 
   const resetForm = () => setForm({
-    title: '', description: '', role_category: '', hires_needed: 1, screening_quota: 10,
+    title: '', description: '', role_category: '', location: '', hires_needed: 1, screening_quota: 10, job_post_text: '',
   });
+
+  const handleGeneratePost = async () => {
+    const title = form.title.trim();
+    const description = form.description.trim();
+    if (!title || !description) {
+      toast.error('Enter job title and description first');
+      return;
+    }
+    if (!companyName) {
+      toast.error('Company name not loaded yet');
+      return;
+    }
+    setGeneratingPost(true);
+    // Use a placeholder apply URL — real job ID assigned on save. We tell users link is finalized after creation.
+    const placeholderApplyUrl = `${window.location.origin}/apply?job_id=PENDING&company_id=${employerId}`;
+    const { data, error } = await supabase.functions.invoke('generate-job-post', {
+      body: {
+        company_name: companyName,
+        job_title: title,
+        description,
+        role_category: form.role_category.trim() || undefined,
+        location: form.location.trim() || undefined,
+        apply_url: placeholderApplyUrl,
+      },
+    });
+    setGeneratingPost(false);
+    if (error || (data as { error?: string })?.error) {
+      const msg = (data as { error?: string })?.error || error?.message || 'Failed to generate job post';
+      toast.error(msg);
+      return;
+    }
+    setForm((f) => ({ ...f, job_post_text: (data as { job_post_text: string }).job_post_text }));
+    toast.success('Job post generated — review & edit before saving');
+  };
+
+  const handleCopyPost = async () => {
+    if (!form.job_post_text) return;
+    const ok = await copyToClipboard(form.job_post_text);
+    if (ok) toast.success('Job post copied');
+    else toast.error('Could not copy');
+  };
 
   const handleCreate = async () => {
     const title = form.title.trim();
@@ -123,21 +164,28 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSubmitting(false); return; }
 
-    const { error } = await supabase.from('jobs').insert({
+    const { data: inserted, error } = await supabase.from('jobs').insert({
       employer_id: employerId,
       created_by: user.id,
       title,
       description,
       role_category: form.role_category.trim() || null,
+      location: form.location.trim() || null,
       hires_needed: form.hires_needed,
       screening_quota: form.screening_quota,
       status: 'open',
-    });
+      job_post_text: form.job_post_text || null,
+    }).select('id').single();
     setSubmitting(false);
     if (error) {
       if (error.code === '42501') toast.error('Your company must be verified to create jobs');
       else toast.error('Failed to create job');
       return;
+    }
+    // Replace placeholder apply URL with real job ID in saved post (best-effort)
+    if (inserted?.id && form.job_post_text?.includes('job_id=PENDING')) {
+      const finalText = form.job_post_text.replaceAll('job_id=PENDING', `job_id=${inserted.id}`);
+      await supabase.from('jobs').update({ job_post_text: finalText }).eq('id', inserted.id);
     }
     toast.success('Job created');
     setCreateOpen(false);
