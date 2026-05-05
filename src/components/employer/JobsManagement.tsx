@@ -200,6 +200,39 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const buildApplyUrl = (jobId: string) =>
     `${window.location.origin}/apply?job_id=${jobId}&company_id=${employerId}`;
 
+  const handleGeneratePoster = async (job: Job) => {
+    if (!companyName) { toast.error('Company name not loaded yet'); return; }
+    try {
+      const responsibilities = extractResponsibilities(job.description, job.job_post_text);
+      if (responsibilities.length < 1) {
+        toast.error('Add a more detailed job description first');
+        return;
+      }
+      const blob = await generateJobPosterImage({
+        companyName,
+        jobTitle: job.title,
+        responsibilities,
+        deadline: job.application_deadline
+          ? new Date(job.application_deadline).toLocaleDateString()
+          : undefined,
+        applyUrl: buildApplyUrl(job.id),
+        location: job.location || undefined,
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${job.title.replace(/[^\w]+/g, '_')}_poster.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Poster downloaded');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to generate poster');
+    }
+  };
+
   const handleCopyLink = async (jobId: string) => {
     const ok = await copyToClipboard(buildApplyUrl(jobId));
     if (ok) toast.success('Apply link copied');
