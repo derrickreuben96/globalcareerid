@@ -168,7 +168,7 @@ export default function Apply() {
     );
   }
 
-  if (!jobId || !companyId || !job || !employer) {
+  if (!jobId || !job || !employer) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
