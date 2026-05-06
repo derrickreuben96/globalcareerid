@@ -119,16 +119,16 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       toast.error('Enter job title and description first');
       return;
     }
-    if (!companyName) {
-      toast.error('Company name not loaded yet');
+    const cName = await ensureCompanyName();
+    if (!cName) {
+      toast.error('Company name not found. Update your company profile.');
       return;
     }
     setGeneratingPost(true);
-    // Use a placeholder apply URL — real job ID assigned on save. We tell users link is finalized after creation.
     const placeholderApplyUrl = `${window.location.origin}/apply?job_id=PENDING&company_id=${employerId}`;
     const { data, error } = await supabase.functions.invoke('generate-job-post', {
       body: {
-        company_name: companyName,
+        company_name: cName,
         job_title: title,
         description,
         role_category: form.role_category.trim() || undefined,
