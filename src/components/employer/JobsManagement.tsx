@@ -263,7 +263,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         return;
       }
       const blob = await generateJobPosterImage({
-        companyName,
+        companyName: cName,
         jobTitle: job.title,
         responsibilities,
         deadline: job.application_deadline
