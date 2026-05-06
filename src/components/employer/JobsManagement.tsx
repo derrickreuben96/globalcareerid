@@ -136,6 +136,9 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         role_category: form.role_category.trim() || undefined,
         location: form.location.trim() || undefined,
         apply_url: placeholderApplyUrl,
+        deadline_display: form.application_deadline
+          ? formatDeadlineDisplay(new Date(form.application_deadline).toISOString())
+          : undefined,
       },
     });
     setGeneratingPost(false);
