@@ -458,6 +458,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                       <ImageIcon className="w-3.5 h-3.5" />
                       Generate Image Poster
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => openEdit(job)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                      Edit
+                    </Button>
                     {job.status === 'open' ? (
                       <Button size="sm" variant="outline" onClick={() => handleClose(job.id)}>
                         <XCircle className="w-3.5 h-3.5" />
@@ -468,6 +472,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                         Reopen
                       </Button>
                     ) : null}
+                    <Button size="sm" variant="destructive" onClick={() => setDeletingId(job.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
