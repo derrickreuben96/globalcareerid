@@ -261,7 +261,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   };
 
   const buildApplyUrl = (jobId: string) =>
-    `${window.location.origin}/apply?job_id=${jobId}&company_id=${employerId}`;
+    `https://globalcareerid.com/apply?job_id=${jobId}`;
 
   const ensureCompanyName = async (): Promise<string | null> => {
     if (companyName) return companyName;
