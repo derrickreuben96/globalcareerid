@@ -2,6 +2,9 @@ import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import { initErrorTracking } from "./lib/errorTracking";
 import { initAnalytics } from "./lib/analytics";
+import { installDebugCapture } from "./lib/debugReport";
+
+installDebugCapture();
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import App from "./App.tsx";

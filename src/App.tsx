@@ -11,6 +11,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RouteErrorBoundary } from "./components/RouteErrorBoundary";
 import { PageLoader } from "./components/PageLoader";
 import { CookieConsent } from "./components/CookieConsent";
+import { DebugReportButton } from "./components/DebugReportButton";
 
 // Lazy-loaded pages
 const Index = lazy(() => import("./pages/Index"));
@@ -92,6 +93,7 @@ const App = () => {
           </Suspense>
           </RouteErrorBoundary>
           <CookieConsent />
+          <DebugReportButton />
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
