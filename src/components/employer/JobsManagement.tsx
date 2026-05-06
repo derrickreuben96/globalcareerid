@@ -53,6 +53,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     hires_needed: 1,
     screening_quota: 10,
     job_post_text: '',
+    application_deadline: '', // datetime-local string
   });
   const [generatingPost, setGeneratingPost] = useState(false);
   const [companyName, setCompanyName] = useState<string>('');
