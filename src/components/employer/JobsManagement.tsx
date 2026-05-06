@@ -111,7 +111,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   }, [employerId]);
 
   const resetForm = () => setForm({
-    title: '', description: '', role_category: '', location: '', hires_needed: 1, screening_quota: 10, job_post_text: '',
+    title: '', description: '', role_category: '', location: '', hires_needed: 1, screening_quota: 10, job_post_text: '', application_deadline: '',
   });
 
   const handleGeneratePost = async () => {
