@@ -626,7 +626,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate} disabled={submitting}>
-              {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : 'Create Job'}
+              {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{editingId ? 'Saving...' : 'Creating...'}</> : (editingId ? 'Save Changes' : 'Create Job')}
             </Button>
           </DialogFooter>
         </DialogContent>
