@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { formatDeadlineDisplay, exportJobPostPdf } from '@/lib/jobPostExport';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
@@ -52,6 +53,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     hires_needed: 1,
     screening_quota: 10,
     job_post_text: '',
+    application_deadline: '', // datetime-local string
   });
   const [generatingPost, setGeneratingPost] = useState(false);
   const [companyName, setCompanyName] = useState<string>('');
@@ -109,7 +111,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   }, [employerId]);
 
   const resetForm = () => setForm({
-    title: '', description: '', role_category: '', location: '', hires_needed: 1, screening_quota: 10, job_post_text: '',
+    title: '', description: '', role_category: '', location: '', hires_needed: 1, screening_quota: 10, job_post_text: '', application_deadline: '',
   });
 
   const handleGeneratePost = async () => {
@@ -134,6 +136,9 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         role_category: form.role_category.trim() || undefined,
         location: form.location.trim() || undefined,
         apply_url: placeholderApplyUrl,
+        deadline_display: form.application_deadline
+          ? formatDeadlineDisplay(new Date(form.application_deadline).toISOString())
+          : undefined,
       },
     });
     setGeneratingPost(false);
@@ -179,6 +184,9 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       screening_quota: form.screening_quota,
       status: 'open',
       job_post_text: form.job_post_text || null,
+      application_deadline: form.application_deadline
+        ? new Date(form.application_deadline).toISOString()
+        : null,
     }).select('id').single();
     setSubmitting(false);
     if (error) {
@@ -238,6 +246,9 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           role_category: job.role_category || undefined,
           location: job.location || undefined,
           apply_url: buildApplyUrl(job.id),
+          deadline_display: job.application_deadline
+            ? formatDeadlineDisplay(job.application_deadline)
+            : undefined,
         },
       });
       if (error || (data as { error?: string })?.error) {
@@ -473,6 +484,22 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label>Application Deadline</Label>
+              <Input
+                type="datetime-local"
+                value={form.application_deadline}
+                onChange={(e) => setForm({ ...form, application_deadline: e.target.value })}
+              />
+              {form.application_deadline && (
+                <p className="text-xs text-muted-foreground">
+                  Will display as: <span className="font-medium text-foreground">
+                    {formatDeadlineDisplay(new Date(form.application_deadline).toISOString())}
+                  </span>
+                </p>
+              )}
+            </div>
+
             <div className="space-y-2 border-t border-border pt-4">
               <div className="flex items-center justify-between gap-2">
                 <div>
@@ -496,23 +523,43 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 </Button>
               </div>
               {form.job_post_text && (
-                <>
-                  <Textarea
-                    rows={10}
-                    value={form.job_post_text}
-                    onChange={(e) => setForm({ ...form, job_post_text: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <div className="flex items-center justify-between">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Editable markdown</Label>
+                    <Textarea
+                      rows={14}
+                      value={form.job_post_text}
+                      onChange={(e) => setForm({ ...form, job_post_text: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Live preview</Label>
+                    <div className="rounded-md border border-border bg-muted/30 p-3 h-[300px] overflow-y-auto text-sm whitespace-pre-wrap leading-relaxed">
+                      {form.job_post_text}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 flex items-center justify-between flex-wrap gap-2">
                     <p className="text-xs text-muted-foreground">
                       Apply link is finalized after the job is created.
                     </p>
-                    <Button type="button" size="sm" variant="ghost" onClick={handleCopyPost}>
-                      <ClipboardCopy className="w-3.5 h-3.5" />
-                      Copy to Clipboard
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => exportJobPostPdf(form.job_post_text, form.title || 'Job Post')}
+                      >
+                        <FileDown className="w-3.5 h-3.5" />
+                        Export PDF
+                      </Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={handleCopyPost}>
+                        <ClipboardCopy className="w-3.5 h-3.5" />
+                        Copy to Clipboard
+                      </Button>
+                    </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>

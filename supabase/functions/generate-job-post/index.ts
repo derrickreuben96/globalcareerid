@@ -7,6 +7,7 @@ interface Body {
   role_category?: string;
   location?: string;
   apply_url: string;
+  deadline_display?: string; // pre-formatted, timezone-safe (e.g., "15 June 2026 23:59 (Asia/Kuwait)")
 }
 
 Deno.serve(async (req) => {
@@ -17,7 +18,7 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const body = (await req.json()) as Body;
-    const { company_name, job_title, description, role_category, location, apply_url } = body;
+    const { company_name, job_title, description, role_category, location, apply_url, deadline_display } = body;
 
     if (!company_name || !job_title || !description || !apply_url) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -38,7 +39,7 @@ ${location ? "📍 Location: {Location}\n" : ""}${role_category ? "🗂️ Categ
 - {bullet from description}
 - {bullet from description}
 - {bullet from description}
-
+${deadline_display ? `\n**⏰ Application Deadline**\n${deadline_display}\n` : ""}
 **How to Apply**
 Apply via your Global Career ID:
 👉 {apply_url}
@@ -48,11 +49,11 @@ Apply via your Global Career ID:
 Rules:
 - Do NOT add requirements, benefits, salary, or culture details unless present in the input.
 - Keep bullets concise (max 12 words).
-- Output plain markdown only, no preamble or explanation.`;
+${deadline_display ? "- Include the Application Deadline block EXACTLY as provided. Do not reformat the date or timezone.\n" : "- Do NOT mention any deadline.\n"}- Output plain markdown only, no preamble or explanation.`;
 
     const userPrompt = `Company Name: ${company_name}
 Job Title: ${job_title}
-${role_category ? `Category: ${role_category}\n` : ""}${location ? `Location: ${location}\n` : ""}Apply URL: ${apply_url}
+${role_category ? `Category: ${role_category}\n` : ""}${location ? `Location: ${location}\n` : ""}${deadline_display ? `Application Deadline (use exactly as-is): ${deadline_display}\n` : ""}Apply URL: ${apply_url}
 
 Job Description:
 ${description}`;
