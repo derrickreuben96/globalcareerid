@@ -42,28 +42,38 @@ export default function Apply() {
   const [submitted, setSubmitted] = useState(false);
 
   const returnPath = useMemo(
-    () => `/apply?job_id=${jobId ?? ''}&company_id=${companyId ?? ''}`,
-    [jobId, companyId],
+    () => `/apply?job_id=${jobId ?? ''}`,
+    [jobId],
   );
 
   useEffect(() => {
-    if (!jobId || !companyId) {
+    if (!jobId) {
       setLoading(false);
       return;
     }
 
     const load = async () => {
-      const { data: jobRows } = await supabase.rpc('get_public_job_for_apply', {
+      // Prefer job-id-only lookup (trusted domain links). Fall back to legacy
+      // job_id+company_id RPC for older shared links.
+      let jobData: JobView | null = null;
+      const { data: jobRows } = await supabase.rpc('get_public_job_by_id', {
         job_id_param: jobId,
-        employer_id_param: companyId,
       });
-      const jobData = Array.isArray(jobRows) && jobRows.length > 0 ? jobRows[0] : null;
+      if (Array.isArray(jobRows) && jobRows.length > 0) {
+        jobData = jobRows[0] as JobView;
+      } else if (companyId) {
+        const { data: legacy } = await supabase.rpc('get_public_job_for_apply', {
+          job_id_param: jobId,
+          employer_id_param: companyId,
+        });
+        if (Array.isArray(legacy) && legacy.length > 0) jobData = legacy[0] as JobView;
+      }
 
       if (!jobData) { setLoading(false); return; }
-      setJob(jobData as JobView);
+      setJob(jobData);
 
       const { data: emp } = await supabase.rpc('get_public_employer_info', {
-        employer_id_param: companyId,
+        employer_id_param: jobData.employer_id,
       });
       if (emp && emp.length > 0) setEmployer(emp[0] as EmployerInfo);
 
@@ -158,7 +168,7 @@ export default function Apply() {
     );
   }
 
-  if (!jobId || !companyId || !job || !employer) {
+  if (!jobId || !job || !employer) {
     return (
       <div className="min-h-screen bg-background">
         <Header />

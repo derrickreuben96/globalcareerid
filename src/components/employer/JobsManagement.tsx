@@ -141,7 +141,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       return;
     }
     setGeneratingPost(true);
-    const placeholderApplyUrl = `${window.location.origin}/apply?job_id=PENDING&company_id=${employerId}`;
+    const placeholderApplyUrl = `https://globalcareerid.com/apply?job_id=PENDING&company_id=${employerId}`;
     const { data, error } = await supabase.functions.invoke('generate-job-post', {
       body: {
         company_name: cName,
@@ -261,7 +261,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   };
 
   const buildApplyUrl = (jobId: string) =>
-    `${window.location.origin}/apply?job_id=${jobId}&company_id=${employerId}`;
+    `https://globalcareerid.com/apply?job_id=${jobId}`;
 
   const ensureCompanyName = async (): Promise<string | null> => {
     if (companyName) return companyName;
