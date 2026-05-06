@@ -216,24 +216,27 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
 
   const ensureCompanyName = async (): Promise<string | null> => {
     if (companyName) return companyName;
-    const { data } = await supabase
+    const { data: org } = await supabase
       .from('organization_profiles')
       .select('company_name')
       .eq('user_id', employerId)
       .maybeSingle();
-    if (data?.company_name) {
-      setCompanyName(data.company_name);
-      return data.company_name;
-    }
-    // Fallback to profiles.first_name (org accounts store company there too)
+    if (org?.company_name) { setCompanyName(org.company_name); return org.company_name; }
+    const { data: emp } = await supabase
+      .from('employers')
+      .select('company_name')
+      .eq('user_id', employerId)
+      .maybeSingle();
+    if (emp?.company_name) { setCompanyName(emp.company_name); return emp.company_name; }
     const { data: prof } = await supabase
       .from('profiles')
-      .select('first_name')
+      .select('first_name,last_name')
       .eq('user_id', employerId)
       .maybeSingle();
     if (prof?.first_name) {
-      setCompanyName(prof.first_name);
-      return prof.first_name;
+      const name = `${prof.first_name}${prof.last_name ? ' ' + prof.last_name : ''}`;
+      setCompanyName(name);
+      return name;
     }
     return null;
   };
