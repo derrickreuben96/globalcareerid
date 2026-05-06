@@ -184,6 +184,9 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       screening_quota: form.screening_quota,
       status: 'open',
       job_post_text: form.job_post_text || null,
+      application_deadline: form.application_deadline
+        ? new Date(form.application_deadline).toISOString()
+        : null,
     }).select('id').single();
     setSubmitting(false);
     if (error) {
