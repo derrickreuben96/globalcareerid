@@ -476,10 +476,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         </Table>
       </div>
 
-      <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) resetForm(); }}>
+      <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) { resetForm(); setEditingId(null); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create Job</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Job' : 'Create Job'}</DialogTitle>
             <DialogDescription>
               Post a new opening. Candidates will apply via a unique link tied to your company.
             </DialogDescription>
