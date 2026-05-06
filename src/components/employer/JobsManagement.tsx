@@ -246,6 +246,9 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           role_category: job.role_category || undefined,
           location: job.location || undefined,
           apply_url: buildApplyUrl(job.id),
+          deadline_display: job.application_deadline
+            ? formatDeadlineDisplay(job.application_deadline)
+            : undefined,
         },
       });
       if (error || (data as { error?: string })?.error) {
