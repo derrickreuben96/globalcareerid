@@ -131,8 +131,7 @@ export function installDebugCapture() {
     xhr.open = function (m: string, u: string | URL, ...rest: unknown[]) {
       method = m.toUpperCase();
       url = typeof u === 'string' ? u : u.toString();
-      // @ts-expect-error - forwarding rest args
-      return origOpen.call(this, m, u, ...rest);
+      return (origOpen as any).call(this, m, u, ...rest);
     };
     const origSend = xhr.send;
     xhr.send = function (...args: unknown[]) {
@@ -147,8 +146,7 @@ export function installDebugCapture() {
           type: 'xhr',
         });
       });
-      // @ts-expect-error - forwarding args
-      return origSend.apply(this, args);
+      return (origSend as any).apply(this, args);
     };
     return xhr;
   }
