@@ -484,6 +484,22 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
               </div>
             </div>
 
+            <div className="space-y-2">
+              <Label>Application Deadline</Label>
+              <Input
+                type="datetime-local"
+                value={form.application_deadline}
+                onChange={(e) => setForm({ ...form, application_deadline: e.target.value })}
+              />
+              {form.application_deadline && (
+                <p className="text-xs text-muted-foreground">
+                  Will display as: <span className="font-medium text-foreground">
+                    {formatDeadlineDisplay(new Date(form.application_deadline).toISOString())}
+                  </span>
+                </p>
+              )}
+            </div>
+
             <div className="space-y-2 border-t border-border pt-4">
               <div className="flex items-center justify-between gap-2">
                 <div>
@@ -507,23 +523,43 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                 </Button>
               </div>
               {form.job_post_text && (
-                <>
-                  <Textarea
-                    rows={10}
-                    value={form.job_post_text}
-                    onChange={(e) => setForm({ ...form, job_post_text: e.target.value })}
-                    className="font-mono text-xs"
-                  />
-                  <div className="flex items-center justify-between">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Editable markdown</Label>
+                    <Textarea
+                      rows={14}
+                      value={form.job_post_text}
+                      onChange={(e) => setForm({ ...form, job_post_text: e.target.value })}
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">Live preview</Label>
+                    <div className="rounded-md border border-border bg-muted/30 p-3 h-[300px] overflow-y-auto text-sm whitespace-pre-wrap leading-relaxed">
+                      {form.job_post_text}
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 flex items-center justify-between flex-wrap gap-2">
                     <p className="text-xs text-muted-foreground">
                       Apply link is finalized after the job is created.
                     </p>
-                    <Button type="button" size="sm" variant="ghost" onClick={handleCopyPost}>
-                      <ClipboardCopy className="w-3.5 h-3.5" />
-                      Copy to Clipboard
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => exportJobPostPdf(form.job_post_text, form.title || 'Job Post')}
+                      >
+                        <FileDown className="w-3.5 h-3.5" />
+                        Export PDF
+                      </Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={handleCopyPost}>
+                        <ClipboardCopy className="w-3.5 h-3.5" />
+                        Copy to Clipboard
+                      </Button>
+                    </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
           </div>
