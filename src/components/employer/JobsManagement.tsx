@@ -60,12 +60,14 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
 
   useEffect(() => {
     (async () => {
-      const { data: org } = await supabase.from('organization_profiles').select('company_name').eq('user_id', employerId).maybeSingle();
-      if (org?.company_name) { setCompanyName(org.company_name); return; }
-      const { data: emp } = await supabase.from('employers').select('company_name').eq('user_id', employerId).maybeSingle();
+      const { data: emp } = await supabase.from('employers').select('company_name,user_id').eq('id', employerId).maybeSingle();
       if (emp?.company_name) { setCompanyName(emp.company_name); return; }
-      const { data: prof } = await supabase.from('profiles').select('first_name,last_name').eq('user_id', employerId).maybeSingle();
-      if (prof?.first_name) setCompanyName(`${prof.first_name}${prof.last_name ? ' ' + prof.last_name : ''}`);
+      if (emp?.user_id) {
+        const { data: org } = await supabase.from('organization_profiles').select('company_name').eq('user_id', emp.user_id).maybeSingle();
+        if (org?.company_name) { setCompanyName(org.company_name); return; }
+        const { data: prof } = await supabase.from('profiles').select('first_name,last_name').eq('user_id', emp.user_id).maybeSingle();
+        if (prof?.first_name) setCompanyName(`${prof.first_name}${prof.last_name ? ' ' + prof.last_name : ''}`);
+      }
     })();
   }, [employerId]);
 
