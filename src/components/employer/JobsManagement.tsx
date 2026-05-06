@@ -119,16 +119,16 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       toast.error('Enter job title and description first');
       return;
     }
-    if (!companyName) {
-      toast.error('Company name not loaded yet');
+    const cName = await ensureCompanyName();
+    if (!cName) {
+      toast.error('Company name not found. Update your company profile.');
       return;
     }
     setGeneratingPost(true);
-    // Use a placeholder apply URL — real job ID assigned on save. We tell users link is finalized after creation.
     const placeholderApplyUrl = `${window.location.origin}/apply?job_id=PENDING&company_id=${employerId}`;
     const { data, error } = await supabase.functions.invoke('generate-job-post', {
       body: {
-        company_name: companyName,
+        company_name: cName,
         job_title: title,
         description,
         role_category: form.role_category.trim() || undefined,
@@ -200,8 +200,62 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const buildApplyUrl = (jobId: string) =>
     `${window.location.origin}/apply?job_id=${jobId}&company_id=${employerId}`;
 
+  const ensureCompanyName = async (): Promise<string | null> => {
+    if (companyName) return companyName;
+    const { data } = await supabase
+      .from('organization_profiles')
+      .select('company_name')
+      .eq('user_id', employerId)
+      .maybeSingle();
+    if (data?.company_name) {
+      setCompanyName(data.company_name);
+      return data.company_name;
+    }
+    // Fallback to profiles.first_name (org accounts store company there too)
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('first_name')
+      .eq('user_id', employerId)
+      .maybeSingle();
+    if (prof?.first_name) {
+      setCompanyName(prof.first_name);
+      return prof.first_name;
+    }
+    return null;
+  };
+
+  const handleCopyJobPost = async (job: Job) => {
+    let text = job.job_post_text;
+    if (!text) {
+      const cName = await ensureCompanyName();
+      if (!cName) { toast.error('Company name not found. Update your company profile.'); return; }
+      toast.info('Generating job post...');
+      const { data, error } = await supabase.functions.invoke('generate-job-post', {
+        body: {
+          company_name: cName,
+          job_title: job.title,
+          description: job.description,
+          role_category: job.role_category || undefined,
+          location: job.location || undefined,
+          apply_url: buildApplyUrl(job.id),
+        },
+      });
+      if (error || (data as { error?: string })?.error) {
+        toast.error((data as { error?: string })?.error || error?.message || 'Failed to generate post');
+        return;
+      }
+      text = (data as { job_post_text: string }).job_post_text;
+      await supabase.from('jobs').update({ job_post_text: text }).eq('id', job.id);
+      setJobs((prev) => prev.map((j) => (j.id === job.id ? { ...j, job_post_text: text } : j)));
+    }
+    const ok = await copyToClipboard(text!);
+    if (ok) toast.success('Job post copied — ready to paste anywhere');
+    else toast.error('Could not copy');
+  };
+
   const handleGeneratePoster = async (job: Job) => {
-    if (!companyName) { toast.error('Company name not loaded yet'); return; }
+    const cName = await ensureCompanyName();
+    if (!cName) { toast.error('Company name not found. Update your company profile.'); return; }
     try {
       const responsibilities = extractResponsibilities(job.description, job.job_post_text);
       if (responsibilities.length < 1) {
@@ -209,7 +263,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         return;
       }
       const blob = await generateJobPosterImage({
-        companyName,
+        companyName: cName,
         jobTitle: job.title,
         responsibilities,
         deadline: job.application_deadline
@@ -324,6 +378,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                     <Button size="sm" variant="outline" onClick={() => handleCopyLink(job.id)}>
                       <Copy className="w-3.5 h-3.5" />
                       Copy Apply Link
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleCopyJobPost(job)}>
+                      <ClipboardCopy className="w-3.5 h-3.5" />
+                      Copy Job Post
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleGeneratePoster(job)}>
                       <ImageIcon className="w-3.5 h-3.5" />
