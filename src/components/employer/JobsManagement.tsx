@@ -12,7 +12,11 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown, Pencil, Trash2 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
@@ -44,6 +48,8 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const [createOpen, setCreateOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [viewing, setViewing] = useState<Job | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -59,8 +65,16 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const [companyName, setCompanyName] = useState<string>('');
 
   useEffect(() => {
-    supabase.from('organization_profiles').select('company_name').eq('user_id', employerId).maybeSingle()
-      .then(({ data }) => { if (data?.company_name) setCompanyName(data.company_name); });
+    (async () => {
+      const { data: emp } = await supabase.from('employers').select('company_name,user_id').eq('id', employerId).maybeSingle();
+      if (emp?.company_name) { setCompanyName(emp.company_name); return; }
+      if (emp?.user_id) {
+        const { data: org } = await supabase.from('organization_profiles').select('company_name').eq('user_id', emp.user_id).maybeSingle();
+        if (org?.company_name) { setCompanyName(org.company_name); return; }
+        const { data: prof } = await supabase.from('profiles').select('first_name,last_name').eq('user_id', emp.user_id).maybeSingle();
+        if (prof?.first_name) setCompanyName(`${prof.first_name}${prof.last_name ? ' ' + prof.last_name : ''}`);
+      }
+    })();
   }, [employerId]);
 
   const fetchJobs = async () => {
@@ -158,6 +172,32 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     else toast.error('Could not copy');
   };
 
+  const openEdit = (job: Job) => {
+    setEditingId(job.id);
+    setForm({
+      title: job.title,
+      description: job.description,
+      role_category: job.role_category || '',
+      location: job.location || '',
+      hires_needed: job.hires_needed,
+      screening_quota: job.screening_quota,
+      job_post_text: job.job_post_text || '',
+      application_deadline: job.application_deadline
+        ? new Date(job.application_deadline).toISOString().slice(0, 16)
+        : '',
+    });
+    setCreateOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    const { error } = await supabase.from('jobs').delete().eq('id', deletingId);
+    if (error) { toast.error('Failed to delete job'); return; }
+    toast.success('Job deleted');
+    setDeletingId(null);
+    fetchJobs();
+  };
+
   const handleCreate = async () => {
     const title = form.title.trim();
     const description = form.description.trim();
@@ -173,20 +213,36 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSubmitting(false); return; }
 
-    const { data: inserted, error } = await supabase.from('jobs').insert({
-      employer_id: employerId,
-      created_by: user.id,
+    const payload = {
       title,
       description,
       role_category: form.role_category.trim() || null,
       location: form.location.trim() || null,
       hires_needed: form.hires_needed,
       screening_quota: form.screening_quota,
-      status: 'open',
       job_post_text: form.job_post_text || null,
       application_deadline: form.application_deadline
         ? new Date(form.application_deadline).toISOString()
         : null,
+    };
+
+    if (editingId) {
+      const { error } = await supabase.from('jobs').update(payload).eq('id', editingId);
+      setSubmitting(false);
+      if (error) { toast.error('Failed to update job'); return; }
+      toast.success('Job updated');
+      setCreateOpen(false);
+      setEditingId(null);
+      resetForm();
+      fetchJobs();
+      return;
+    }
+
+    const { data: inserted, error } = await supabase.from('jobs').insert({
+      ...payload,
+      employer_id: employerId,
+      created_by: user.id,
+      status: 'open',
     }).select('id').single();
     setSubmitting(false);
     if (error) {
@@ -194,7 +250,6 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       else toast.error('Failed to create job');
       return;
     }
-    // Replace placeholder apply URL with real job ID in saved post (best-effort)
     if (inserted?.id && form.job_post_text?.includes('job_id=PENDING')) {
       const finalText = form.job_post_text.split('job_id=PENDING').join(`job_id=${inserted.id}`);
       await supabase.from('jobs').update({ job_post_text: finalText }).eq('id', inserted.id);
@@ -210,24 +265,29 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
 
   const ensureCompanyName = async (): Promise<string | null> => {
     if (companyName) return companyName;
-    const { data } = await supabase
-      .from('organization_profiles')
-      .select('company_name')
-      .eq('user_id', employerId)
+    const { data: emp } = await supabase
+      .from('employers')
+      .select('company_name,user_id')
+      .eq('id', employerId)
       .maybeSingle();
-    if (data?.company_name) {
-      setCompanyName(data.company_name);
-      return data.company_name;
-    }
-    // Fallback to profiles.first_name (org accounts store company there too)
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('first_name')
-      .eq('user_id', employerId)
-      .maybeSingle();
-    if (prof?.first_name) {
-      setCompanyName(prof.first_name);
-      return prof.first_name;
+    if (emp?.company_name) { setCompanyName(emp.company_name); return emp.company_name; }
+    if (emp?.user_id) {
+      const { data: org } = await supabase
+        .from('organization_profiles')
+        .select('company_name')
+        .eq('user_id', emp.user_id)
+        .maybeSingle();
+      if (org?.company_name) { setCompanyName(org.company_name); return org.company_name; }
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('first_name,last_name')
+        .eq('user_id', emp.user_id)
+        .maybeSingle();
+      if (prof?.first_name) {
+        const name = `${prof.first_name}${prof.last_name ? ' ' + prof.last_name : ''}`;
+        setCompanyName(name);
+        return name;
+      }
     }
     return null;
   };
@@ -398,6 +458,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                       <ImageIcon className="w-3.5 h-3.5" />
                       Generate Image Poster
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => openEdit(job)}>
+                      <Pencil className="w-3.5 h-3.5" />
+                      Edit
+                    </Button>
                     {job.status === 'open' ? (
                       <Button size="sm" variant="outline" onClick={() => handleClose(job.id)}>
                         <XCircle className="w-3.5 h-3.5" />
@@ -408,6 +472,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                         Reopen
                       </Button>
                     ) : null}
+                    <Button size="sm" variant="destructive" onClick={() => setDeletingId(job.id)}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -416,10 +484,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         </Table>
       </div>
 
-      <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) resetForm(); }}>
+      <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) { resetForm(); setEditingId(null); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Create Job</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Job' : 'Create Job'}</DialogTitle>
             <DialogDescription>
               Post a new opening. Candidates will apply via a unique link tied to your company.
             </DialogDescription>
@@ -566,7 +634,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
             <Button onClick={handleCreate} disabled={submitting}>
-              {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating...</> : 'Create Job'}
+              {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{editingId ? 'Saving...' : 'Creating...'}</> : (editingId ? 'Save Changes' : 'Create Job')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -581,6 +649,21 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           screeningQuota={viewing.screening_quota}
         />
       )}
+
+      <AlertDialog open={!!deletingId} onOpenChange={(o) => { if (!o) setDeletingId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this job?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the job posting and its apply link. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
