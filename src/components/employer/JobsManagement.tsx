@@ -172,6 +172,32 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     else toast.error('Could not copy');
   };
 
+  const openEdit = (job: Job) => {
+    setEditingId(job.id);
+    setForm({
+      title: job.title,
+      description: job.description,
+      role_category: job.role_category || '',
+      location: job.location || '',
+      hires_needed: job.hires_needed,
+      screening_quota: job.screening_quota,
+      job_post_text: job.job_post_text || '',
+      application_deadline: job.application_deadline
+        ? new Date(job.application_deadline).toISOString().slice(0, 16)
+        : '',
+    });
+    setCreateOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletingId) return;
+    const { error } = await supabase.from('jobs').delete().eq('id', deletingId);
+    if (error) { toast.error('Failed to delete job'); return; }
+    toast.success('Job deleted');
+    setDeletingId(null);
+    fetchJobs();
+  };
+
   const handleCreate = async () => {
     const title = form.title.trim();
     const description = form.description.trim();
@@ -187,20 +213,36 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { setSubmitting(false); return; }
 
-    const { data: inserted, error } = await supabase.from('jobs').insert({
-      employer_id: employerId,
-      created_by: user.id,
+    const payload = {
       title,
       description,
       role_category: form.role_category.trim() || null,
       location: form.location.trim() || null,
       hires_needed: form.hires_needed,
       screening_quota: form.screening_quota,
-      status: 'open',
       job_post_text: form.job_post_text || null,
       application_deadline: form.application_deadline
         ? new Date(form.application_deadline).toISOString()
         : null,
+    };
+
+    if (editingId) {
+      const { error } = await supabase.from('jobs').update(payload).eq('id', editingId);
+      setSubmitting(false);
+      if (error) { toast.error('Failed to update job'); return; }
+      toast.success('Job updated');
+      setCreateOpen(false);
+      setEditingId(null);
+      resetForm();
+      fetchJobs();
+      return;
+    }
+
+    const { data: inserted, error } = await supabase.from('jobs').insert({
+      ...payload,
+      employer_id: employerId,
+      created_by: user.id,
+      status: 'open',
     }).select('id').single();
     setSubmitting(false);
     if (error) {
@@ -208,7 +250,6 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       else toast.error('Failed to create job');
       return;
     }
-    // Replace placeholder apply URL with real job ID in saved post (best-effort)
     if (inserted?.id && form.job_post_text?.includes('job_id=PENDING')) {
       const finalText = form.job_post_text.split('job_id=PENDING').join(`job_id=${inserted.id}`);
       await supabase.from('jobs').update({ job_post_text: finalText }).eq('id', inserted.id);
