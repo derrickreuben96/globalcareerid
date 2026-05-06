@@ -12,7 +12,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
