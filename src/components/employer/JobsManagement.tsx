@@ -686,6 +686,49 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         />
       )}
 
+      <Dialog open={!!qrJob} onOpenChange={(o) => { if (!o) setQrJob(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Apply QR Code</DialogTitle>
+            <DialogDescription>
+              Always points to the latest canonical apply link on globalcareerid.com.
+            </DialogDescription>
+          </DialogHeader>
+          {qrJob && (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <QRCodeSVG
+                    key={qrNonce}
+                    id={`job-qr-${qrJob.id}`}
+                    value={buildApplyUrl(qrJob.id)}
+                    size={220}
+                    level="H"
+                    includeMargin={false}
+                    bgColor="#ffffff"
+                    fgColor="#0B2545"
+                  />
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs font-mono break-all">
+                {buildApplyUrl(qrJob.id)}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleCopyLink(qrJob.id)}>
+                  <Copy className="w-4 h-4" /> Copy
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleRegenerateQr(qrJob)}>
+                  <RefreshCcw className="w-4 h-4" /> Regenerate
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleDownloadQr(qrJob)}>
+                  <Download className="w-4 h-4" /> SVG
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={!!deletingId} onOpenChange={(o) => { if (!o) setDeletingId(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
