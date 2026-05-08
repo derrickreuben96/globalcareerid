@@ -12,7 +12,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown, Pencil, Trash2 } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown, Pencil, Trash2, QrCode, Download, RefreshCcw } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -21,6 +21,8 @@ import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
 import { generateJobPosterImage, extractResponsibilities } from '@/lib/jobPosterImage';
+import { buildApplyUrl, isCanonicalApplyUrl } from '@/lib/applyUrl';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Job {
   id: string;
