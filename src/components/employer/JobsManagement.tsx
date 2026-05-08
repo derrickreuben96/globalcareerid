@@ -12,7 +12,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown, Pencil, Trash2 } from 'lucide-react';
+import { Briefcase, Plus, Loader2, Copy, XCircle, Users, Eye, Sparkles, ClipboardCopy, ImageIcon, FileDown, Pencil, Trash2, QrCode, Download, RefreshCcw } from 'lucide-react';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -21,6 +21,8 @@ import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/clipboard';
 import { ViewApplicationsDialog } from './ViewApplicationsDialog';
 import { generateJobPosterImage, extractResponsibilities } from '@/lib/jobPosterImage';
+import { buildApplyUrl, isCanonicalApplyUrl } from '@/lib/applyUrl';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface Job {
   id: string;
@@ -50,6 +52,8 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const [viewing, setViewing] = useState<Job | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [qrJob, setQrJob] = useState<Job | null>(null);
+  const [qrNonce, setQrNonce] = useState(0);
 
   const [form, setForm] = useState({
     title: '',
@@ -141,7 +145,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       return;
     }
     setGeneratingPost(true);
-    const placeholderApplyUrl = `https://globalcareerid.com/apply?job_id=PENDING&company_id=${employerId}`;
+    const placeholderApplyUrl = `https://globalcareerid.com/apply?job_id=PENDING`;
     const { data, error } = await supabase.functions.invoke('generate-job-post', {
       body: {
         company_name: cName,
@@ -260,8 +264,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     fetchJobs();
   };
 
-  const buildApplyUrl = (jobId: string) =>
-    `https://globalcareerid.com/apply?job_id=${jobId}`;
+  // buildApplyUrl is imported from @/lib/applyUrl — single canonical source.
 
   const ensureCompanyName = async (): Promise<string | null> => {
     if (companyName) return companyName;
@@ -359,10 +362,39 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   };
 
   const handleCopyLink = async (jobId: string) => {
-    const ok = await copyToClipboard(buildApplyUrl(jobId));
+    const url = buildApplyUrl(jobId);
+    if (!isCanonicalApplyUrl(url)) {
+      toast.error('Generated link failed trust validation');
+      return;
+    }
+    const ok = await copyToClipboard(url);
     if (ok) toast.success('Apply link copied');
     else toast.error('Could not copy');
   };
+
+  const handleRegenerateQr = (job: Job) => {
+    setQrNonce((n) => n + 1);
+    setQrJob(job);
+    toast.success('QR refreshed for the latest apply link');
+  };
+
+  const handleDownloadQr = (job: Job) => {
+    if (typeof document === 'undefined') return;
+    const svg = document.getElementById(`job-qr-${job.id}`) as unknown as SVGSVGElement | null;
+    if (!svg) return;
+    const xml = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = `${job.title.replace(/[^\w]+/g, '_')}_apply_qr.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+    toast.success('QR downloaded');
+  };
+
 
   const handleClose = async (jobId: string) => {
     const { error } = await supabase.from('jobs').update({ status: 'closed' }).eq('id', jobId);
@@ -457,6 +489,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                     <Button size="sm" variant="outline" onClick={() => handleGeneratePoster(job)}>
                       <ImageIcon className="w-3.5 h-3.5" />
                       Generate Image Poster
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setQrNonce((n) => n + 1); setQrJob(job); }}>
+                      <QrCode className="w-3.5 h-3.5" />
+                      Show QR
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => openEdit(job)}>
                       <Pencil className="w-3.5 h-3.5" />
@@ -649,6 +685,49 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
           screeningQuota={viewing.screening_quota}
         />
       )}
+
+      <Dialog open={!!qrJob} onOpenChange={(o) => { if (!o) setQrJob(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Apply QR Code</DialogTitle>
+            <DialogDescription>
+              Always points to the latest canonical apply link on globalcareerid.com.
+            </DialogDescription>
+          </DialogHeader>
+          {qrJob && (
+            <div className="space-y-4">
+              <div className="flex justify-center">
+                <div className="bg-white rounded-lg p-3 shadow-sm">
+                  <QRCodeSVG
+                    key={qrNonce}
+                    id={`job-qr-${qrJob.id}`}
+                    value={buildApplyUrl(qrJob.id)}
+                    size={220}
+                    level="H"
+                    includeMargin={false}
+                    bgColor="#ffffff"
+                    fgColor="#0B2545"
+                  />
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs font-mono break-all">
+                {buildApplyUrl(qrJob.id)}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleCopyLink(qrJob.id)}>
+                  <Copy className="w-4 h-4" /> Copy
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleRegenerateQr(qrJob)}>
+                  <RefreshCcw className="w-4 h-4" /> Regenerate
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleDownloadQr(qrJob)}>
+                  <Download className="w-4 h-4" /> SVG
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deletingId} onOpenChange={(o) => { if (!o) setDeletingId(null); }}>
         <AlertDialogContent>

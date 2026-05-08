@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Loader2, CheckCircle, AlertTriangle, Building2 } from 'lucide-react';
+import { Briefcase, Loader2, CheckCircle, AlertTriangle, Building2, Home, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface JobView {
@@ -27,7 +27,7 @@ interface EmployerInfo {
 }
 
 export default function Apply() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, authStatus } = useAuth();
   const jobId = params.get('job_id');
@@ -40,19 +40,32 @@ export default function Apply() {
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [accountType, setAccountType] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [errorState, setErrorState] = useState<'invalid' | 'closed' | null>(null);
 
   const returnPath = useMemo(
     () => `/apply?job_id=${jobId ?? ''}`,
     [jobId],
   );
 
+  // Strip legacy ?company_id=... and replace with canonical job_id-only URL.
+  // Preserves session/auth (no full reload) and matches the trusted domain shape.
+  useEffect(() => {
+    if (jobId && companyId) {
+      const next = new URLSearchParams();
+      next.set('job_id', jobId);
+      setParams(next, { replace: true });
+    }
+  }, [jobId, companyId, setParams]);
+
   useEffect(() => {
     if (!jobId) {
+      setErrorState('invalid');
       setLoading(false);
       return;
     }
 
     const load = async () => {
+      setErrorState(null);
       // Prefer job-id-only lookup (trusted domain links). Fall back to legacy
       // job_id+company_id RPC for older shared links.
       let jobData: JobView | null = null;
@@ -69,7 +82,26 @@ export default function Apply() {
         if (Array.isArray(legacy) && legacy.length > 0) jobData = legacy[0] as JobView;
       }
 
-      if (!jobData) { setLoading(false); return; }
+      // If still nothing, check whether the job exists at all (closed vs missing)
+      if (!jobData) {
+        const { data: anyJob } = await supabase
+          .from('jobs')
+          .select('id,status,employer_id')
+          .eq('id', jobId)
+          .maybeSingle();
+        if (anyJob && anyJob.status !== 'open') {
+          setErrorState('closed');
+          // still show employer card so user can find more roles
+          const { data: emp } = await supabase.rpc('get_public_employer_info', {
+            employer_id_param: anyJob.employer_id,
+          });
+          if (emp && emp.length > 0) setEmployer(emp[0] as EmployerInfo);
+        } else {
+          setErrorState('invalid');
+        }
+        setLoading(false);
+        return;
+      }
       setJob(jobData);
 
       const { data: emp } = await supabase.rpc('get_public_employer_info', {
@@ -168,15 +200,42 @@ export default function Apply() {
     );
   }
 
-  if (!jobId || !job || !employer) {
+  if (errorState || !jobId || !job || !employer) {
+    const isClosed = errorState === 'closed';
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="pt-24 pb-16 container mx-auto px-4 max-w-2xl">
-          <div className="glass-card rounded-2xl p-8 text-center">
-            <AlertTriangle className="w-10 h-10 mx-auto text-warning mb-3" />
-            <h1 className="text-xl font-display font-semibold text-foreground">Invalid apply link</h1>
-            <p className="text-sm text-muted-foreground mt-2">The job could not be found or the link is incomplete.</p>
+          <div className="glass-card rounded-2xl p-8 text-center space-y-4">
+            {isClosed ? (
+              <XCircle className="w-12 h-12 mx-auto text-warning" />
+            ) : (
+              <AlertTriangle className="w-12 h-12 mx-auto text-warning" />
+            )}
+            <h1 className="text-2xl font-display font-semibold text-foreground">
+              {isClosed ? 'This role is no longer accepting applications' : 'We couldn’t find that job'}
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              {isClosed
+                ? `The recruiter has closed this opening${employer ? ` at ${employer.company_name}` : ''}. You can browse other verified roles or return to the job poster for more openings.`
+                : 'The link may be expired, mistyped, or the job has been removed by the recruiter. Please double-check the link or contact the recruiter who shared it.'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <Button onClick={() => navigate('/')} variant="default">
+                <Home className="w-4 h-4 mr-2" /> Back to Global Career ID
+              </Button>
+              <Button onClick={() => navigate('/for-job-seekers')} variant="outline">
+                Browse roles
+              </Button>
+              {document.referrer && (
+                <Button
+                  onClick={() => { window.location.href = document.referrer; }}
+                  variant="ghost"
+                >
+                  Return to recruiter
+                </Button>
+              )}
+            </div>
           </div>
         </main>
         <Footer />
