@@ -262,8 +262,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
     fetchJobs();
   };
 
-  const buildApplyUrl = (jobId: string) =>
-    `https://globalcareerid.com/apply?job_id=${jobId}`;
+  // buildApplyUrl is imported from @/lib/applyUrl — single canonical source.
 
   const ensureCompanyName = async (): Promise<string | null> => {
     if (companyName) return companyName;
