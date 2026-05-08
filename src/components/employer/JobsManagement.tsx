@@ -52,6 +52,8 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   const [viewing, setViewing] = useState<Job | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [qrJob, setQrJob] = useState<Job | null>(null);
+  const [qrNonce, setQrNonce] = useState(0);
 
   const [form, setForm] = useState({
     title: '',
