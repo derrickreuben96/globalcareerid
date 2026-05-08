@@ -200,15 +200,42 @@ export default function Apply() {
     );
   }
 
-  if (!jobId || !job || !employer) {
+  if (errorState || !jobId || !job) {
+    const isClosed = errorState === 'closed';
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="pt-24 pb-16 container mx-auto px-4 max-w-2xl">
-          <div className="glass-card rounded-2xl p-8 text-center">
-            <AlertTriangle className="w-10 h-10 mx-auto text-warning mb-3" />
-            <h1 className="text-xl font-display font-semibold text-foreground">Invalid apply link</h1>
-            <p className="text-sm text-muted-foreground mt-2">The job could not be found or the link is incomplete.</p>
+          <div className="glass-card rounded-2xl p-8 text-center space-y-4">
+            {isClosed ? (
+              <XCircle className="w-12 h-12 mx-auto text-warning" />
+            ) : (
+              <AlertTriangle className="w-12 h-12 mx-auto text-warning" />
+            )}
+            <h1 className="text-2xl font-display font-semibold text-foreground">
+              {isClosed ? 'This role is no longer accepting applications' : 'We couldn’t find that job'}
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+              {isClosed
+                ? `The recruiter has closed this opening${employer ? ` at ${employer.company_name}` : ''}. You can browse other verified roles or return to the job poster for more openings.`
+                : 'The link may be expired, mistyped, or the job has been removed by the recruiter. Please double-check the link or contact the recruiter who shared it.'}
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+              <Button onClick={() => navigate('/')} variant="default">
+                <Home className="w-4 h-4 mr-2" /> Back to Global Career ID
+              </Button>
+              <Button onClick={() => navigate('/for-job-seekers')} variant="outline">
+                Browse roles
+              </Button>
+              {document.referrer && (
+                <Button
+                  onClick={() => { window.location.href = document.referrer; }}
+                  variant="ghost"
+                >
+                  Return to recruiter
+                </Button>
+              )}
+            </div>
           </div>
         </main>
         <Footer />
