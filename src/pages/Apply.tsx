@@ -200,7 +200,7 @@ export default function Apply() {
     );
   }
 
-  if (errorState || !jobId || !job) {
+  if (errorState || !jobId || !job || !employer) {
     const isClosed = errorState === 'closed';
     return (
       <div className="min-h-screen bg-background">
