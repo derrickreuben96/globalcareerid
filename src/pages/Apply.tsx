@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Briefcase, Loader2, CheckCircle, AlertTriangle, Building2 } from 'lucide-react';
+import { Briefcase, Loader2, CheckCircle, AlertTriangle, Building2, Home, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface JobView {
