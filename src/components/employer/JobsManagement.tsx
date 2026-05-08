@@ -143,7 +143,7 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
       return;
     }
     setGeneratingPost(true);
-    const placeholderApplyUrl = `https://globalcareerid.com/apply?job_id=PENDING&company_id=${employerId}`;
+    const placeholderApplyUrl = `https://globalcareerid.com/apply?job_id=PENDING`;
     const { data, error } = await supabase.functions.invoke('generate-job-post', {
       body: {
         company_name: cName,
