@@ -490,6 +490,10 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
                       <ImageIcon className="w-3.5 h-3.5" />
                       Generate Image Poster
                     </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setQrNonce((n) => n + 1); setQrJob(job); }}>
+                      <QrCode className="w-3.5 h-3.5" />
+                      Show QR
+                    </Button>
                     <Button size="sm" variant="outline" onClick={() => openEdit(job)}>
                       <Pencil className="w-3.5 h-3.5" />
                       Edit
