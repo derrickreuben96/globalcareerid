@@ -362,10 +362,39 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
   };
 
   const handleCopyLink = async (jobId: string) => {
-    const ok = await copyToClipboard(buildApplyUrl(jobId));
+    const url = buildApplyUrl(jobId);
+    if (!isCanonicalApplyUrl(url)) {
+      toast.error('Generated link failed trust validation');
+      return;
+    }
+    const ok = await copyToClipboard(url);
     if (ok) toast.success('Apply link copied');
     else toast.error('Could not copy');
   };
+
+  const handleRegenerateQr = (job: Job) => {
+    setQrNonce((n) => n + 1);
+    setQrJob(job);
+    toast.success('QR refreshed for the latest apply link');
+  };
+
+  const handleDownloadQr = (job: Job) => {
+    if (typeof document === 'undefined') return;
+    const svg = document.getElementById(`job-qr-${job.id}`) as unknown as SVGSVGElement | null;
+    if (!svg) return;
+    const xml = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = `${job.title.replace(/[^\w]+/g, '_')}_apply_qr.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objectUrl);
+    toast.success('QR downloaded');
+  };
+
 
   const handleClose = async (jobId: string) => {
     const { error } = await supabase.from('jobs').update({ status: 'closed' }).eq('id', jobId);
