@@ -27,7 +27,7 @@ interface EmployerInfo {
 }
 
 export default function Apply() {
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, authStatus } = useAuth();
   const jobId = params.get('job_id');
@@ -40,19 +40,32 @@ export default function Apply() {
   const [alreadyApplied, setAlreadyApplied] = useState(false);
   const [accountType, setAccountType] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [errorState, setErrorState] = useState<'invalid' | 'closed' | null>(null);
 
   const returnPath = useMemo(
     () => `/apply?job_id=${jobId ?? ''}`,
     [jobId],
   );
 
+  // Strip legacy ?company_id=... and replace with canonical job_id-only URL.
+  // Preserves session/auth (no full reload) and matches the trusted domain shape.
+  useEffect(() => {
+    if (jobId && companyId) {
+      const next = new URLSearchParams();
+      next.set('job_id', jobId);
+      setParams(next, { replace: true });
+    }
+  }, [jobId, companyId, setParams]);
+
   useEffect(() => {
     if (!jobId) {
+      setErrorState('invalid');
       setLoading(false);
       return;
     }
 
     const load = async () => {
+      setErrorState(null);
       // Prefer job-id-only lookup (trusted domain links). Fall back to legacy
       // job_id+company_id RPC for older shared links.
       let jobData: JobView | null = null;
@@ -69,7 +82,26 @@ export default function Apply() {
         if (Array.isArray(legacy) && legacy.length > 0) jobData = legacy[0] as JobView;
       }
 
-      if (!jobData) { setLoading(false); return; }
+      // If still nothing, check whether the job exists at all (closed vs missing)
+      if (!jobData) {
+        const { data: anyJob } = await supabase
+          .from('jobs')
+          .select('id,status,employer_id')
+          .eq('id', jobId)
+          .maybeSingle();
+        if (anyJob && anyJob.status !== 'open') {
+          setErrorState('closed');
+          // still show employer card so user can find more roles
+          const { data: emp } = await supabase.rpc('get_public_employer_info', {
+            employer_id_param: anyJob.employer_id,
+          });
+          if (emp && emp.length > 0) setEmployer(emp[0] as EmployerInfo);
+        } else {
+          setErrorState('invalid');
+        }
+        setLoading(false);
+        return;
+      }
       setJob(jobData);
 
       const { data: emp } = await supabase.rpc('get_public_employer_info', {
