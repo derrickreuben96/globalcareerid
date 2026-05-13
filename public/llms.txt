@@ -1,0 +1,19 @@
+# Global Career ID
+
+> Global Career ID is a verified employment identity platform. Job seekers build a single trusted, employer-verified career record (a Career ID) that recruiters and employers can verify instantly — replacing easily-faked CVs and reference letters.
+
+## Pages
+
+- [Home](/): Overview of the verified Career ID platform.
+- [How it works](/how-it-works): Step-by-step walkthrough for job seekers and employers.
+- [For employers and recruiters](/for-employers): Verify candidates, post jobs, and reduce hiring fraud.
+- [For job seekers](/for-job-seekers): Build a verified career identity you control.
+- [Verify a profile](/verify): Look up and verify any Career ID.
+- [Verify a credential](/verify-credential): Cryptographically verify a signed credential.
+- [About](/about): Mission and team behind Global Career ID.
+- [Careers](/careers): Open roles at Global Career ID.
+- [FAQ](/faq): Common questions about the platform.
+- [Help center](/help): Guides and support resources.
+- [Contact](/contact): Reach the Global Career ID team.
+- [Privacy policy](/privacy): How data is handled.
+- [Terms of service](/terms): Platform terms.

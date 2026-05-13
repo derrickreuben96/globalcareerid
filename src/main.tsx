@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
+import { HelmetProvider } from "react-helmet-async";
 import { initErrorTracking } from "./lib/errorTracking";
 import { initAnalytics } from "./lib/analytics";
 import { installDebugCapture } from "./lib/debugReport";
@@ -51,7 +52,9 @@ createRoot(document.getElementById("root")!).render(
       />
     )}
   >
-    <App />
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
   </Sentry.ErrorBoundary>
 );
 

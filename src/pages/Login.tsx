@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { MFAVerification } from '@/components/auth/MFAVerification';
 import { WelcomeOverlay } from '@/components/WelcomeOverlay';
+import { SEO } from '@/components/SEO';
 
 function getRedirectFromProfile(profile: any, roles: string[]): string {
   if (roles.includes('admin')) return '/admin';
@@ -216,6 +217,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Log In — Global Career ID" description="Sign in to your Global Career ID account to access your verified career record, employer dashboard, or admin tools." path="/login" />
       <Header />
       
       <main className="pt-24 pb-16">

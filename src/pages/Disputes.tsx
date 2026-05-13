@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertCircle, FileText, Clock, CheckCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { SEO } from '@/components/SEO';
 
 const disputeSteps = [
   {
@@ -34,6 +35,7 @@ export default function Disputes() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Disputes — Global Career ID" description="Raise and track disputes about employment records on your Global Career ID profile." path="/disputes" />
       <Header />
       
       <main className="pt-24 pb-16">

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ceoPhoto from '@/assets/ceo-photo.jpg';
+import { SEO } from '@/components/SEO';
 
 interface JobOpening {
   id: string;
@@ -153,6 +154,7 @@ export default function Careers() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Careers at Global Career ID" description="Open roles at Global Career ID — help build the global standard for verified employment identity." path="/careers" />
       <Header />
       
       <main className="pt-24">

@@ -4,6 +4,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
+import { SEO } from '@/components/SEO';
   Shield, 
   FileCheck, 
   AlertCircle, 
@@ -64,6 +65,7 @@ const features = [
 export default function ForJobSeekers() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="For Job Seekers — Global Career ID" description="Build a portable, employer-verified career identity. Share your Career ID with one tap and let recruiters trust your history instantly." path="/for-job-seekers" />
       <Header />
       
       <main className="pt-24 pb-16">

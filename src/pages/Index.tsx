@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { SEO } from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -122,6 +123,11 @@ export default function Index() {
   }];
 
   return <div className="min-h-screen bg-background">
+      <SEO
+        title="Global Career ID — Verified Employment Identity"
+        description="Build a single, employer-verified Career ID. Replace fakeable CVs with instant, cryptographic proof of work history trusted by recruiters worldwide."
+        path="/"
+      />
       <Header />
       
       {/* Hero Section with Image Background */}
@@ -135,6 +141,9 @@ export default function Index() {
             <h1 className="mt-8 text-5xl md:text-7xl lg:text-8xl font-display font-bold text-foreground leading-tight">
               <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-secondary-foreground">
                 Global Career ID
+              </span>
+              <span className="block mt-2 text-2xl md:text-3xl lg:text-4xl font-display font-semibold text-foreground/90">
+                Verified Employment Identity for Modern Hiring
               </span>
             </h1>
             

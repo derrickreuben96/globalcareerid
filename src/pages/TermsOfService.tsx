@@ -1,9 +1,11 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SEO } from '@/components/SEO';
 
 export default function TermsOfService() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Terms of Service — Global Career ID" description="The terms governing use of Global Career ID by job seekers, employers, and recruiters." path="/terms" />
       <Header />
       
       <main className="pt-24 pb-16">

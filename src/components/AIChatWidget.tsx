@@ -195,12 +195,13 @@ export function AIChatWidget() {
       {/* Chat Widget Button */}
       <button
         onClick={() => setIsOpen(true)}
+        aria-label="Open AI assistant chat"
         className={cn(
           "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 transition-transform",
           isOpen && "hidden"
         )}
       >
-        <MessageCircle className="w-6 h-6" />
+        <MessageCircle className="w-6 h-6" aria-hidden="true" />
       </button>
 
       {/* Chat Window */}
@@ -213,8 +214,8 @@ export function AIChatWidget() {
                 <Bot className="w-5 h-5" />
                 <span className="font-semibold">Global Career ID Assistant</span>
               </div>
-              <button onClick={() => setIsOpen(false)} className="hover:opacity-80">
-                <X className="w-5 h-5" />
+              <button onClick={() => setIsOpen(false)} aria-label="Close chat" className="hover:opacity-80">
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <div className="flex items-center gap-1.5 mt-1 text-xs text-primary-foreground/80">
@@ -280,11 +281,12 @@ export function AIChatWidget() {
                 onClick={sendMessage} 
                 disabled={isLoading || !input.trim()}
                 size="icon"
+                aria-label="Send message"
               >
                 {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <Send className="w-4 h-4" aria-hidden="true" />
                 )}
               </Button>
             </div>

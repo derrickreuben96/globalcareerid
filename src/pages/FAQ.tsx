@@ -1,5 +1,6 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SEO } from '@/components/SEO';
 import { useTranslation } from 'react-i18next';
 import {
   Accordion,
@@ -62,8 +63,25 @@ export default function FAQ() {
     }
   ];
 
+  const allFaqs = faqCategories.flatMap(c => c.faqs);
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: allFaqs.map(f => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: { '@type': 'Answer', text: f.answer },
+    })),
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="FAQ — Global Career ID"
+        description="Answers to common questions about Global Career ID: how verification works, account types, privacy controls, and the dispute process."
+        path="/faq"
+        jsonLd={faqJsonLd}
+      />
       <Header />
       
       <main className="pt-24 pb-16">

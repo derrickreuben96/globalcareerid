@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+import { SEO } from '@/components/SEO';
 
 // Contact form validation schema
 const contactFormSchema = z.object({
@@ -68,6 +69,7 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Contact Global Career ID" description="Get in touch with the Global Career ID team — for support, partnerships, employer onboarding, or media inquiries." path="/contact" />
       <Header />
       
       <main className="pt-24 pb-16">

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, Shield, User, Calendar, CheckCircle, Eye, Loader2 } from 'lucide-react';
+import { SEO } from '@/components/SEO';
 
 interface Profile {
   id: string;
@@ -110,6 +111,7 @@ export default function Verify() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Verify a Career ID — Global Career ID" description="Look up and verify any Global Career ID profile. Confirm employment history, employer verification, and credential authenticity in seconds." path="/verify" />
       <Header />
       
       <main className="pt-24 pb-16">

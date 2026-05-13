@@ -16,6 +16,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 
 const helpCategories = [
   {
@@ -91,6 +92,7 @@ export default function HelpCenter() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Help Center — Global Career ID" description="Guides, walkthroughs, and answers to help job seekers and employers get the most out of Global Career ID." path="/help" />
       <Header />
       
       <main className="pt-24 pb-16">

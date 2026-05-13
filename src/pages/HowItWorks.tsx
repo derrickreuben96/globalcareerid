@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
+import { SEO } from '@/components/SEO';
   UserCheck, 
   Building2, 
   Search, 
@@ -84,6 +85,7 @@ export default function HowItWorks() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="How Global Career ID Works" description="Step-by-step: how job seekers build a verified Career ID and how employers verify candidates instantly — no fake CVs, no slow background checks." path="/how-it-works" />
       <Header />
       
       <main className="pt-24 pb-16">
