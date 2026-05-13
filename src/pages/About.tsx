@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Shield, Target, Eye, Users, Award, Globe, ArrowRight, Linkedin, Mail } from 'lucide-react';
 import ceoPhoto from '@/assets/ceo-photo.jpg';
+import { SEO } from '@/components/SEO';
 
 export default function About() {
   const { t } = useTranslation();
@@ -65,6 +66,7 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="About — Global Career ID" description="Learn about Global Career ID — our mission to replace fakeable CVs with verified employment identity for job seekers and employers worldwide." path="/about" />
       <Header />
       
       <main className="pt-24">

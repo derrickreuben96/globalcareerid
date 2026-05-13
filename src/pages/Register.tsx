@@ -15,6 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { 
+import { SEO } from '@/components/SEO';
   jobSeekerRegistrationSchema, 
   employerRegistrationSchema, 
   validateForm 
@@ -265,6 +266,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Create Your Career ID — Global Career ID" description="Sign up for Global Career ID. Create a verified career identity as a job seeker, or register your company as an employer." path="/register" />
       <Header />
       
       <main className="pt-24 pb-16">

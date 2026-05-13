@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
+import { SEO } from '@/components/SEO';
   Building2, 
   Search, 
   Shield, 
@@ -74,6 +75,7 @@ export default function ForEmployers() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="For Employers & Recruiters — Global Career ID" description="Verify candidates in minutes, post jobs that reach trusted talent, and eliminate CV fraud with employer-verified work histories." path="/for-employers" />
       <Header />
       
       <main className="pt-24 pb-16">

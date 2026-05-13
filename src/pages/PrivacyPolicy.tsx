@@ -1,9 +1,11 @@
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
+import { SEO } from '@/components/SEO';
 
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Privacy Policy — Global Career ID" description="How Global Career ID collects, stores, and protects your personal and employment data, and the controls you have over it." path="/privacy" />
       <Header />
       
       <main className="pt-24 pb-16">
