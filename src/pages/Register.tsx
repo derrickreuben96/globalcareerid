@@ -14,8 +14,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
-import { 
 import { SEO } from '@/components/SEO';
+import { 
   jobSeekerRegistrationSchema, 
   employerRegistrationSchema, 
   validateForm 
