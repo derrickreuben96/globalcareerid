@@ -99,7 +99,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/50">
           <div className="flex items-center justify-center gap-4 mb-4">
-            <a href="https://www.facebook.com/profile.php?id=61587225303471" target="_blank" rel="noopener noreferrer" aria-label="Global Career ID on Facebook" className="hover:text-primary-foreground transition-colors">
+            <a href="https://www.facebook.com/profile.php?id=61587225303471" rel="noopener noreferrer" aria-label="Global Career ID on Facebook" className="hover:text-primary-foreground transition-colors">
               <Facebook className="w-5 h-5" />
             </a>
             <a href="https://www.linkedin.com/company/global-career-id/" target="_blank" rel="noopener noreferrer" aria-label="Global Career ID on LinkedIn" className="hover:text-primary-foreground transition-colors">
