@@ -1,0 +1,9 @@
+{
+  "appId": "app.lovable.0a7945f4acf74810ac4b09248a30f02b",
+  "appName": "globalcareerid",
+  "webDir": "dist",
+  "server": {
+    "url": "https://0a7945f4-acf7-4810-ac4b-09248a30f02b.lovableproject.com?forceHideBadge=true",
+    "cleartext": true
+  }
+}
