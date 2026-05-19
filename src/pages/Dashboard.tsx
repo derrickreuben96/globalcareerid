@@ -182,12 +182,13 @@ export default function Dashboard() {
       window.location.href = '/login';
       return;
     }
+    // Role-based redirect: hard redirect once to avoid re-render flicker
     if (roles.includes('admin')) {
-      navigate('/admin');
-    } else if (profile?.account_type === 'organization') {
-      navigate('/employer');
+      window.location.replace('/admin');
+    } else if (profile?.account_type === 'organization' || roles.includes('employer')) {
+      window.location.replace('/employer');
     }
-  }, [authStatus, user, profile, roles, navigate]);
+  }, [authStatus, roles, profile?.account_type]);
 
   useEffect(() => {
     if (profile) {
