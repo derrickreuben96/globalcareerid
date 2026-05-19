@@ -182,12 +182,13 @@ export default function Dashboard() {
       window.location.href = '/login';
       return;
     }
+    // Role-based redirect: hard redirect once to avoid re-render flicker
     if (roles.includes('admin')) {
-      navigate('/admin');
-    } else if (profile?.account_type === 'organization') {
-      navigate('/employer');
+      window.location.replace('/admin');
+    } else if (profile?.account_type === 'organization' || roles.includes('employer')) {
+      window.location.replace('/employer');
     }
-  }, [authStatus, user, profile, roles, navigate]);
+  }, [authStatus, roles, profile?.account_type]);
 
   useEffect(() => {
     if (profile) {
@@ -342,7 +343,15 @@ export default function Dashboard() {
     window.location.href = '/';
   };
 
-  if (authLoading) {
+  // Show a single smooth spinner while auth is loading OR while we're about
+  // to redirect an admin/employer user away from /dashboard.
+  const willRedirect =
+    authStatus === 'authenticated' &&
+    (roles.includes('admin') ||
+      roles.includes('employer') ||
+      profile?.account_type === 'organization');
+
+  if (authLoading || willRedirect) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
