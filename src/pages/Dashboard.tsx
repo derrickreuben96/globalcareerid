@@ -343,7 +343,15 @@ export default function Dashboard() {
     window.location.href = '/';
   };
 
-  if (authLoading) {
+  // Show a single smooth spinner while auth is loading OR while we're about
+  // to redirect an admin/employer user away from /dashboard.
+  const willRedirect =
+    authStatus === 'authenticated' &&
+    (roles.includes('admin') ||
+      roles.includes('employer') ||
+      profile?.account_type === 'organization');
+
+  if (authLoading || willRedirect) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
