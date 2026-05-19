@@ -148,14 +148,17 @@ export default function EmployerDashboard() {
   }, [authStatus, navigate]);
 
   useEffect(() => {
-    const fetchEmployerData = async () => {
-      if (!user) return;
+    if (!user?.id) return;
+    let cancelled = false;
 
+    const fetchEmployerData = async () => {
       const { data: employerData } = await supabase
         .from('employers')
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+
+      if (cancelled) return;
 
       if (!employerData) {
         navigate('/register?type=employer');
@@ -164,13 +167,13 @@ export default function EmployerDashboard() {
 
       setEmployer(employerData);
       await fetchEmployeesForEmployer(employerData.id);
-      setIsLoading(false);
+      if (!cancelled) setIsLoading(false);
     };
 
-    if (user) {
-      fetchEmployerData();
-    }
-  }, [user, navigate]);
+    void fetchEmployerData();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const handleAddEmployee = async () => {
     if (!normalizedProfileId || !newEmployee.jobTitle || !newEmployee.startDate || !employer) {
