@@ -12,6 +12,24 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    // Auth guard — only the owning employer (or admin) may notify
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const token = authHeader.replace('Bearer ', '');
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+    );
+    const { data: userData, error: authErr } = await authClient.auth.getUser(token);
+    if (authErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const callerId = userData.user.id;
+
     const { application_id } = await req.json().catch(() => ({}));
     if (!application_id || typeof application_id !== 'string') {
       return new Response(JSON.stringify({ error: 'application_id required' }),
@@ -25,13 +43,24 @@ Deno.serve(async (req) => {
 
     const { data: app } = await supabase
       .from('applications')
-      .select('id, status, applicant_user_id, job:jobs(title), employer:employers(company_name)')
+      .select('id, status, applicant_user_id, employer_id, job:jobs(title), employer:employers(company_name, user_id)')
       .eq('id', application_id)
       .maybeSingle();
 
     if (!app) {
       return new Response(JSON.stringify({ error: 'not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: callerId, _role: 'admin' });
+    if (!isAdmin && (app as any).employer?.user_id !== callerId) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (app.status !== 'interview') {
+      return new Response(JSON.stringify({ error: 'application is not in interview stage' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const { data: profile } = await supabase
