@@ -1421,6 +1421,19 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_employer_public_info: {
+        Args: { _employer_id: string }
+        Returns: {
+          company_name: string
+          country: string
+          employer_id: string
+          id: string
+          industry: string
+          is_verified: boolean
+          logo_url: string
+          website: string
+        }[]
+      }
       get_employment_by_profile_id: {
         Args: { profile_id_param: string }
         Returns: {
