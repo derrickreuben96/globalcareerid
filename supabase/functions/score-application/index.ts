@@ -50,20 +50,51 @@ Deno.serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+    // Require auth
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const authClient = createClient(supabaseUrl, supabaseAnonKey);
+    const { data: userData, error: userErr } = await authClient.auth.getUser(
+      authHeader.replace('Bearer ', '')
     );
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const callerId = userData.user.id;
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { data: app, error: appErr } = await supabase
       .from('applications')
-      .select('id, job_id, employment_snapshot, applicant_user_id')
+      .select('id, job_id, employer_id, employment_snapshot, applicant_user_id')
       .eq('id', application_id)
       .maybeSingle();
     if (appErr || !app) {
       return new Response(JSON.stringify({ error: 'application not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+
+    // Authorize: caller must be admin OR the employer who owns the job
+    const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: callerId, _role: 'admin' });
+    let authorized = !!isAdmin;
+    if (!authorized) {
+      const { data: emp } = await supabase
+        .from('employers').select('id').eq('id', app.employer_id).eq('user_id', callerId).maybeSingle();
+      authorized = !!emp;
+    }
+    if (!authorized) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
 
     const { data: job } = await supabase
       .from('jobs').select('title, description, role_category')
