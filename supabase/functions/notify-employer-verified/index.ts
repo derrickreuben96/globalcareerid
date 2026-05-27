@@ -104,18 +104,23 @@ const handler = async (req: Request): Promise<Response> => {
       firstName = authUser.user.user_metadata?.first_name || "there";
     }
 
+    const safeCompany = escapeHtml(employer.company_name);
+    const safeFirstName = escapeHtml(firstName);
+    const safeIndustry = escapeHtml(employer.industry);
+    const safeCountry = escapeHtml(employer.country);
+    const safeRejection = escapeHtml(rejection_notes);
+
     let subject: string;
     let htmlContent: string;
 
     if (isApproved) {
-      // Also fetch organization_profiles for the organization_id
       const { data: orgProfile } = await supabase
         .from("organization_profiles")
         .select("organization_id")
         .eq("user_id", employer.user_id)
         .single();
 
-      const orgId = orgProfile?.organization_id || employer.employer_id || "N/A";
+      const orgId = escapeHtml(orgProfile?.organization_id || employer.employer_id || "N/A");
 
       subject = `✅ ${employer.company_name} — Organization Verified Successfully`;
       htmlContent = `
@@ -125,41 +130,29 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: #94a3b8; margin: 8px 0 0 0; font-size: 14px;">Your organization has been verified</p>
           </div>
           <div style="padding: 32px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-            <p style="color: #1a1a1a; font-size: 16px;">Hello ${firstName},</p>
+            <p style="color: #1a1a1a; font-size: 16px;">Hello ${safeFirstName},</p>
             <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-              We are pleased to inform you that <strong>${employer.company_name}</strong> has been successfully verified on TrueWork ID. 
+              We are pleased to inform you that <strong>${safeCompany}</strong> has been successfully verified on TrueWork ID. 
               You now have full access to employer features including adding employment records for your employees.
             </p>
-            
             <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 20px; border-radius: 8px; margin: 24px 0;">
               <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #166534;">Your Organization Details</p>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 140px;">Organization ID:</td>
-                  <td style="padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 600; font-family: monospace;">${orgId}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Company Name:</td>
-                  <td style="padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 600;">${employer.company_name}</td>
-                </tr>
-                ${employer.industry ? `<tr><td style="padding: 6px 0; color: #64748b; font-size: 13px;">Industry:</td><td style="padding: 6px 0; color: #0f172a; font-size: 13px;">${employer.industry}</td></tr>` : ""}
-                ${employer.country ? `<tr><td style="padding: 6px 0; color: #64748b; font-size: 13px;">Country:</td><td style="padding: 6px 0; color: #0f172a; font-size: 13px;">${employer.country}</td></tr>` : ""}
+                <tr><td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 140px;">Organization ID:</td><td style="padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 600; font-family: monospace;">${orgId}</td></tr>
+                <tr><td style="padding: 6px 0; color: #64748b; font-size: 13px;">Company Name:</td><td style="padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 600;">${safeCompany}</td></tr>
+                ${employer.industry ? `<tr><td style="padding: 6px 0; color: #64748b; font-size: 13px;">Industry:</td><td style="padding: 6px 0; color: #0f172a; font-size: 13px;">${safeIndustry}</td></tr>` : ""}
+                ${employer.country ? `<tr><td style="padding: 6px 0; color: #64748b; font-size: 13px;">Country:</td><td style="padding: 6px 0; color: #0f172a; font-size: 13px;">${safeCountry}</td></tr>` : ""}
               </table>
             </div>
-
             <p style="color: #334155; font-size: 14px; line-height: 1.6;">
               Please keep your Organization ID safe — you may need it for reference. You can now log in to your employer dashboard to start managing employment records.
             </p>
-
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-              This is an automated message from TrueWork ID. Please do not reply to this email.
-            </p>
+            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated message from TrueWork ID. Please do not reply to this email.</p>
           </div>
         </div>
       `;
     } else {
-      // Rejection email
       subject = `❌ ${employer.company_name} — Organization Verification Unsuccessful`;
       htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
@@ -168,40 +161,23 @@ const handler = async (req: Request): Promise<Response> => {
             <p style="color: #fca5a5; margin: 8px 0 0 0; font-size: 14px;">Your organization verification was not approved</p>
           </div>
           <div style="padding: 32px; border: 1px solid #e2e8f0; border-top: none; border-radius: 0 0 8px 8px;">
-            <p style="color: #1a1a1a; font-size: 16px;">Hello ${firstName},</p>
+            <p style="color: #1a1a1a; font-size: 16px;">Hello ${safeFirstName},</p>
             <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-              We regret to inform you that the verification request for <strong>${employer.company_name}</strong> on TrueWork ID has not been approved at this time.
+              We regret to inform you that the verification request for <strong>${safeCompany}</strong> on TrueWork ID has not been approved at this time.
             </p>
-
             ${rejection_notes ? `
             <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 20px; border-radius: 8px; margin: 24px 0;">
               <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #991b1b;">Reason for Rejection</p>
-              <p style="margin: 0; color: #334155; font-size: 13px; line-height: 1.6;">${rejection_notes}</p>
-            </div>
-            ` : ""}
-
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin: 24px 0;">
-              <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #0f172a;">What You Can Do</p>
-              <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 13px; line-height: 1.8;">
-                <li>Review the rejection reason above and address the issues</li>
-                <li>Ensure your company registration details are accurate and up to date</li>
-                <li>Update your company profile with correct information</li>
-                <li>Contact our support team if you believe this was an error</li>
-              </ul>
-            </div>
-
-            <p style="color: #334155; font-size: 14px; line-height: 1.6;">
-              You may update your organization profile and resubmit for verification. If you have questions, please reach out to our support team.
-            </p>
-
+              <p style="margin: 0; color: #334155; font-size: 13px; line-height: 1.6;">${safeRejection}</p>
+            </div>` : ""}
+            <p style="color: #334155; font-size: 14px; line-height: 1.6;">You may update your organization profile and resubmit for verification.</p>
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
-            <p style="color: #94a3b8; font-size: 12px; text-align: center;">
-              This is an automated message from TrueWork ID. Please do not reply to this email.
-            </p>
+            <p style="color: #94a3b8; font-size: 12px; text-align: center;">This is an automated message from TrueWork ID. Please do not reply to this email.</p>
           </div>
         </div>
       `;
     }
+
 
     const emailResponse = await resend.emails.send({
       from: "TrueWork ID <onboarding@resend.dev>",
