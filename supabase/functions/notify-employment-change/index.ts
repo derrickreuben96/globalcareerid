@@ -10,6 +10,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const escapeHtml = (s: unknown): string =>
+  String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+
 interface EmploymentChangePayload {
   type: "INSERT" | "UPDATE";
   record: {
