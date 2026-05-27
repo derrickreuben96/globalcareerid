@@ -90,6 +90,14 @@ const handler = async (req: Request): Promise<Response> => {
       .eq("id", request.employer_id)
       .single();
 
+    const escapeHtml = (s: unknown) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
     const companyName = employer?.company_name || "your employer";
     const changes = typeof request.requested_changes === "object"
       ? request.requested_changes
@@ -98,8 +106,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     const changesList = Object.entries(changes)
       .filter(([k]) => k !== "reason")
-      .map(([k, v]) => `<li><strong>${k}:</strong> ${v}</li>`)
+      .map(([k, v]) => `<li><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</li>`)
       .join("");
+
+    const safeReason = escapeHtml(reason);
+    const safeAdminNotes = escapeHtml(admin_notes);
+    const safeFirstName = escapeHtml(profile.first_name);
+    const safeCompany = escapeHtml(companyName);
 
     const isApproved = decision === "approved";
     const subject = isApproved
@@ -109,14 +122,14 @@ const handler = async (req: Request): Promise<Response> => {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #1a1a1a;">Experience Update ${isApproved ? "Approved" : "Declined"}</h1>
-        <p>Hello ${profile.first_name},</p>
-        <p>Your experience update request for <strong>${companyName}</strong> has been <strong>${isApproved ? "approved" : "declined"}</strong>.</p>
+        <p>Hello ${safeFirstName},</p>
+        <p>Your experience update request for <strong>${safeCompany}</strong> has been <strong>${isApproved ? "approved" : "declined"}</strong>.</p>
         <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <p><strong>Requested Changes:</strong></p>
           <ul>${changesList}</ul>
-          ${reason ? `<p><strong>Your Reason:</strong> ${reason}</p>` : ""}
+          ${safeReason ? `<p><strong>Your Reason:</strong> ${safeReason}</p>` : ""}
         </div>
-        ${admin_notes ? `<div style="background: ${isApproved ? "#e8f5e9" : "#fce4ec"}; padding: 16px; border-radius: 8px; margin: 20px 0;"><p><strong>Admin Notes:</strong> ${admin_notes}</p></div>` : ""}
+        ${safeAdminNotes ? `<div style="background: ${isApproved ? "#e8f5e9" : "#fce4ec"}; padding: 16px; border-radius: 8px; margin: 20px 0;"><p><strong>Admin Notes:</strong> ${safeAdminNotes}</p></div>` : ""}
         ${isApproved
           ? "<p>The changes have been applied to your employment record.</p>"
           : "<p>If you believe this is incorrect, you can submit a new request with additional details or contact your employer directly.</p>"
