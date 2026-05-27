@@ -119,16 +119,21 @@ const handler = async (req: Request): Promise<Response> => {
           headers: { "Content-Type": "application/json", ...corsHeaders },
         });
       }
+      const safeCompany = escapeHtml(employer.company_name);
+      const safeFirstName = escapeHtml(profile.first_name);
+      const safeTitle = escapeHtml(record.job_title);
+      const safeDept = escapeHtml(record.department);
+      const safeType = escapeHtml((record.employment_type || "").replace("_", " "));
       subject = `New Employment Record Added - ${employer.company_name}`;
       htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #1a1a1a;">New Employment Record</h1>
-          <p>Hello ${profile.first_name},</p>
-          <p><strong>${employer.company_name}</strong> has added a new employment record to your WorkID profile:</p>
+          <p>Hello ${safeFirstName},</p>
+          <p><strong>${safeCompany}</strong> has added a new employment record to your WorkID profile:</p>
           <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p><strong>Position:</strong> ${record.job_title}</p>
-            ${record.department ? `<p><strong>Department:</strong> ${record.department}</p>` : ""}
-            <p><strong>Employment Type:</strong> ${record.employment_type.replace("_", " ")}</p>
+            <p><strong>Position:</strong> ${safeTitle}</p>
+            ${record.department ? `<p><strong>Department:</strong> ${safeDept}</p>` : ""}
+            <p><strong>Employment Type:</strong> ${safeType}</p>
             <p><strong>Start Date:</strong> ${new Date(record.start_date).toLocaleDateString()}</p>
             ${record.end_date ? `<p><strong>End Date:</strong> ${new Date(record.end_date).toLocaleDateString()}</p>` : "<p><strong>Status:</strong> Currently Active</p>"}
           </div>
@@ -139,11 +144,14 @@ const handler = async (req: Request): Promise<Response> => {
     } else {
       // UPDATE
       const wasEnded = !old_record?.end_date && record.end_date;
+      const safeCompany = escapeHtml(employer.company_name);
+      const safeFirstName = escapeHtml(profile.first_name);
+      const safeTitle = escapeHtml(record.job_title);
+      const safeDept = escapeHtml(record.department);
+      const safeType = escapeHtml((record.employment_type || "").replace("_", " "));
 
       if (wasEnded) {
-        // Check if user wants notifications for ended records
         if (!prefs.email_on_record_ended) {
-          // User disabled notifications - skip silently
           return new Response(JSON.stringify({ success: true, skipped: true }), {
             status: 200,
             headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -153,10 +161,10 @@ const handler = async (req: Request): Promise<Response> => {
         htmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #1a1a1a;">Employment Record Updated</h1>
-            <p>Hello ${profile.first_name},</p>
-            <p>Your employment record at <strong>${employer.company_name}</strong> has been marked as ended:</p>
+            <p>Hello ${safeFirstName},</p>
+            <p>Your employment record at <strong>${safeCompany}</strong> has been marked as ended:</p>
             <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Position:</strong> ${record.job_title}</p>
+              <p><strong>Position:</strong> ${safeTitle}</p>
               <p><strong>Start Date:</strong> ${new Date(record.start_date).toLocaleDateString()}</p>
               <p><strong>End Date:</strong> ${new Date(record.end_date!).toLocaleDateString()}</p>
             </div>
@@ -165,9 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
         `;
       } else {
-        // Check if user wants notifications for updated records
         if (!prefs.email_on_record_updated) {
-          // User disabled notifications - skip silently
           return new Response(JSON.stringify({ success: true, skipped: true }), {
             status: 200,
             headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -177,12 +183,12 @@ const handler = async (req: Request): Promise<Response> => {
         htmlContent = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #1a1a1a;">Employment Record Updated</h1>
-            <p>Hello ${profile.first_name},</p>
-            <p>Your employment record at <strong>${employer.company_name}</strong> has been updated:</p>
+            <p>Hello ${safeFirstName},</p>
+            <p>Your employment record at <strong>${safeCompany}</strong> has been updated:</p>
             <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <p><strong>Position:</strong> ${record.job_title}</p>
-              ${record.department ? `<p><strong>Department:</strong> ${record.department}</p>` : ""}
-              <p><strong>Employment Type:</strong> ${record.employment_type.replace("_", " ")}</p>
+              <p><strong>Position:</strong> ${safeTitle}</p>
+              ${record.department ? `<p><strong>Department:</strong> ${safeDept}</p>` : ""}
+              <p><strong>Employment Type:</strong> ${safeType}</p>
               <p><strong>Start Date:</strong> ${new Date(record.start_date).toLocaleDateString()}</p>
               ${record.end_date ? `<p><strong>End Date:</strong> ${new Date(record.end_date).toLocaleDateString()}</p>` : "<p><strong>Status:</strong> Currently Active</p>"}
             </div>
@@ -192,6 +198,7 @@ const handler = async (req: Request): Promise<Response> => {
         `;
       }
     }
+
 
     const emailResponse = await resend.emails.send({
       from: "WorkID <onboarding@resend.dev>",
