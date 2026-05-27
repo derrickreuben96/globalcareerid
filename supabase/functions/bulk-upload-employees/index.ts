@@ -414,12 +414,9 @@ Deno.serve(async (req) => {
     // Send welcome emails in parallel (best-effort, don't fail the upload)
     if (resendApiKey && emailTasks.length > 0) {
       const resend = new Resend(resendApiKey);
-      const appUrl = supabaseUrl.replace(".supabase.co", "").includes("//")
-        ? "https://truework.app" // fallback
-        : "https://truework.app";
+      // Use server-configured app URL. Never trust the client-supplied Origin header.
+      const originUrl = Deno.env.get("APP_URL") ?? "https://globalcareerid.com";
 
-      // Determine app URL from origin header or fallback
-      const originUrl = req.headers.get("origin") || "https://truework.app";
 
       await Promise.allSettled(
         emailTasks.map((task) =>
