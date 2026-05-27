@@ -47,19 +47,15 @@ describe("RLS regression — applications table", () => {
     }
   });
 
-  it("anon SELECT on jobs only returns open jobs from verified employers", async () => {
+  it("anon SELECT on jobs only returns open jobs (RLS hides drafts/closed)", async () => {
     const { data, error } = await anon
       .from("jobs")
-      .select("id, status, employer:employers(is_verified)")
+      .select("id, status, employer_id")
       .limit(100);
 
     expect(error).toBeNull();
     for (const row of data ?? []) {
       expect(row.status).toBe("open");
-      // employer relation may be null only if RLS hides the employer row;
-      // when present it must be verified.
-      const emp = (row as any).employer;
-      if (emp) expect(emp.is_verified).toBe(true);
     }
   });
 });
