@@ -148,6 +148,13 @@ export type Database = {
             referencedRelation: "employers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bulk_upload_logs_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       consent_log: {
@@ -214,6 +221,13 @@ export type Database = {
             columns: ["employer_id"]
             isOneToOne: false
             referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credentials_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
             referencedColumns: ["id"]
           },
           {
@@ -473,6 +487,13 @@ export type Database = {
             referencedRelation: "employers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "employment_records_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       experience_update_requests: {
@@ -521,6 +542,13 @@ export type Database = {
             columns: ["employer_id"]
             isOneToOne: false
             referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "experience_update_requests_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
             referencedColumns: ["id"]
           },
           {
@@ -962,6 +990,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "projects_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "projects_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -1090,6 +1125,13 @@ export type Database = {
             columns: ["employer_id"]
             isOneToOne: false
             referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_letters_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
             referencedColumns: ["id"]
           },
           {
@@ -1325,7 +1367,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      employers_public: {
+        Row: {
+          company_name: string | null
+          country: string | null
+          employer_id: string | null
+          id: string | null
+          industry: string | null
+          is_verified: boolean | null
+          logo_url: string | null
+          website: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          country?: string | null
+          employer_id?: string | null
+          id?: string | null
+          industry?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          website?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          country?: string | null
+          employer_id?: string | null
+          id?: string | null
+          industry?: string | null
+          is_verified?: boolean | null
+          logo_url?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       approve_promotion: {
