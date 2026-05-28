@@ -308,7 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active || inFlight) return;
       inFlight = true;
       try {
-        await fetchProfile(user.id);
+        await fetchProfile(user.id, false);
       } finally {
         inFlight = false;
       }
@@ -400,6 +400,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         roles,
+        profileReady,
         isLoading,
         authStatus,
         authError,
