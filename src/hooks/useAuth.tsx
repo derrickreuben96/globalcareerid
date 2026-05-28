@@ -430,6 +430,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         refreshProfile,
+        reloadProfile,
       }}
     >
       {children}
