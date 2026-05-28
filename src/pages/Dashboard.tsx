@@ -46,7 +46,8 @@ import {
   Award,
   Building2,
   TrendingUp,
-  GitBranch
+  GitBranch,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { skillSchema, disputeReasonSchema, validateField } from '@/lib/validation';
@@ -85,6 +86,7 @@ export default function Dashboard() {
     authStatus,
     signOut,
     refreshProfile,
+    reloadProfile,
   } = useAuth();
   const [records, setRecords] = useState<EmploymentRecord[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
@@ -297,6 +299,21 @@ export default function Dashboard() {
     window.location.href = '/';
   };
 
+  const [isReloadingProfile, setIsReloadingProfile] = useState(false);
+  const handleReloadProfile = async () => {
+    setIsReloadingProfile(true);
+    try {
+      await reloadProfile();
+      await fetchRecords();
+      toast.success(t('dashboard.profileReloaded', 'Profile reloaded'));
+    } catch (e) {
+      toast.error(t('dashboard.profileReloadFailed', 'Failed to reload profile'));
+    } finally {
+      setIsReloadingProfile(false);
+    }
+  };
+
+
   // Show a single smooth spinner while auth is loading OR while we're about
   // to redirect an admin/employer user away from /dashboard.
   const willRedirect =
@@ -331,8 +348,9 @@ export default function Dashboard() {
             {t('dashboard.sessionFoundLoading')}
           </p>
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refreshProfile()}>
-              {t('dashboard.retry')}
+            <Button variant="outline" size="sm" onClick={() => reloadProfile()}>
+              <RefreshCw className="w-4 h-4" />
+              {t('dashboard.reloadProfile', 'Reload profile')}
             </Button>
             <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
               {t('dashboard.reloadSession')}
@@ -375,10 +393,16 @@ export default function Dashboard() {
                 {isAdmin ? t('dashboard.platformAdmin') : isEmployer ? t('dashboard.employerDashboard') : t('dashboard.manageProfile')}
               </p>
             </div>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4" />
-              {t('dashboard.signOut')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleReloadProfile} disabled={isReloadingProfile}>
+                <RefreshCw className={`w-4 h-4 ${isReloadingProfile ? 'animate-spin' : ''}`} />
+                {t('dashboard.reloadProfile', 'Reload profile')}
+              </Button>
+              <Button variant="outline" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4" />
+                {t('dashboard.signOut')}
+              </Button>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">

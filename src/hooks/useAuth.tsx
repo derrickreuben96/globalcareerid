@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useRef, useCallback, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Profile {
@@ -40,6 +41,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: Error | null; data?: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  reloadProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -393,6 +395,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchProfile]);
 
+  const queryClient = useQueryClient();
+
+  const reloadProfile = useCallback(async () => {
+    const uid = currentUserIdRef.current ?? user?.id;
+    if (!uid) return;
+    // Clear stale in-memory profile/roles state
+    setProfile(null);
+    setRoles([]);
+    setProfileReady(false);
+    setAuthError(null);
+    // Invalidate any cached queries (react-query)
+    try {
+      await queryClient.invalidateQueries();
+    } catch (e) {
+      console.warn('Query cache invalidation failed:', e);
+    }
+    // Force a fresh fetch from the backend
+    await fetchProfile(uid);
+  }, [user, fetchProfile, queryClient]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -408,6 +430,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         refreshProfile,
+        reloadProfile,
       }}
     >
       {children}
