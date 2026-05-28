@@ -86,6 +86,7 @@ export default function Dashboard() {
     authStatus,
     signOut,
     refreshProfile,
+    reloadProfile,
   } = useAuth();
   const [records, setRecords] = useState<EmploymentRecord[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
