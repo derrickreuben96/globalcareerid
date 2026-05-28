@@ -94,67 +94,20 @@ export default function Dashboard() {
   const [isLoadingRecords, setIsLoadingRecords] = useState(true);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMissingFields, setShowMissingFields] = useState(false);
-  const [recoveredProfile, setRecoveredProfile] = useState<typeof authProfile>(null);
-  const [isRecoveringProfile, setIsRecoveringProfile] = useState(false);
-  const [profileRecoveryFailed, setProfileRecoveryFailed] = useState(false);
+  const [profileGracePeriodOver, setProfileGracePeriodOver] = useState(false);
 
   const user = authUser ?? session?.user ?? null;
-  const profile = authProfile ?? recoveredProfile;
+  const profile = authProfile;
 
-  // Recover the profile directly if the auth context is authenticated but profile hydration lags behind.
+  // Give the auth context's built-in retry loop time to hydrate before showing a fallback UI.
   useEffect(() => {
-    let isActive = true;
-
-    if (authStatus !== 'authenticated' || authProfile || recoveredProfile) {
+    if (authStatus !== 'authenticated' || profile) {
+      setProfileGracePeriodOver(false);
       return;
     }
-
-    const recoverProfile = async () => {
-      const resolvedUserId = authUser?.id ?? session?.user?.id ?? (await supabase.auth.getUser()).data.user?.id;
-      if (!resolvedUserId || !isActive) return;
-
-      setIsRecoveringProfile(true);
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', resolvedUserId)
-          .maybeSingle();
-
-        if (!isActive) return;
-
-        if (!error && data) {
-          setProfileRecoveryFailed(false);
-          setRecoveredProfile(data as NonNullable<typeof authProfile>);
-          return;
-        }
-
-        await refreshProfile();
-        if (isActive) {
-          setProfileRecoveryFailed(true);
-        }
-      } catch (error) {
-        if (isActive) {
-          console.error('Dashboard profile recovery failed:', error);
-          setProfileRecoveryFailed(true);
-        }
-      } finally {
-        if (isActive) {
-          setIsRecoveringProfile(false);
-        }
-      }
-    };
-
-    void recoverProfile();
-    const retryTimer = setInterval(() => void recoverProfile(), 2000);
-    const timeout = setTimeout(() => clearInterval(retryTimer), 15000);
-
-    return () => {
-      isActive = false;
-      clearInterval(retryTimer);
-      clearTimeout(timeout);
-    };
-  }, [authStatus, authProfile, recoveredProfile, authUser?.id, session?.user?.id, refreshProfile]);
+    const timer = setTimeout(() => setProfileGracePeriodOver(true), 4000);
+    return () => clearTimeout(timer);
+  }, [authStatus, profile]);
 
   const isAdmin = roles.includes('admin');
   const isEmployer = roles.includes('employer') || profile?.account_type === 'organization';
@@ -351,7 +304,12 @@ export default function Dashboard() {
       roles.includes('employer') ||
       profile?.account_type === 'organization');
 
-  if (authLoading || willRedirect) {
+  // Unified loading screen: show one consistent spinner while auth is loading,
+  // while we'll redirect, OR while the profile is still hydrating (within grace period).
+  // This prevents the back-to-back "loading profile" → "setting up profile" flash.
+  const profileHydrating = authStatus === 'authenticated' && !profile && !profileGracePeriodOver;
+
+  if (authLoading || willRedirect || profileHydrating) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -369,17 +327,15 @@ export default function Dashboard() {
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">{t('dashboard.settingUpProfile')}</p>
           <p className="text-xs text-muted-foreground">
-            {profileRecoveryFailed ? t('dashboard.sessionFoundLoading') : t('dashboard.thisMayTakeMoment')}
+            {t('dashboard.sessionFoundLoading')}
           </p>
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refreshProfile()} disabled={isRecoveringProfile}>
+            <Button variant="outline" size="sm" onClick={() => refreshProfile()}>
               {t('dashboard.retry')}
             </Button>
-            {profileRecoveryFailed && (
-              <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
-                {t('dashboard.reloadSession')}
-              </Button>
-            )}
+            <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
+              {t('dashboard.reloadSession')}
+            </Button>
           </div>
         </div>
       </div>
