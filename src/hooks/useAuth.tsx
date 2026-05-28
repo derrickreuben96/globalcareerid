@@ -395,6 +395,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, fetchProfile]);
 
+  const queryClient = useQueryClient();
+
+  const reloadProfile = useCallback(async () => {
+    const uid = currentUserIdRef.current ?? user?.id;
+    if (!uid) return;
+    // Clear stale in-memory profile/roles state
+    setProfile(null);
+    setRoles([]);
+    setProfileReady(false);
+    setAuthError(null);
+    // Invalidate any cached queries (react-query)
+    try {
+      await queryClient.invalidateQueries();
+    } catch (e) {
+      console.warn('Query cache invalidation failed:', e);
+    }
+    // Force a fresh fetch from the backend
+    await fetchProfile(uid);
+  }, [user, fetchProfile, queryClient]);
+
   return (
     <AuthContext.Provider
       value={{
