@@ -85,7 +85,6 @@ export default function Dashboard() {
     isLoading: authLoading,
     authStatus,
     signOut,
-    refreshProfile,
     reloadProfile,
   } = useAuth();
   const [records, setRecords] = useState<EmploymentRecord[]>([]);
