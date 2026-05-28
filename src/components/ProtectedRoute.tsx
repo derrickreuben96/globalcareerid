@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { authStatus, roles, profileReady } = useAuth();
+  const { authStatus, roles, profile, profileReady } = useAuth();
   const location = useLocation();
   const needsRoleCheck = !!allowedRoles?.length;
 
@@ -30,7 +30,10 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
-    const hasRequiredRole = allowedRoles.some((role) => roles.includes(role));
+    const hasRequiredRole = allowedRoles.some((role) => {
+      if (role === 'employer' && profile?.account_type === 'organization') return true;
+      return roles.includes(role);
+    });
     if (!hasRequiredRole) {
       return <Navigate to="/dashboard" replace />;
     }
