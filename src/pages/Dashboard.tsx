@@ -348,8 +348,9 @@ export default function Dashboard() {
             {t('dashboard.sessionFoundLoading')}
           </p>
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refreshProfile()}>
-              {t('dashboard.retry')}
+            <Button variant="outline" size="sm" onClick={() => reloadProfile()}>
+              <RefreshCw className="w-4 h-4" />
+              {t('dashboard.reloadProfile', 'Reload profile')}
             </Button>
             <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
               {t('dashboard.reloadSession')}
