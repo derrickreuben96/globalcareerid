@@ -1523,6 +1523,14 @@ export type Database = {
           status: string
         }[]
       }
+      get_my_recovery_codes_metadata: {
+        Args: never
+        Returns: {
+          created_at: string
+          id: string
+          used_at: string
+        }[]
+      }
       get_notification_preferences: {
         Args: { target_user_id: string }
         Returns: {
