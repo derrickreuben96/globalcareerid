@@ -393,10 +393,16 @@ export default function Dashboard() {
                 {isAdmin ? t('dashboard.platformAdmin') : isEmployer ? t('dashboard.employerDashboard') : t('dashboard.manageProfile')}
               </p>
             </div>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4" />
-              {t('dashboard.signOut')}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleReloadProfile} disabled={isReloadingProfile}>
+                <RefreshCw className={`w-4 h-4 ${isReloadingProfile ? 'animate-spin' : ''}`} />
+                {t('dashboard.reloadProfile', 'Reload profile')}
+              </Button>
+              <Button variant="outline" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4" />
+                {t('dashboard.signOut')}
+              </Button>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
