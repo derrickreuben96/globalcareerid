@@ -299,6 +299,21 @@ export default function Dashboard() {
     window.location.href = '/';
   };
 
+  const [isReloadingProfile, setIsReloadingProfile] = useState(false);
+  const handleReloadProfile = async () => {
+    setIsReloadingProfile(true);
+    try {
+      await reloadProfile();
+      await fetchRecords();
+      toast.success(t('dashboard.profileReloaded', 'Profile reloaded'));
+    } catch (e) {
+      toast.error(t('dashboard.profileReloadFailed', 'Failed to reload profile'));
+    } finally {
+      setIsReloadingProfile(false);
+    }
+  };
+
+
   // Show a single smooth spinner while auth is loading OR while we're about
   // to redirect an admin/employer user away from /dashboard.
   const willRedirect =
