@@ -304,7 +304,12 @@ export default function Dashboard() {
       roles.includes('employer') ||
       profile?.account_type === 'organization');
 
-  if (authLoading || willRedirect) {
+  // Unified loading screen: show one consistent spinner while auth is loading,
+  // while we'll redirect, OR while the profile is still hydrating (within grace period).
+  // This prevents the back-to-back "loading profile" → "setting up profile" flash.
+  const profileHydrating = authStatus === 'authenticated' && !profile && !profileGracePeriodOver;
+
+  if (authLoading || willRedirect || profileHydrating) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -322,17 +327,15 @@ export default function Dashboard() {
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
           <p className="text-muted-foreground">{t('dashboard.settingUpProfile')}</p>
           <p className="text-xs text-muted-foreground">
-            {profileRecoveryFailed ? t('dashboard.sessionFoundLoading') : t('dashboard.thisMayTakeMoment')}
+            {t('dashboard.sessionFoundLoading')}
           </p>
           <div className="flex items-center justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => refreshProfile()} disabled={isRecoveringProfile}>
+            <Button variant="outline" size="sm" onClick={() => refreshProfile()}>
               {t('dashboard.retry')}
             </Button>
-            {profileRecoveryFailed && (
-              <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
-                {t('dashboard.reloadSession')}
-              </Button>
-            )}
+            <Button variant="hero" size="sm" onClick={() => window.location.reload()}>
+              {t('dashboard.reloadSession')}
+            </Button>
           </div>
         </div>
       </div>
