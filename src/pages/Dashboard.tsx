@@ -80,6 +80,7 @@ export default function Dashboard() {
     session,
     profile: authProfile,
     roles,
+    profileReady,
     isLoading: authLoading,
     authStatus,
     signOut,
@@ -101,13 +102,13 @@ export default function Dashboard() {
 
   // Give the auth context's built-in retry loop time to hydrate before showing a fallback UI.
   useEffect(() => {
-    if (authStatus !== 'authenticated' || profile) {
+    if (authStatus !== 'authenticated' || profile || profileReady) {
       setProfileGracePeriodOver(false);
       return;
     }
     const timer = setTimeout(() => setProfileGracePeriodOver(true), 4000);
     return () => clearTimeout(timer);
-  }, [authStatus, profile]);
+  }, [authStatus, profile, profileReady]);
 
   const isAdmin = roles.includes('admin');
   const isEmployer = roles.includes('employer') || profile?.account_type === 'organization';
@@ -299,7 +300,7 @@ export default function Dashboard() {
   // Show a single smooth spinner while auth is loading OR while we're about
   // to redirect an admin/employer user away from /dashboard.
   const willRedirect =
-    authStatus === 'authenticated' &&
+    profileReady &&
     (roles.includes('admin') ||
       roles.includes('employer') ||
       profile?.account_type === 'organization');
@@ -307,7 +308,7 @@ export default function Dashboard() {
   // Unified loading screen: show one consistent spinner while auth is loading,
   // while we'll redirect, OR while the profile is still hydrating (within grace period).
   // This prevents the back-to-back "loading profile" → "setting up profile" flash.
-  const profileHydrating = authStatus === 'authenticated' && !profile && !profileGracePeriodOver;
+  const profileHydrating = authStatus === 'authenticated' && !profileReady && !profileGracePeriodOver;
 
   if (authLoading || willRedirect || profileHydrating) {
     return (

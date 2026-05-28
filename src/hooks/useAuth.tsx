@@ -32,6 +32,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   roles: string[];
+  profileReady: boolean;
   isLoading: boolean;
   authStatus: AuthStatus;
   authError: string | null;
@@ -97,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
+  const [profileReady, setProfileReady] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
   const [authError, setAuthError] = useState<string | null>(null);
   const currentUserIdRef = useRef<string | null>(null);
@@ -112,9 +114,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setProfile(null);
     setRoles([]);
+    setProfileReady(false);
   }, []);
 
-  const fetchProfile = useCallback(async (userId: string): Promise<boolean> => {
+  const fetchProfile = useCallback(async (userId: string, markLoading = true): Promise<boolean> => {
+    if (markLoading && currentUserIdRef.current === userId) {
+      setProfileReady(false);
+    }
+
     try {
       const results = await withTimeout(
         Promise.all([
@@ -126,6 +133,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       if (!results) {
+        if (currentUserIdRef.current === userId) {
+          setAuthError('Profile loading timed out. Please try again.');
+          setProfileReady(true);
+        }
         return false;
       }
 
@@ -136,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (profileResult.error) {
         console.error('Profile fetch error:', profileResult.error);
         setAuthError('Failed to load profile data');
+        setProfileReady(true);
         return false;
       }
 
@@ -146,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(profileResult.data);
       setRoles(rolesResult.data?.map(r => r.role) || []);
       setAuthError(null);
+      setProfileReady(true);
       return true;
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -153,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setRoles([]);
         setAuthError('Network error loading profile');
+        setProfileReady(true);
       }
       return false;
     }
@@ -294,7 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!active || inFlight) return;
       inFlight = true;
       try {
-        await fetchProfile(user.id);
+        await fetchProfile(user.id, false);
       } finally {
         inFlight = false;
       }
@@ -386,6 +400,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         roles,
+        profileReady,
         isLoading,
         authStatus,
         authError,

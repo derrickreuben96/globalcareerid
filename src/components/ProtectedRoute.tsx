@@ -10,10 +10,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { authStatus, roles } = useAuth();
+  const { authStatus, roles, profile, profileReady } = useAuth();
   const location = useLocation();
+  const needsRoleCheck = !!allowedRoles?.length;
 
-  if (authStatus === 'loading') {
+  if (authStatus === 'loading' || (authStatus === 'authenticated' && needsRoleCheck && !profileReady)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
@@ -29,7 +30,10 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
-    const hasRequiredRole = allowedRoles.some((role) => roles.includes(role));
+    const hasRequiredRole = allowedRoles.some((role) => {
+      if (role === 'employer' && profile?.account_type === 'organization') return true;
+      return roles.includes(role);
+    });
     if (!hasRequiredRole) {
       return <Navigate to="/dashboard" replace />;
     }
