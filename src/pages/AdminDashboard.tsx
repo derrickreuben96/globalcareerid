@@ -81,7 +81,7 @@ export default function AdminDashboard() {
     setIsLoading(true);
 
     const [employersRes, disputesRes, profileCountRes] = await Promise.all([
-      supabase.from("employers").select("*").order("created_at", { ascending: false }),
+      supabase.rpc("get_admin_employers"),
       supabase.rpc("get_admin_disputes"),
       supabase.from("profiles").select("id", { count: "exact", head: true }),
     ]);
