@@ -1433,6 +1433,34 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_admin_employers: {
+        Args: never
+        Returns: {
+          address: string | null
+          company_name: string
+          country: string | null
+          created_at: string
+          email: string | null
+          employer_id: string | null
+          id: string
+          industry: string | null
+          is_verified: boolean | null
+          logo_url: string | null
+          phone: string | null
+          registration_number: string | null
+          updated_at: string
+          user_id: string
+          verification_notes: string | null
+          verification_status: string | null
+          website: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "employers"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_consent_logs_admin: {
         Args: {
           consent_type_filter?: string
@@ -1522,6 +1550,34 @@ export type Database = {
           start_date: string
           status: string
         }[]
+      }
+      get_my_employer: {
+        Args: never
+        Returns: {
+          address: string | null
+          company_name: string
+          country: string | null
+          created_at: string
+          email: string | null
+          employer_id: string | null
+          id: string
+          industry: string | null
+          is_verified: boolean | null
+          logo_url: string | null
+          phone: string | null
+          registration_number: string | null
+          updated_at: string
+          user_id: string
+          verification_notes: string | null
+          verification_status: string | null
+          website: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "employers"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_my_recovery_codes_metadata: {
         Args: never
