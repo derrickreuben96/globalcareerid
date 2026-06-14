@@ -11,7 +11,9 @@ import {
   Edit,
   Fingerprint,
   ScrollText,
+  Home,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -109,7 +111,17 @@ export function AdminSidebar({
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
+      <SidebarFooter className="p-4 border-t border-sidebar-border space-y-1">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
+          asChild
+        >
+          <Link to="/">
+            <Home className="w-4 h-4" />
+            Back to Home
+          </Link>
+        </Button>
         <Button
           variant="ghost"
           className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
