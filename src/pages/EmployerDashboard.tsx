@@ -152,11 +152,10 @@ export default function EmployerDashboard() {
     let cancelled = false;
 
     const fetchEmployerData = async () => {
-      const { data: employerData } = await supabase
-        .from('employers')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const { data: employerRows } = await supabase.rpc('get_my_employer');
+      const employerData = Array.isArray(employerRows) ? employerRows[0] : null;
+
+
 
       if (cancelled) return;
 
