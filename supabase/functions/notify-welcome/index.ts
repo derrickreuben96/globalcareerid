@@ -57,8 +57,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const escapeHtml = (s: unknown): string =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     const safeName = typeof first_name === "string" ? first_name.slice(0, 100) : "";
-    const name = safeName || "there";
+    const name = escapeHtml(safeName || "there");
     const isOrg = account_type === "organization";
 
     const subject = isOrg
