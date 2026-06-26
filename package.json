@@ -60,7 +60,7 @@
     "jspdf": "^4.2.0",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
-    "posthog-js": "^1.363.1",
+    "posthog-js": "^1.393.5",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
