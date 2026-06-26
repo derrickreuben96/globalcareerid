@@ -102,8 +102,22 @@ const handler = async (req: Request): Promise<Response> => {
     const companyName = employer?.company_name || "Unknown Company";
     const isResolved = record.status === "resolved";
 
-    const subject = isResolved 
-      ? `Dispute Resolved - ${companyName}` 
+    const escapeHtml = (s: unknown): string =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const safeCompany = escapeHtml(companyName);
+    const safeFirstName = escapeHtml(profile.first_name);
+    const safeJobTitle = escapeHtml(employmentRecord.job_title);
+    const safeReason = escapeHtml(record.reason);
+    const safeAdminNotes = record.admin_notes ? escapeHtml(record.admin_notes) : "";
+
+    const subject = isResolved
+      ? `Dispute Resolved - ${companyName}`
       : `Dispute Update - ${companyName}`;
 
     const statusColor = isResolved ? "#22c55e" : "#ef4444";
@@ -112,22 +126,22 @@ const handler = async (req: Request): Promise<Response> => {
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #1a1a1a;">Dispute ${statusText}</h1>
-        <p>Hello ${profile.first_name},</p>
-        <p>Your dispute regarding the employment record at <strong>${companyName}</strong> has been reviewed by our admin team.</p>
+        <p>Hello ${safeFirstName},</p>
+        <p>Your dispute regarding the employment record at <strong>${safeCompany}</strong> has been reviewed by our admin team.</p>
         
         <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <p><strong>Position:</strong> ${employmentRecord.job_title}</p>
-          <p><strong>Your Reason:</strong> ${record.reason}</p>
+          <p><strong>Position:</strong> ${safeJobTitle}</p>
+          <p><strong>Your Reason:</strong> ${safeReason}</p>
           <p style="margin-top: 15px;">
             <strong>Status:</strong> 
             <span style="background: ${statusColor}; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px;">
               ${statusText}
             </span>
           </p>
-          ${record.admin_notes ? `
+          ${safeAdminNotes ? `
             <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;">
               <p><strong>Admin Notes:</strong></p>
-              <p style="color: #555;">${record.admin_notes}</p>
+              <p style="color: #555;">${safeAdminNotes}</p>
             </div>
           ` : ""}
         </div>
