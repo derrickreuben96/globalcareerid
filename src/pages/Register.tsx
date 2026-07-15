@@ -154,9 +154,23 @@ export default function Register() {
           },
         });
       } catch (e) { console.warn("Welcome email failed:", e); }
+      clearPendingSignup();
       toast.success('Account created! Redirecting to your dashboard...');
       navigate('/dashboard');
     } else {
+      // Email verification required — persist the rest of the form so it
+      // is applied automatically after the user confirms and signs in.
+      savePendingSignup({
+        kind: 'career_individual',
+        country: jobSeekerForm.country,
+        citizenship: jobSeekerForm.citizenship,
+        nationalId: jobSeekerForm.nationalId,
+        passportNumber: jobSeekerForm.passportNumber,
+        gender: jobSeekerForm.gender,
+        dateOfBirth: jobSeekerForm.dateOfBirth,
+        email: jobSeekerForm.email,
+        firstName: jobSeekerForm.firstName,
+      });
       toast.success('Account created! Please check your email to verify your account before signing in.');
     }
   };
