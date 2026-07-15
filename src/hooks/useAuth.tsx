@@ -230,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (newUserId) {
           void fetchProfile(newUserId);
+          void flushPendingSignup(newUserId).then(() => fetchProfile(newUserId));
         }
       }
     );
