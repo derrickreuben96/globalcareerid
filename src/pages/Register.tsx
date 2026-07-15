@@ -20,6 +20,7 @@ import {
   employerRegistrationSchema, 
   validateForm 
 } from '@/lib/validation';
+import { savePendingSignup, clearPendingSignup, fileToDataUrl } from '@/lib/pendingSignup';
 
 export default function Register() {
   const navigate = useNavigate();
