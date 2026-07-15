@@ -20,6 +20,7 @@ import {
   employerRegistrationSchema, 
   validateForm 
 } from '@/lib/validation';
+import { savePendingSignup, clearPendingSignup, fileToDataUrl } from '@/lib/pendingSignup';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -153,9 +154,23 @@ export default function Register() {
           },
         });
       } catch (e) { console.warn("Welcome email failed:", e); }
+      clearPendingSignup();
       toast.success('Account created! Redirecting to your dashboard...');
       navigate('/dashboard');
     } else {
+      // Email verification required — persist the rest of the form so it
+      // is applied automatically after the user confirms and signs in.
+      savePendingSignup({
+        kind: 'career_individual',
+        country: jobSeekerForm.country,
+        citizenship: jobSeekerForm.citizenship,
+        nationalId: jobSeekerForm.nationalId,
+        passportNumber: jobSeekerForm.passportNumber,
+        gender: jobSeekerForm.gender,
+        dateOfBirth: jobSeekerForm.dateOfBirth,
+        email: jobSeekerForm.email,
+        firstName: jobSeekerForm.firstName,
+      });
       toast.success('Account created! Please check your email to verify your account before signing in.');
     }
   };
@@ -255,10 +270,35 @@ export default function Register() {
           },
         });
       } catch (e) { console.warn("Welcome email failed:", e); }
+      clearPendingSignup();
       setIsLoading(false);
       toast.success('Company registration submitted! Verification typically takes 24-48 hours.');
       navigate('/employer');
     } else {
+      // Email verification required — persist the company details + logo so
+      // they are applied automatically after the user confirms and signs in.
+      let logoDataUrl: string | undefined;
+      let logoFileName: string | undefined;
+      if (logoFile) {
+        try {
+          logoDataUrl = await fileToDataUrl(logoFile);
+          logoFileName = logoFile.name;
+        } catch (err) {
+          console.warn('Failed to buffer logo for deferred upload:', err);
+        }
+      }
+      savePendingSignup({
+        kind: 'organization',
+        companyName: validation.data!.companyName,
+        registrationNumber: validation.data!.registrationNumber,
+        country: validation.data!.country,
+        industry: validation.data!.industry,
+        phone: validation.data!.phone,
+        website: validation.data!.website,
+        email: validation.data!.email,
+        logoDataUrl,
+        logoFileName,
+      });
       setIsLoading(false);
       toast.success('Account created! Please check your email to verify your account before signing in.');
     }

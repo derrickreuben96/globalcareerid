@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, useCallback, Re
 import { User, Session } from '@supabase/supabase-js';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { flushPendingSignup } from '@/lib/pendingSignup';
 
 interface Profile {
   id: string;
@@ -229,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (newUserId) {
           void fetchProfile(newUserId);
+          void flushPendingSignup(newUserId).then(() => fetchProfile(newUserId));
         }
       }
     );
@@ -254,6 +256,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthStatus('authenticated');
 
         void fetchProfile(localSession.user.id);
+        void flushPendingSignup(localSession.user.id).then(() => fetchProfile(localSession.user.id));
 
         void (async () => {
           try {
