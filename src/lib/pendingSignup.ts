@@ -77,9 +77,22 @@ function dataUrlToBlob(dataUrl: string): Blob {
  * Flush pending signup form data collected before email verification.
  * Safe to call multiple times — clears storage after a successful flush.
  */
-export async function flushPendingSignup(userId: string): Promise<void> {
+export async function flushPendingSignup(userId: string, userEmail?: string | null): Promise<void> {
   const pending = readPendingSignup();
   if (!pending) return;
+
+  // SECURITY: Only apply pending signup data if the signed-in user's email
+  // matches the email that started the registration. Otherwise the data
+  // belongs to a different (unverified) registration and must be discarded
+  // to prevent overwriting an unrelated user's profile.
+  const pendingEmail = pending.email?.trim().toLowerCase();
+  const currentEmail = userEmail?.trim().toLowerCase();
+  if (!pendingEmail || !currentEmail || pendingEmail !== currentEmail) {
+    clearPendingSignup();
+    return;
+  }
+
+
 
   try {
     if (pending.kind === 'career_individual') {
