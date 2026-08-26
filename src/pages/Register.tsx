@@ -160,7 +160,7 @@ export default function Register() {
     } else {
       // Email verification required — persist the rest of the form so it
       // is applied automatically after the user confirms and signs in.
-      savePendingSignup({
+      await savePendingSignup({
         kind: 'career_individual',
         country: jobSeekerForm.country,
         citizenship: jobSeekerForm.citizenship,
@@ -287,7 +287,7 @@ export default function Register() {
           console.warn('Failed to buffer logo for deferred upload:', err);
         }
       }
-      savePendingSignup({
+      await savePendingSignup({
         kind: 'organization',
         companyName: validation.data!.companyName,
         registrationNumber: validation.data!.registrationNumber,
