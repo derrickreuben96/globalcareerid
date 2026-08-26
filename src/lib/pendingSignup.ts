@@ -256,7 +256,7 @@ async function logPendingSignupEvent(
     const { error } = await supabase.rpc('log_security_event', {
       event_type_param: eventType,
       user_id_param: userId,
-      metadata_param: metadata,
+      metadata_param: metadata as Json,
     });
     if (error) console.warn('Pending signup audit log failed:', error.message);
   } catch (e) {
