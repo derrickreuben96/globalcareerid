@@ -23,7 +23,7 @@ function makeChain(result: ChainResult = { data: null, error: null }) {
 }
 
 const fromMock = vi.fn((_table: string) => makeChain());
-const rpcMock = vi.fn(async () => ({ data: null, error: null }));
+const rpcMock = vi.fn(async (_fn: string, _args: unknown) => ({ data: null, error: null }));
 const storageUploadMock = vi.fn(async () => ({ data: null, error: null }));
 
 vi.mock('@/integrations/supabase/client', () => ({
