@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 const KEY = 'pending_signup_v1';
 const SIGNING_KEY_STORAGE = 'pending_signup_sigkey_v1';
@@ -48,14 +49,14 @@ interface PendingEnvelope {
 // Signing helpers (Web Crypto HMAC-SHA256, per-installation random key)
 // ---------------------------------------------------------------------------
 
-function base64ToBytes(b64: string): Uint8Array {
+function base64ToBytes(b64: string): Uint8Array<ArrayBuffer> {
   const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
+  const bytes = new Uint8Array(new ArrayBuffer(bin.length));
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return bytes;
 }
 
-function bytesToBase64(bytes: Uint8Array): string {
+function bytesToBase64(bytes: Uint8Array<ArrayBuffer>): string {
   let bin = '';
   for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin);
