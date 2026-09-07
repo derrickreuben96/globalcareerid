@@ -104,8 +104,24 @@ export function Footer() {
                   {t('footer.raiseDispute')}
                 </Link>
               </li>
+              <li>
+                <Link to="/answers" className="hover:text-primary-foreground transition-colors">
+                  Answers
+                </Link>
+              </li>
+              <li>
+                <Link to="/employment-verification" className="hover:text-primary-foreground transition-colors">
+                  Employment verification
+                </Link>
+              </li>
+              <li>
+                <Link to="/glossary" className="hover:text-primary-foreground transition-colors">
+                  Glossary
+                </Link>
+              </li>
             </ul>
           </div>
+
         </div>
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/50">
