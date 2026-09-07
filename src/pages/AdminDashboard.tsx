@@ -12,6 +12,8 @@ import { AdminAIChat } from "@/components/admin/AdminAIChat";
 import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { AdminDocumentReview } from "@/components/admin/AdminDocumentReview";
 import { AdminExperienceRequests } from "@/components/admin/AdminExperienceRequests";
+import { AdminEmployerLeads } from "@/components/admin/AdminEmployerLeads";
+
 import { AdminDuplicateRisks } from "@/components/admin/AdminDuplicateRisks";
 import { AdminConsentLog } from "@/components/admin/AdminConsentLog";
 import { Loader2 } from "lucide-react";
@@ -212,6 +214,9 @@ export default function AdminDashboard() {
         return <AdminDuplicateRisks />;
       case "consent-log":
         return <AdminConsentLog />;
+      case "employer-leads":
+        return <AdminEmployerLeads />;
+
       default:
         return <AdminOverview employers={employers} disputes={disputes} userCount={userCount} />;
     }

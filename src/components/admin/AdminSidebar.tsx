@@ -45,6 +45,8 @@ const navItems = [
   { title: "Duplicate Risks", url: "duplicate-risks", icon: Fingerprint },
   { title: "Document Reviews", url: "documents", icon: FileText },
   { title: "Consent Log", url: "consent-log", icon: ScrollText },
+  { title: "Employer Leads", url: "employer-leads", icon: Building2 },
+
   { title: "AI Assistant", url: "ai-chat", icon: MessageSquareText },
   { title: "Activity Log", url: "activity", icon: Activity },
 ];
