@@ -41,8 +41,19 @@ export function Footer() {
                   {t('footer.verifyProfile')}
                 </Link>
               </li>
+              <li>
+                <Link to="/pricing" className="hover:text-primary-foreground transition-colors">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/for-employers/demo" className="hover:text-primary-foreground transition-colors">
+                  Request a demo
+                </Link>
+              </li>
             </ul>
           </div>
+
 
           <div>
             <h4 className="font-semibold mb-4">{t('footer.company')}</h4>
