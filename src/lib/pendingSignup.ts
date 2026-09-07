@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
+import { uploadCompanyLogo } from '@/lib/companyLogo';
 
 const KEY = 'pending_signup_v1';
 const SIGNING_KEY_STORAGE = 'pending_signup_sigkey_v1';
