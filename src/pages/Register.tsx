@@ -21,6 +21,7 @@ import {
   validateForm 
 } from '@/lib/validation';
 import { savePendingSignup, clearPendingSignup, fileToDataUrl } from '@/lib/pendingSignup';
+import { uploadCompanyLogo } from '@/lib/companyLogo';
 
 export default function Register() {
   const navigate = useNavigate();
