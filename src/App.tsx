@@ -42,6 +42,13 @@ const AddProject = lazy(() => import("./pages/employer/AddProject"));
 const PendingProjects = lazy(() => import("./pages/employee/PendingProjects"));
 const PublicProject = lazy(() => import("./pages/PublicProject"));
 const Apply = lazy(() => import("./pages/Apply"));
+const EmploymentVerification = lazy(() => import("./pages/geo/EmploymentVerification"));
+const CvVsCareerId = lazy(() => import("./pages/geo/CvVsCareerId"));
+const Glossary = lazy(() => import("./pages/geo/Glossary"));
+const AnswersHub = lazy(() => import("./pages/geo/AnswersHub"));
+const RequestDemo = lazy(() => import("./pages/employers/RequestDemo"));
+const Pricing = lazy(() => import("./pages/employers/Pricing"));
+
 
 const queryClient = new QueryClient();
 
@@ -87,6 +94,14 @@ const App = () => {
             <Route path="/dashboard/pending-projects" element={<ProtectedRoute><PendingProjects /></ProtectedRoute>} />
             <Route path="/project/:projectId" element={<PublicProject />} />
             <Route path="/apply" element={<Apply />} />
+            <Route path="/employment-verification" element={<EmploymentVerification />} />
+            <Route path="/cv-vs-career-id" element={<CvVsCareerId />} />
+            <Route path="/glossary" element={<Glossary />} />
+            <Route path="/answers" element={<AnswersHub />} />
+            <Route path="/for-employers/demo" element={<RequestDemo />} />
+            <Route path="/request-demo" element={<RequestDemo />} />
+            <Route path="/pricing" element={<Pricing />} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
