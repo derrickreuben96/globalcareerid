@@ -226,18 +226,10 @@ export default function Register() {
         // Upload logo if provided
         let logoUrl: string | null = null;
         if (logoFile) {
-          const ext = logoFile.name.split('.').pop();
-          const path = `${user.id}/logo.${ext}`;
-          const { error: uploadError } = await supabase.storage
-            .from('company-logos')
-            .upload(path, logoFile, { upsert: true });
-          if (!uploadError) {
-            const { data: urlData } = supabase.storage
-              .from('company-logos')
-              .getPublicUrl(path);
-            logoUrl = urlData.publicUrl;
-          }
+          const ext = logoFile.name.split('.').pop() || 'png';
+          logoUrl = await uploadCompanyLogo(`${user.id}/logo.${ext}`, logoFile);
         }
+
 
         await supabase.from('organization_profiles').update({
           registration_number: validation.data!.registrationNumber,
