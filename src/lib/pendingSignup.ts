@@ -324,13 +324,7 @@ export async function flushPendingSignup(userId: string, userEmail?: string | nu
           const blob = dataUrlToBlob(pending.logoDataUrl);
           const ext = pending.logoFileName.split('.').pop() || 'png';
           const path = `${userId}/logo.${ext}`;
-          const { error: uploadError } = await supabase.storage
-            .from('company-logos')
-            .upload(path, blob, { upsert: true, contentType: blob.type });
-          if (!uploadError) {
-            const { data: urlData } = supabase.storage.from('company-logos').getPublicUrl(path);
-            logoUrl = urlData.publicUrl;
-          }
+          logoUrl = await uploadCompanyLogo(path, blob);
         } catch (e) {
           console.warn('Deferred logo upload failed:', e);
         }
