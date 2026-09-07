@@ -41,8 +41,19 @@ export function Footer() {
                   {t('footer.verifyProfile')}
                 </Link>
               </li>
+              <li>
+                <Link to="/pricing" className="hover:text-primary-foreground transition-colors">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link to="/for-employers/demo" className="hover:text-primary-foreground transition-colors">
+                  Request a demo
+                </Link>
+              </li>
             </ul>
           </div>
+
 
           <div>
             <h4 className="font-semibold mb-4">{t('footer.company')}</h4>
@@ -93,8 +104,24 @@ export function Footer() {
                   {t('footer.raiseDispute')}
                 </Link>
               </li>
+              <li>
+                <Link to="/answers" className="hover:text-primary-foreground transition-colors">
+                  Answers
+                </Link>
+              </li>
+              <li>
+                <Link to="/employment-verification" className="hover:text-primary-foreground transition-colors">
+                  Employment verification
+                </Link>
+              </li>
+              <li>
+                <Link to="/glossary" className="hover:text-primary-foreground transition-colors">
+                  Glossary
+                </Link>
+              </li>
             </ul>
           </div>
+
         </div>
 
         <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/50">
