@@ -379,6 +379,57 @@ export type Database = {
         }
         Relationships: []
       }
+      employer_leads: {
+        Row: {
+          company_name: string
+          company_size: string | null
+          contact_name: string
+          country: string | null
+          created_at: string
+          current_method: string | null
+          id: string
+          message: string | null
+          monthly_hires: number | null
+          phone: string | null
+          source: string
+          status: string
+          updated_at: string
+          work_email: string
+        }
+        Insert: {
+          company_name: string
+          company_size?: string | null
+          contact_name: string
+          country?: string | null
+          created_at?: string
+          current_method?: string | null
+          id?: string
+          message?: string | null
+          monthly_hires?: number | null
+          phone?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          work_email: string
+        }
+        Update: {
+          company_name?: string
+          company_size?: string | null
+          contact_name?: string
+          country?: string | null
+          created_at?: string
+          current_method?: string | null
+          id?: string
+          message?: string | null
+          monthly_hires?: number | null
+          phone?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          work_email?: string
+        }
+        Relationships: []
+      }
       employers: {
         Row: {
           address: string | null
