@@ -7,6 +7,39 @@ export interface JobPosterData {
   deadline?: string;
   applyUrl: string;
   location?: string;
+  /** Optional role photo (data URL or same-origin/CORS-enabled URL) drawn in the hero band. */
+  heroImageUrl?: string;
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  await new Promise<void>((res, rej) => {
+    img.onload = () => res();
+    img.onerror = () => rej(new Error('Image load failed'));
+    img.src = src;
+  });
+  return img;
+}
+
+/** Draw an image cropped to fill the given rect (object-fit: cover). */
+function drawImageCover(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+) {
+  const scale = Math.max(w / img.width, h / img.height);
+  const dw = img.width * scale;
+  const dh = img.height * scale;
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  ctx.drawImage(img, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+  ctx.restore();
 }
 
 // Brand colors (Navy / Teal / Gold)
