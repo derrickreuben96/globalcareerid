@@ -139,7 +139,16 @@ export function Header() {
                     </div>
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/jobs" className="cursor-pointer">
+                    <div>
+                      <p className="font-medium">Browse verified jobs</p>
+                      <p className="text-xs text-muted-foreground">Apply with your Career ID</p>
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
+
             </DropdownMenu>
 
             {isAdmin && (
