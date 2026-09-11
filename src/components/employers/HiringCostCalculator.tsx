@@ -23,13 +23,20 @@ export function HiringCostCalculator() {
     const rate = Math.max(0, Number(hourlyCost) || 0);
 
     const monthlyHours = (hires * refs * minutes) / 60;
+    const monthlyCost = monthlyHours * rate;
+    const plan = bestMonthlyPlanCost(hires);
     return {
       monthlyHours,
-      monthlyCost: monthlyHours * rate,
+      monthlyCost,
       annualHours: monthlyHours * 12,
-      annualCost: monthlyHours * rate * 12,
+      annualCost: monthlyCost * 12,
+      planCost: plan.cost,
+      planName: plan.planName,
+      monthlySaving: monthlyCost - plan.cost,
+      annualSaving: (monthlyCost - plan.cost) * 12,
     };
   }, [hiresPerMonth, refsPerHire, minutesPerRef, hourlyCost]);
+
 
   const fmtHours = (n: number) =>
     n.toLocaleString(undefined, { maximumFractionDigits: 1 });
