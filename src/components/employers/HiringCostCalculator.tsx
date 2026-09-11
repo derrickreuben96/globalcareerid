@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calculator } from 'lucide-react';
+import { bestMonthlyPlanCost, PRICE_PER_VERIFICATION } from '@/lib/pricing';
+
 
 /**
  * Estimates the cost of manual reference checking using the employer's OWN
