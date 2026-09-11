@@ -107,21 +107,47 @@ export async function generateJobPosterImage(data: JobPosterData): Promise<Blob>
     y += 56;
   });
 
-  // Hero band (solid color block — no role-image hallucination)
+  // Hero band — role photo when available, brand block otherwise
+  let heroImg: HTMLImageElement | null = null;
+  if (data.heroImageUrl) {
+    try {
+      heroImg = await loadImage(data.heroImageUrl);
+    } catch {
+      heroImg = null;
+    }
+  }
   const heroY = y + 24;
-  const heroH = 220;
-  const heroGrad = ctx.createLinearGradient(0, heroY, W, heroY + heroH);
-  heroGrad.addColorStop(0, TEAL);
-  heroGrad.addColorStop(1, '#0E7A7A');
-  ctx.fillStyle = heroGrad;
-  ctx.fillRect(64, heroY, W - 128, heroH);
+  const heroH = heroImg ? 340 : 220;
+
+  if (heroImg) {
+    drawImageCover(ctx, heroImg, 64, heroY, W - 128, heroH);
+    // Dark scrim for text legibility
+    const scrim = ctx.createLinearGradient(0, heroY, 0, heroY + heroH);
+    scrim.addColorStop(0, 'rgba(8,27,51,0.15)');
+    scrim.addColorStop(0.45, 'rgba(8,27,51,0.55)');
+    scrim.addColorStop(1, 'rgba(8,27,51,0.92)');
+    ctx.fillStyle = scrim;
+    ctx.fillRect(64, heroY, W - 128, heroH);
+    // Teal accent edge
+    ctx.fillStyle = TEAL;
+    ctx.fillRect(64, heroY + heroH - 8, W - 128, 8);
+  } else {
+    const heroGrad = ctx.createLinearGradient(0, heroY, W, heroY + heroH);
+    heroGrad.addColorStop(0, TEAL);
+    heroGrad.addColorStop(1, '#0E7A7A');
+    ctx.fillStyle = heroGrad;
+    ctx.fillRect(64, heroY, W - 128, heroH);
+  }
 
   // Job title on hero
   ctx.fillStyle = WHITE;
   ctx.font = '800 64px Inter, system-ui, sans-serif';
   const titleLines = wrapText(ctx, data.jobTitle, W - 192);
-  let ty = heroY + heroH / 2 - (titleLines.length * 36);
-  titleLines.slice(0, 2).forEach((l) => {
+  const shown = titleLines.slice(0, 2);
+  let ty = heroImg
+    ? heroY + heroH - 60 - shown.length * 72 - (data.location ? 34 : 0)
+    : heroY + heroH / 2 - shown.length * 36;
+  shown.forEach((l) => {
     ctx.fillText(l, 96, ty);
     ty += 72;
   });
@@ -129,7 +155,7 @@ export async function generateJobPosterImage(data: JobPosterData): Promise<Blob>
   if (data.location) {
     ctx.font = '500 24px Inter, system-ui, sans-serif';
     ctx.fillStyle = WHITE;
-    ctx.fillText(`📍 ${data.location}`, 96, heroY + heroH - 44);
+    ctx.fillText(`📍 ${data.location}`, 96, heroImg ? ty + 4 : heroY + heroH - 44);
   }
 
   // Responsibilities
