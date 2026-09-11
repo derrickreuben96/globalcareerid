@@ -121,10 +121,30 @@ export function HiringCostCalculator() {
         </div>
       </div>
 
+      <div className="rounded-xl border border-border p-4 mt-4">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+          With Global Career ID ({result.planName})
+        </p>
+        <p className="text-2xl font-display font-bold text-foreground">
+          {fmtMoney(result.planCost)} / month
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Based on our published pricing: ${PRICE_PER_VERIFICATION} per verification, or $299/month
+          including 40 verifications — whichever is cheaper at your volume.
+        </p>
+        {result.monthlySaving > 0 && (
+          <p className="text-sm font-medium text-foreground mt-2">
+            That is ≈ {fmtMoney(result.monthlySaving)} saved per month, {fmtMoney(result.annualSaving)}{' '}
+            per year.
+          </p>
+        )}
+      </div>
+
       <p className="text-xs text-muted-foreground mt-4">
         With Global Career ID this work happens once, when the employer records the role — a
         recruiter then verifies a Career ID in a single lookup.
       </p>
+
     </div>
   );
 }

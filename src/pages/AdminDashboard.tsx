@@ -13,6 +13,8 @@ import { AdminActivityLog } from "@/components/admin/AdminActivityLog";
 import { AdminDocumentReview } from "@/components/admin/AdminDocumentReview";
 import { AdminExperienceRequests } from "@/components/admin/AdminExperienceRequests";
 import { AdminEmployerLeads } from "@/components/admin/AdminEmployerLeads";
+import { AdminPageTraffic } from "@/components/admin/AdminPageTraffic";
+
 
 import { AdminDuplicateRisks } from "@/components/admin/AdminDuplicateRisks";
 import { AdminConsentLog } from "@/components/admin/AdminConsentLog";
@@ -216,6 +218,10 @@ export default function AdminDashboard() {
         return <AdminConsentLog />;
       case "employer-leads":
         return <AdminEmployerLeads />;
+      case "page-traffic":
+        return <AdminPageTraffic />;
+
+
 
       default:
         return <AdminOverview employers={employers} disputes={disputes} userCount={userCount} />;
