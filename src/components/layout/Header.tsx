@@ -277,6 +277,10 @@ export function Header() {
               <Link to="/for-job-seekers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('nav.forJobSeekersAndEmployees')}
               </Link>
+              <Link to="/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Browse verified jobs
+              </Link>
+
               {isAdmin && (
                 <Link to="/admin" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
                   <Shield className="w-4 h-4" />
