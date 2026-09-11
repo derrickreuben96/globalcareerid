@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SEO } from '@/components/SEO';
+import { usePageVisit } from '@/hooks/usePageVisit';
 import { Button } from '@/components/ui/button';
 import {
   Accordion,
@@ -39,6 +40,7 @@ const steps = [
 ];
 
 export default function EmploymentVerification() {
+  usePageVisit('/employment-verification');
   return (
     <div className="min-h-screen bg-background">
       <SEO

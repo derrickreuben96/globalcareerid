@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SEO } from '@/components/SEO';
+import { usePageVisit } from '@/hooks/usePageVisit';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -46,6 +47,7 @@ const benefits = [
 ];
 
 export default function RequestDemo() {
+  usePageVisit('/for-employers/demo');
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({

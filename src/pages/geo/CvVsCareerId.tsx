@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { SEO } from '@/components/SEO';
+import { usePageVisit } from '@/hooks/usePageVisit';
 import { Button } from '@/components/ui/button';
 import { FileX2, BadgeCheck, ArrowRight } from 'lucide-react';
 import { cvComparison } from '@/content/geoContent';
@@ -31,6 +32,7 @@ const faqs = [
 ];
 
 export default function CvVsCareerId() {
+  usePageVisit('/cv-vs-career-id');
   return (
     <div className="min-h-screen bg-background">
       <SEO
