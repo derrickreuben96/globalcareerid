@@ -336,10 +336,37 @@ export function JobsManagement({ employerId, isVerified }: JobsManagementProps) 
         toast.error('Add a more detailed job description first');
         return;
       }
+      // Generate a role-specific photo for the poster hero (best-effort).
+      let heroImageUrl: string | undefined;
+      toast.info('Creating a role image for the poster...');
+      try {
+        const { data: imgData, error: imgError } = await supabase.functions.invoke(
+          'generate-job-poster-image',
+          {
+            body: {
+              job_title: job.title,
+              role_category: job.role_category || undefined,
+              location: job.location || undefined,
+              description: job.description,
+            },
+          },
+        );
+        const imgErr = (imgData as { error?: string })?.error;
+        if (imgError || imgErr) {
+          toast.error(imgErr || imgError?.message || 'Could not create the role image — using a plain poster');
+        } else {
+          heroImageUrl = (imgData as { image_data_url?: string })?.image_data_url;
+        }
+      } catch (e) {
+        console.error('poster image generation failed', e);
+        toast.error('Could not create the role image — using a plain poster');
+      }
+
       const blob = await generateJobPosterImage({
         companyName: cName,
         jobTitle: job.title,
         responsibilities,
+        heroImageUrl,
         deadline: job.application_deadline
           ? new Date(job.application_deadline).toLocaleDateString()
           : undefined,
