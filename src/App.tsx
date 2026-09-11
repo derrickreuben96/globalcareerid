@@ -48,6 +48,8 @@ const Glossary = lazy(() => import("./pages/geo/Glossary"));
 const AnswersHub = lazy(() => import("./pages/geo/AnswersHub"));
 const RequestDemo = lazy(() => import("./pages/employers/RequestDemo"));
 const Pricing = lazy(() => import("./pages/employers/Pricing"));
+const Jobs = lazy(() => import("./pages/Jobs"));
+
 
 
 const queryClient = new QueryClient();
@@ -101,6 +103,8 @@ const App = () => {
             <Route path="/for-employers/demo" element={<RequestDemo />} />
             <Route path="/request-demo" element={<RequestDemo />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/jobs" element={<Jobs />} />
+
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

@@ -139,7 +139,16 @@ export function Header() {
                     </div>
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/jobs" className="cursor-pointer">
+                    <div>
+                      <p className="font-medium">Browse verified jobs</p>
+                      <p className="text-xs text-muted-foreground">Apply with your Career ID</p>
+                    </div>
+                  </Link>
+                </DropdownMenuItem>
               </DropdownMenuContent>
+
             </DropdownMenu>
 
             {isAdmin && (
@@ -268,6 +277,10 @@ export function Header() {
               <Link to="/for-job-seekers" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 {t('nav.forJobSeekersAndEmployees')}
               </Link>
+              <Link to="/jobs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Browse verified jobs
+              </Link>
+
               {isAdmin && (
                 <Link to="/admin" className="text-sm text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
                   <Shield className="w-4 h-4" />

@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calculator } from 'lucide-react';
+import { bestMonthlyPlanCost, PRICE_PER_VERIFICATION } from '@/lib/pricing';
+
 
 /**
  * Estimates the cost of manual reference checking using the employer's OWN
@@ -21,13 +23,20 @@ export function HiringCostCalculator() {
     const rate = Math.max(0, Number(hourlyCost) || 0);
 
     const monthlyHours = (hires * refs * minutes) / 60;
+    const monthlyCost = monthlyHours * rate;
+    const plan = bestMonthlyPlanCost(hires);
     return {
       monthlyHours,
-      monthlyCost: monthlyHours * rate,
+      monthlyCost,
       annualHours: monthlyHours * 12,
-      annualCost: monthlyHours * rate * 12,
+      annualCost: monthlyCost * 12,
+      planCost: plan.cost,
+      planName: plan.planName,
+      monthlySaving: monthlyCost - plan.cost,
+      annualSaving: (monthlyCost - plan.cost) * 12,
     };
   }, [hiresPerMonth, refsPerHire, minutesPerRef, hourlyCost]);
+
 
   const fmtHours = (n: number) =>
     n.toLocaleString(undefined, { maximumFractionDigits: 1 });
@@ -112,10 +121,30 @@ export function HiringCostCalculator() {
         </div>
       </div>
 
+      <div className="rounded-xl border border-border p-4 mt-4">
+        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+          With Global Career ID ({result.planName})
+        </p>
+        <p className="text-2xl font-display font-bold text-foreground">
+          {fmtMoney(result.planCost)} / month
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Based on our published pricing: ${PRICE_PER_VERIFICATION} per verification, or $299/month
+          including 40 verifications — whichever is cheaper at your volume.
+        </p>
+        {result.monthlySaving > 0 && (
+          <p className="text-sm font-medium text-foreground mt-2">
+            That is ≈ {fmtMoney(result.monthlySaving)} saved per month, {fmtMoney(result.annualSaving)}{' '}
+            per year.
+          </p>
+        )}
+      </div>
+
       <p className="text-xs text-muted-foreground mt-4">
         With Global Career ID this work happens once, when the employer records the role — a
         recruiter then verifies a Career ID in a single lookup.
       </p>
+
     </div>
   );
 }

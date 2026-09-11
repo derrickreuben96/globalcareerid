@@ -388,8 +388,11 @@ export type Database = {
           created_at: string
           current_method: string | null
           id: string
+          last_contacted_at: string | null
           message: string | null
           monthly_hires: number | null
+          next_follow_up_at: string | null
+          owner_id: string | null
           phone: string | null
           source: string
           status: string
@@ -404,8 +407,11 @@ export type Database = {
           created_at?: string
           current_method?: string | null
           id?: string
+          last_contacted_at?: string | null
           message?: string | null
           monthly_hires?: number | null
+          next_follow_up_at?: string | null
+          owner_id?: string | null
           phone?: string | null
           source?: string
           status?: string
@@ -420,8 +426,11 @@ export type Database = {
           created_at?: string
           current_method?: string | null
           id?: string
+          last_contacted_at?: string | null
           message?: string | null
           monthly_hires?: number | null
+          next_follow_up_at?: string | null
+          owner_id?: string | null
           phone?: string | null
           source?: string
           status?: string
@@ -695,6 +704,47 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activities: {
+        Row: {
+          activity_type: string
+          body: string | null
+          created_at: string
+          created_by: string | null
+          follow_up_at: string | null
+          id: string
+          lead_id: string
+          subject: string | null
+        }
+        Insert: {
+          activity_type?: string
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_at?: string | null
+          id?: string
+          lead_id: string
+          subject?: string | null
+        }
+        Update: {
+          activity_type?: string
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          follow_up_at?: string | null
+          id?: string
+          lead_id?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activities_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "employer_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string
@@ -779,6 +829,36 @@ export type Database = {
           verification_notes?: string | null
           verification_status?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      page_visits: {
+        Row: {
+          created_at: string
+          id: string
+          is_bot: boolean
+          path: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_bot?: boolean
+          path: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_bot?: boolean
+          path?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -1646,6 +1726,16 @@ export type Database = {
           email_on_record_updated: boolean
         }[]
       }
+      get_page_visit_stats: {
+        Args: { days_back?: number }
+        Returns: {
+          bot_visits: number
+          human_visits: number
+          last_visit: string
+          path: string
+          total_visits: number
+        }[]
+      }
       get_public_employer_info: {
         Args: { employer_id_param: string }
         Returns: {
@@ -1675,6 +1765,22 @@ export type Database = {
           id: string
           role_category: string
           status: string
+          title: string
+        }[]
+      }
+      get_public_open_jobs: {
+        Args: never
+        Returns: {
+          application_deadline: string
+          company_name: string
+          country: string
+          created_at: string
+          description: string
+          employer_id: string
+          id: string
+          location: string
+          logo_url: string
+          role_category: string
           title: string
         }[]
       }

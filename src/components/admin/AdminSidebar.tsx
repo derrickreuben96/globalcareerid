@@ -46,6 +46,9 @@ const navItems = [
   { title: "Document Reviews", url: "documents", icon: FileText },
   { title: "Consent Log", url: "consent-log", icon: ScrollText },
   { title: "Employer Leads", url: "employer-leads", icon: Building2 },
+  { title: "Page Traffic", url: "page-traffic", icon: BarChart3 },
+
+
 
   { title: "AI Assistant", url: "ai-chat", icon: MessageSquareText },
   { title: "Activity Log", url: "activity", icon: Activity },
