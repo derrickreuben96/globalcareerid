@@ -124,7 +124,7 @@ export function Footer() {
 
         </div>
 
-        <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/50">
+        <div className="mt-12 pt-8 border-t border-primary-foreground/10 text-center text-sm text-primary-foreground/75">
           <div className="flex items-center justify-center gap-4 mb-4">
             <a href="https://www.facebook.com/profile.php?id=61587225303471" rel="noopener noreferrer" aria-label="Global Career ID on Facebook" className="hover:text-primary-foreground transition-colors">
               <Facebook className="w-5 h-5" />
