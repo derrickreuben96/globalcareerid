@@ -46,6 +46,9 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [interviewApp, setInterviewApp] = useState<Application | null>(null);
+  const [interviewAt, setInterviewAt] = useState('');
+  const [interviewNotes, setInterviewNotes] = useState('');
 
   const fetchApps = async () => {
     setLoading(true);
@@ -172,7 +175,7 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
             <Star className="w-3.5 h-3.5" /> Shortlist
           </Button>
           <Button size="sm" variant="outline" disabled={updating === a.id || a.status === 'interview'}
-            onClick={() => updateStatus(a.id, 'interview')}>
+            onClick={() => { setInterviewApp(a); setInterviewAt(''); setInterviewNotes(''); }}>
             <Calendar className="w-3.5 h-3.5" /> Interview
           </Button>
           <Button size="sm" variant="outline" disabled={updating === a.id || a.status === 'hired'}
