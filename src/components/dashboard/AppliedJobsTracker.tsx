@@ -64,7 +64,7 @@ export function AppliedJobsTracker({ userId }: Props) {
     const enriched = await Promise.all((data || []).map(async (a) => {
       const [{ data: job }, { data: emp }] = await Promise.all([
         supabase.rpc('get_public_job_by_id', { job_id_param: a.job_id }),
-        supabase.rpc('get_employer_public_info', { _employer_id: a.employer_id }),
+        supabase.rpc('get_public_employer_info', { employer_id_param: a.employer_id }),
       ]);
       const j = Array.isArray(job) ? job[0] : job;
       const e = Array.isArray(emp) ? emp[0] : emp;
