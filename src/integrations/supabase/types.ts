@@ -25,6 +25,8 @@ export type Database = {
           employer_id: string
           employment_snapshot: Json
           id: string
+          interview_at: string | null
+          interview_notes: string | null
           job_id: string
           status: string
           updated_at: string
@@ -39,6 +41,8 @@ export type Database = {
           employer_id: string
           employment_snapshot?: Json
           id?: string
+          interview_at?: string | null
+          interview_notes?: string | null
           job_id: string
           status?: string
           updated_at?: string
@@ -53,6 +57,8 @@ export type Database = {
           employer_id?: string
           employment_snapshot?: Json
           id?: string
+          interview_at?: string | null
+          interview_notes?: string | null
           job_id?: string
           status?: string
           updated_at?: string
