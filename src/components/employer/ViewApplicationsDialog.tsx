@@ -9,6 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Sparkles, Users, Star, CheckCircle, XCircle, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -246,6 +249,48 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
           </Tabs>
         )}
       </DialogContent>
+
+      {/* Interview scheduling dialog */}
+      <Dialog open={!!interviewApp} onOpenChange={(o) => { if (!o) setInterviewApp(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule interview</DialogTitle>
+            <DialogDescription>
+              {interviewApp?.applicant_profile
+                ? `${interviewApp.applicant_profile.first_name} ${interviewApp.applicant_profile.last_name}`
+                : 'Candidate'} will see these details on their dashboard and receive an email invitation.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="interview-at">Date & time</Label>
+              <Input
+                id="interview-at"
+                type="datetime-local"
+                value={interviewAt}
+                onChange={(e) => setInterviewAt(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="interview-notes">Details for the candidate (optional)</Label>
+              <Textarea
+                id="interview-notes"
+                placeholder="e.g. Video call link, office address, what to prepare"
+                value={interviewNotes}
+                onChange={(e) => setInterviewNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setInterviewApp(null)}>Cancel</Button>
+            <Button onClick={scheduleInterview} disabled={updating === interviewApp?.id}>
+              {updating === interviewApp?.id && <Loader2 className="w-4 h-4 animate-spin" />}
+              Send invitation
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
