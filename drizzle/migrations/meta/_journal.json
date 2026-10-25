@@ -8,6 +8,13 @@
       "when": 1792921357803,
       "tag": "0000_add_interview_details_to_applications",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792923713036,
+      "tag": "0001_add_get_job_applicants_function",
+      "breakpoints": true
     }
   ]
 }

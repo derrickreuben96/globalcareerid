@@ -1688,6 +1688,15 @@ export type Database = {
           status: string
         }[]
       }
+      get_job_applicants: {
+        Args: { job_id_param: string }
+        Returns: {
+          application_id: string
+          first_name: string
+          last_name: string
+          profile_id: string
+        }[]
+      }
       get_my_employer: {
         Args: never
         Returns: {

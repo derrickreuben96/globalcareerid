@@ -46,18 +46,41 @@ export function AppliedJobsTracker({ userId }: Props) {
   const [loading, setLoading] = useState(true);
 
   const fetchApplications = async () => {
+    // Fetch own applications first — job seekers can't read jobs/employers
+    // tables directly, so embeds would fail. Enrich via public RPCs instead.
     const { data, error } = await supabase
       .from('applications')
-      .select('id, status, created_at, updated_at, interview_at, interview_notes, job:jobs(title, location), employer:employers(company_name, logo_url)')
+      .select('id, status, created_at, updated_at, interview_at, interview_notes, job_id, employer_id')
       .eq('applicant_user_id', userId)
       .order('updated_at', { ascending: false });
 
     if (error) {
       console.error('Failed to load applications', error);
       setRows([]);
-    } else {
-      setRows((data || []) as unknown as AppliedJob[]);
+      setLoading(false);
+      return;
     }
+
+    const enriched = await Promise.all((data || []).map(async (a) => {
+      const [{ data: job }, { data: emp }] = await Promise.all([
+        supabase.rpc('get_public_job_by_id', { job_id_param: a.job_id }),
+        supabase.rpc('get_public_employer_info', { employer_id_param: a.employer_id }),
+      ]);
+      const j = Array.isArray(job) ? job[0] : job;
+      const e = Array.isArray(emp) ? emp[0] : emp;
+      return {
+        id: a.id,
+        status: a.status,
+        created_at: a.created_at,
+        updated_at: a.updated_at,
+        interview_at: a.interview_at,
+        interview_notes: a.interview_notes,
+        job: j ? { title: j.title, location: (j as any).location ?? null } : null,
+        employer: e ? { company_name: e.company_name, logo_url: (e as any).logo_url ?? null } : null,
+      } as AppliedJob;
+    }));
+
+    setRows(enriched);
     setLoading(false);
   };
 
