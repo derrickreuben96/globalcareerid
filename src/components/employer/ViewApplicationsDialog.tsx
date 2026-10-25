@@ -103,15 +103,35 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
       setUpdating(null);
       return;
     }
-    if (status === 'interview') {
-      supabase.functions.invoke('notify-interview', { body: { application_id: id } })
-        .catch(() => { /* email is best-effort */ });
-      toast.success('Interview invitation sent');
-    } else {
-      toast.success(`Marked as ${STATUS_LABELS[status]}`);
-    }
+    toast.success(`Marked as ${STATUS_LABELS[status]}`);
     setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     setUpdating(null);
+  };
+
+  const scheduleInterview = async () => {
+    if (!interviewApp) return;
+    setUpdating(interviewApp.id);
+    const { error } = await supabase
+      .from('applications')
+      .update({
+        status: 'interview',
+        interview_at: interviewAt ? new Date(interviewAt).toISOString() : null,
+        interview_notes: interviewNotes.trim() || null,
+      })
+      .eq('id', interviewApp.id);
+    if (error) {
+      toast.error('Failed to schedule interview');
+      setUpdating(null);
+      return;
+    }
+    supabase.functions.invoke('notify-interview', { body: { application_id: interviewApp.id } })
+      .catch(() => { /* email is best-effort */ });
+    toast.success('Interview invitation sent');
+    setApps(prev => prev.map(a => a.id === interviewApp.id ? { ...a, status: 'interview' } : a));
+    setUpdating(null);
+    setInterviewApp(null);
+    setInterviewAt('');
+    setInterviewNotes('');
   };
 
   const renderRow = (a: Application, showAi: boolean) => (
