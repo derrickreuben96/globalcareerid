@@ -55,31 +55,23 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
 
   const fetchApps = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('applications')
-      .select(`
-        id, status, ai_score, confidence_score, ai_explanation, employment_snapshot, created_at,
-        applicant_profile:profiles!applications_applicant_profile_id_fkey(profile_id, first_name, last_name)
-      `)
-      .eq('job_id', jobId)
-      .order('ai_score', { ascending: false, nullsFirst: false });
-    if (error) {
-      // Fallback without the relation hint (FK name may not exist)
-      const { data: data2 } = await supabase
+    // Applicant names come from a security-definer RPC — employers can't
+    // read the profiles table directly.
+    const [{ data, error }, { data: applicants }] = await Promise.all([
+      supabase
         .from('applications')
-        .select('id, status, ai_score, confidence_score, ai_explanation, employment_snapshot, created_at, applicant_profile_id')
+        .select('id, status, ai_score, confidence_score, ai_explanation, employment_snapshot, created_at')
         .eq('job_id', jobId)
-        .order('ai_score', { ascending: false, nullsFirst: false });
-      const ids = Array.from(new Set((data2 || []).map((a: any) => a.applicant_profile_id)));
-      const profMap = new Map<string, any>();
-      if (ids.length) {
-        const { data: profs } = await supabase
-          .from('profiles').select('id, profile_id, first_name, last_name').in('id', ids);
-        (profs || []).forEach(p => profMap.set(p.id, p));
-      }
-      setApps((data2 || []).map((a: any) => ({ ...a, applicant_profile: profMap.get(a.applicant_profile_id) ?? null })));
+        .order('ai_score', { ascending: false, nullsFirst: false }),
+      supabase.rpc('get_job_applicants', { job_id_param: jobId }),
+    ]);
+    const nameMap = new Map<string, { profile_id: string; first_name: string; last_name: string }>();
+    (applicants || []).forEach((p: any) => nameMap.set(p.application_id, p));
+    if (error) {
+      console.error('Failed to load applications', error);
+      setApps([]);
     } else {
-      setApps((data || []) as unknown as Application[]);
+      setApps((data || []).map((a: any) => ({ ...a, applicant_profile: nameMap.get(a.id) ?? null })));
     }
     setLoading(false);
   };
