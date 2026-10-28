@@ -21,12 +21,12 @@ interface ReferralLetter {
   verification_number: string;
   employer?: {
     company_name: string;
-    address: string | null;
+    address?: string | null;
     logo_url: string | null;
     country: string | null;
-    phone: string | null;
+    phone?: string | null;
     website: string | null;
-    email: string | null;
+    email?: string | null;
   };
   employment_record?: {
     job_title: string;
