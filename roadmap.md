@@ -1,2 +1,3 @@
-- [ ] Correct employer-name reads across career records and related views without exposing private company data.
-- [ ] Audit existing company links and verify Derrick's historical/current records plus regression tests.
+- [x] Correct employer-name reads across career records, pending records, letters, and future application snapshots without exposing private company data.
+- [x] Restore the missing synchronized role and link all existing/future history rows to their source records.
+- [x] Verify Derrick's historical/current records, unrelated-employer denial, private-field exclusion, and regression tests.
