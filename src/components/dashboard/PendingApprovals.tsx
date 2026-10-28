@@ -12,6 +12,7 @@ import {
   Loader2 
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { attachCareerEmployers } from '@/lib/careerEmployerIdentity';
 
 interface PendingRecord {
   id: string;
@@ -52,7 +53,7 @@ export function PendingApprovals({ onApprovalChange }: PendingApprovalsProps) {
         employment_type,
         start_date,
         status,
-        employer:employers(company_name, is_verified)
+        employer_id
       `)
       .eq('user_id', user.id)
       .eq('status', 'pending')
@@ -61,7 +62,11 @@ export function PendingApprovals({ onApprovalChange }: PendingApprovalsProps) {
     if (error) {
       console.error('Error fetching pending records:', error);
     } else {
-      setPendingRecords(data || []);
+      try {
+        setPendingRecords(await attachCareerEmployers(data || []));
+      } catch {
+        toast.error('Company details could not be loaded. Please reload your profile.');
+      }
     }
     setIsLoading(false);
   };

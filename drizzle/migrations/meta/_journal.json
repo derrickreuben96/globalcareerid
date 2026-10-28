@@ -15,6 +15,13 @@
       "when": 1792923713036,
       "tag": "0001_add_get_job_applicants_function",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793179447895,
+      "tag": "0002_career_employer_identity_and_stable_history_sync",
+      "breakpoints": true
     }
   ]
 }

@@ -9,6 +9,7 @@ import { FileText, Download, Eye, Loader2, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
 import logoSrc from '@/assets/logo.png';
+import { attachCareerEmployers } from '@/lib/careerEmployerIdentity';
 
 interface ReferralLetter {
   id: string;
@@ -20,12 +21,12 @@ interface ReferralLetter {
   verification_number: string;
   employer?: {
     company_name: string;
-    address: string | null;
+    address?: string | null;
     logo_url: string | null;
     country: string | null;
-    phone: string | null;
+    phone?: string | null;
     website: string | null;
-    email: string | null;
+    email?: string | null;
   };
   employment_record?: {
     job_title: string;
@@ -48,7 +49,6 @@ export function ReferralLettersViewer() {
       .from('referral_letters')
       .select(`
         id, content, generated_by, created_at, employment_record_id, employer_id, verification_number,
-        employer:employers(company_name, logo_url, country, website),
         employment_record:employment_records(job_title, start_date, end_date)
       `)
       .eq('employee_user_id', user.id)
@@ -58,7 +58,11 @@ export function ReferralLettersViewer() {
       console.error('Error fetching referral letters:', error);
       toast.error('Failed to load referral letters');
     } else {
-      setLetters((data as any) || []);
+      try {
+        setLetters(await attachCareerEmployers(data || []));
+      } catch {
+        toast.error('Company details could not be loaded. Please reload your profile.');
+      }
     }
     setLoading(false);
   }, [user]);

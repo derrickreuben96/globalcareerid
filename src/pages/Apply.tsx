@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Briefcase, Loader2, CheckCircle, AlertTriangle, Building2, Home, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { attachCareerEmployers } from '@/lib/careerEmployerIdentity';
 
 interface JobView {
   id: string;
@@ -139,28 +140,23 @@ export default function Apply() {
       }
 
       // Capture immutable employment snapshot
-      const { data: records } = await supabase
+      const { data: records, error: recordsError } = await supabase
         .from('employment_records')
         .select('id, job_title, department, employment_type, start_date, end_date, status, employer_id')
         .eq('user_id', user.id)
         .in('status', ['active', 'ended'])
         .order('start_date', { ascending: false });
 
-      const employerIds = Array.from(new Set((records || []).map(r => r.employer_id)));
-      const employerMap = new Map<string, string>();
-      if (employerIds.length) {
-        const { data: emps } = await supabase
-          .from('employers').select('id, company_name').in('id', employerIds);
-        (emps || []).forEach(e => employerMap.set(e.id, e.company_name));
-      }
-      const snapshot = (records || []).map(r => ({
+      if (recordsError) throw recordsError;
+      const enrichedRecords = await attachCareerEmployers(records || []);
+      const snapshot = enrichedRecords.map(r => ({
         job_title: r.job_title,
         department: r.department,
         employment_type: r.employment_type,
         start_date: r.start_date,
         end_date: r.end_date,
         status: r.status,
-        company_name: employerMap.get(r.employer_id) || 'Unknown',
+        company_name: r.employer.company_name,
       }));
 
       const { data: inserted, error } = await supabase.from('applications').insert({
@@ -187,6 +183,8 @@ export default function Apply() {
         supabase.functions.invoke('score-application', { body: { application_id: inserted.id } })
           .catch(() => { /* scoring is best-effort */ });
       }
+    } catch {
+      toast.error('Employment details could not be loaded. Please retry your application.');
     } finally {
       setSubmitting(false);
     }

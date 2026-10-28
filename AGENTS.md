@@ -1,0 +1,2 @@
+- Resolve candidate career company branding through the record-authorized `get_career_employer_identity` RPC and shared helper, not employer-table embeds; historical/pending relationships must retain names without granting private organization access.
+- Link synchronized work history by unique `employment_record_id`, never company name; updates and employer renames must target the correct source record without collapsing multiple roles.

@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { skillSchema, disputeReasonSchema, validateField } from '@/lib/validation';
+import { attachCareerEmployers } from '@/lib/careerEmployerIdentity';
 
 /** Mask a sensitive ID: show first 2 and last 2 characters, mask the rest */
 function maskId(value: string): string {
@@ -60,6 +61,7 @@ function maskId(value: string): string {
 
 interface EmploymentRecord {
   id: string;
+  employer_id: string;
   job_title: string;
   department: string | null;
   employment_type: string;
@@ -165,8 +167,7 @@ export default function Dashboard() {
         start_date,
         end_date,
         status,
-        employer_id,
-        employer:employers(company_name, is_verified, logo_url)
+        employer_id
       `)
       .eq('user_id', user.id)
       .in('status', ['active', 'ended', 'disputed'])
@@ -175,7 +176,11 @@ export default function Dashboard() {
     if (error) {
       console.error('Error fetching records:', error);
     } else {
-      setRecords(data || []);
+      try {
+        setRecords(await attachCareerEmployers(data || []));
+      } catch {
+        toast.error('Company details could not be loaded. Please reload your profile.');
+      }
     }
     setIsLoadingRecords(false);
   }, [user]);
@@ -364,8 +369,8 @@ export default function Dashboard() {
   // Transform records for the timeline component
   const timelineRecords = records.map(r => ({
     id: r.id,
-    userId: user!.id,
-    employerId: '',
+    userId: user?.id || '',
+    employerId: r.employer_id,
     jobTitle: r.job_title,
     department: r.department || undefined,
     employmentType: r.employment_type as 'full_time' | 'part_time' | 'contract' | 'internship',

@@ -4,6 +4,8 @@ import { Building2, Calendar, ArrowUpRight, ArrowRight, ArrowDownRight, Loader2 
 import { VerifiedBadge } from './VerifiedBadge';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
+import { attachCareerEmployers } from '@/lib/careerEmployerIdentity';
+import { toast } from 'sonner';
 
 interface RoleEntry {
   id: string;
@@ -52,7 +54,7 @@ export function StructuredEmploymentTimeline({ userId }: StructuredEmploymentTim
       // Get employment records with employer info
       const { data: records } = await supabase
         .from('employment_records')
-        .select('id, job_title, department, start_date, end_date, status, employer:employers(company_name, is_verified)')
+        .select('id, employer_id, job_title, department, start_date, end_date, status')
         .eq('user_id', userId)
         .in('status', ['active', 'ended'])
         .order('start_date', { ascending: false });
@@ -71,9 +73,17 @@ export function StructuredEmploymentTimeline({ userId }: StructuredEmploymentTim
         .in('employment_record_id', recordIds)
         .order('role_start_date', { ascending: true });
 
-      const grouped: GroupedEmployment[] = records.map(r => ({
-        employerName: (r.employer as any)?.company_name || 'Unknown',
-        employerVerified: (r.employer as any)?.is_verified || false,
+      let enriched;
+      try {
+        enriched = await attachCareerEmployers(records);
+      } catch {
+        toast.error('Company details could not be loaded. Please reload your profile.');
+        setLoading(false);
+        return;
+      }
+      const grouped: GroupedEmployment[] = enriched.map(r => ({
+        employerName: r.employer.company_name,
+        employerVerified: r.employer.is_verified || false,
         startDate: r.start_date,
         endDate: r.end_date,
         status: r.status || 'active',
