@@ -1,0 +1,2 @@
+- [ ] Correct employer-name reads across career records and related views without exposing private company data.
+- [ ] Audit existing company links and verify Derrick's historical/current records plus regression tests.
