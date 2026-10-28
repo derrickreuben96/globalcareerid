@@ -1456,6 +1456,7 @@ export type Database = {
           company_name: string
           created_at: string
           department: string | null
+          employment_record_id: string | null
           employment_type: string | null
           end_date: string | null
           id: string
@@ -1472,6 +1473,7 @@ export type Database = {
           company_name: string
           created_at?: string
           department?: string | null
+          employment_record_id?: string | null
           employment_type?: string | null
           end_date?: string | null
           id?: string
@@ -1488,6 +1490,7 @@ export type Database = {
           company_name?: string
           created_at?: string
           department?: string | null
+          employment_record_id?: string | null
           employment_type?: string | null
           end_date?: string | null
           id?: string
@@ -1500,7 +1503,15 @@ export type Database = {
           verification_status?: string
           verified_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "work_history_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1597,6 +1608,17 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      get_career_employer_identity: {
+        Args: { employer_ids: string[] }
+        Returns: {
+          company_name: string
+          country: string
+          id: string
+          is_verified: boolean
+          logo_url: string
+          website: string
+        }[]
       }
       get_consent_logs_admin: {
         Args: {
