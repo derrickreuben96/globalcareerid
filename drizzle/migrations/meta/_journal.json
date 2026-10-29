@@ -22,6 +22,13 @@
       "when": 1793179447895,
       "tag": "0002_career_employer_identity_and_stable_history_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793258993503,
+      "tag": "0003_recruitment_activity_timeline",
+      "breakpoints": true
     }
   ]
 }

@@ -1222,6 +1222,61 @@ export type Database = {
         }
         Relationships: []
       }
+      recruitment_events: {
+        Row: {
+          application_id: string
+          employer_id: string
+          event_type: string
+          from_status: string | null
+          id: string
+          interview_at: string | null
+          occurred_at: string
+          to_status: string
+        }
+        Insert: {
+          application_id: string
+          employer_id: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          interview_at?: string | null
+          occurred_at?: string
+          to_status: string
+        }
+        Update: {
+          application_id?: string
+          employer_id?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          interview_at?: string | null
+          occurred_at?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recruitment_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recruitment_events_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recruitment_events_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       referral_letters: {
         Row: {
           content: string
