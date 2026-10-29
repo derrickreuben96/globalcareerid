@@ -1,3 +1,6 @@
 - [x] Correct employer-name reads across career records, pending records, letters, and future application snapshots without exposing private company data.
 - [x] Restore the missing synchronized role and link all existing/future history rows to their source records.
 - [x] Verify Derrick's historical/current records, unrelated-employer denial, private-field exclusion, and regression tests.
+- [x] Add employer hiring pipeline, interview schedule, stats, filters, and recruitment timeline.
+- [x] Preserve existing applicant actions and securely record future recruitment stage changes.
+- [x] Test hiring calculations and verify the signed-in employer dashboard end to end.

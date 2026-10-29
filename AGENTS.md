@@ -1,2 +1,4 @@
 - Resolve candidate career company branding through the record-authorized `get_career_employer_identity` RPC and shared helper, not employer-table embeds; historical/pending relationships must retain names without granting private organization access.
 - Link synchronized work history by unique `employment_record_id`, never company name; updates and employer renames must target the correct source record without collapsing multiple roles.
+- Employer hiring dashboards reuse application actions and record recruitment transitions with a database trigger in read-only, owner-authorized `recruitment_events`; this preserves existing flows and captures changes from every writer without inventing historical transitions.
+- Refresh employer hiring data on actions, window focus, and visible-page polling rather than adding sensitive tables to public realtime publications.
