@@ -54,6 +54,7 @@ import { EmployerAnalytics } from '@/components/employer/EmployerAnalytics';
 import { ReferralLetterVerifier } from '@/components/employer/ReferralLetterVerifier';
 import { RequestVerification } from '@/components/employer/RequestVerification';
 import { JobsManagement } from '@/components/employer/JobsManagement';
+import { HiringDashboard } from '@/components/employer/HiringDashboard';
 
 interface Employer {
   id: string;
@@ -113,7 +114,7 @@ export default function EmployerDashboard() {
   const [showTalentSearch, setShowTalentSearch] = useState(false);
   const [showAuditLog, setShowAuditLog] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
-  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'jobs' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics' | 'verify'>('employees');
+  const [activeSection, setActiveSection] = useState<'employees' | 'all' | 'jobs' | 'hiring' | 'talent' | 'profile' | 'audit' | 'requests' | 'promotions' | 'analytics' | 'verify'>('employees');
   
   const [newEmployee, setNewEmployee] = useState({
     profileId: '',
@@ -515,6 +516,10 @@ export default function EmployerDashboard() {
 
           {/* Navigation Buttons */}
           <div className="flex flex-wrap gap-2 mb-6">
+            <Button variant={activeSection === 'hiring' ? 'default' : 'outline'} onClick={() => setActiveSection('hiring')} className="gap-2">
+              <Briefcase className="w-4 h-4" />
+              Hiring Dashboard
+            </Button>
             <Button 
               variant={activeSection === 'employees' ? 'default' : 'outline'}
               onClick={() => setActiveSection('employees')}
@@ -598,6 +603,7 @@ export default function EmployerDashboard() {
           </div>
 
           {/* Content Sections */}
+          {activeSection === 'hiring' && <HiringDashboard employerId={employer.id} onManageJobs={() => setActiveSection('jobs')} />}
           {activeSection === 'employees' && (
             <div className="glass-card rounded-2xl p-6">
               <div className="flex items-center justify-between mb-6">

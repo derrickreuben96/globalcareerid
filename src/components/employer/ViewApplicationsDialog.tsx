@@ -34,6 +34,7 @@ interface Props {
   jobId: string;
   jobTitle: string;
   screeningQuota: number;
+  onApplicationsChange?: () => void;
 }
 
 const STATUS_LABELS: Record<Status, string> = {
@@ -45,7 +46,7 @@ const STATUS_LABELS: Record<Status, string> = {
   rejected: 'Rejected',
 };
 
-export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, screeningQuota }: Props) {
+export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, screeningQuota, onApplicationsChange }: Props) {
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -104,6 +105,7 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
     toast.success(`Marked as ${STATUS_LABELS[status]}`);
     setApps(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     setUpdating(null);
+    onApplicationsChange?.();
   };
 
   const scheduleInterview = async () => {
@@ -130,6 +132,7 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
     setInterviewApp(null);
     setInterviewAt('');
     setInterviewNotes('');
+    onApplicationsChange?.();
   };
 
   const renderRow = (a: Application, showAi: boolean) => (
@@ -165,6 +168,10 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
       </TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-1 flex-wrap">
+          <Button size="sm" variant="outline" disabled={updating === a.id || a.status === 'under_review'}
+            onClick={() => updateStatus(a.id, 'under_review')}>
+            <Users className="w-3.5 h-3.5" /> Review
+          </Button>
           <Button size="sm" variant="outline" disabled={updating === a.id || a.status === 'shortlisted'}
             onClick={() => updateStatus(a.id, 'shortlisted')}>
             <Star className="w-3.5 h-3.5" /> Shortlist
