@@ -25,6 +25,8 @@ interface Application {
   ai_explanation: string | null;
   employment_snapshot: any;
   created_at: string;
+  interview_at: string | null;
+  interview_notes: string | null;
   applicant_profile: { profile_id: string; first_name: string; last_name: string } | null;
 }
 
@@ -61,7 +63,7 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
     const [{ data, error }, { data: applicants }] = await Promise.all([
       supabase
         .from('applications')
-        .select('id, status, ai_score, confidence_score, ai_explanation, employment_snapshot, created_at')
+        .select('id, status, ai_score, confidence_score, ai_explanation, employment_snapshot, created_at, interview_at, interview_notes')
         .eq('job_id', jobId)
         .order('ai_score', { ascending: false, nullsFirst: false }),
       supabase.rpc('get_job_applicants', { job_id_param: jobId }),
@@ -127,7 +129,7 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
     supabase.functions.invoke('notify-interview', { body: { application_id: interviewApp.id } })
       .catch(() => { /* email is best-effort */ });
     toast.success('Interview invitation sent');
-    setApps(prev => prev.map(a => a.id === interviewApp.id ? { ...a, status: 'interview' } : a));
+    setApps(prev => prev.map(a => a.id === interviewApp.id ? { ...a, status: 'interview', interview_at: interviewAt ? new Date(interviewAt).toISOString() : null, interview_notes: interviewNotes.trim() || null } : a));
     setUpdating(null);
     setInterviewApp(null);
     setInterviewAt('');
@@ -176,9 +178,14 @@ export function ViewApplicationsDialog({ open, onOpenChange, jobId, jobTitle, sc
             onClick={() => updateStatus(a.id, 'shortlisted')}>
             <Star className="w-3.5 h-3.5" /> Shortlist
           </Button>
-          <Button size="sm" variant="outline" disabled={updating === a.id || a.status === 'interview'}
-            onClick={() => { setInterviewApp(a); setInterviewAt(''); setInterviewNotes(''); }}>
-            <Calendar className="w-3.5 h-3.5" /> Interview
+          <Button size="sm" variant="outline" disabled={updating === a.id}
+            onClick={() => {
+              setInterviewApp(a);
+              const date = a.interview_at ? new Date(a.interview_at) : null;
+              setInterviewAt(date ? new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : '');
+              setInterviewNotes(a.interview_notes ?? '');
+            }}>
+            <Calendar className="w-3.5 h-3.5" /> {a.status === 'interview' ? 'Reschedule' : 'Interview'}
           </Button>
           <Button size="sm" variant="outline" disabled={updating === a.id || a.status === 'hired'}
             onClick={() => updateStatus(a.id, 'hired')}>
