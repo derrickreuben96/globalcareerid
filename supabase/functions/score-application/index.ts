@@ -1,3 +1,4 @@
+import "../_shared/cors.ts";
 // AI-powered application scoring. Computes role relevance, experience duration,
 // stability, and verification integrity into ai_score and confidence_score.
 // Non-blocking: failures do not affect the application itself.

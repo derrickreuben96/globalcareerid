@@ -1,3 +1,4 @@
+import "../_shared/cors.ts";
 // Notify candidate when employer moves an application to "interview".
 // Uses Resend via the connector gateway with LOVABLE_API_KEY.
 

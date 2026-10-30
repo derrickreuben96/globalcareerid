@@ -1,3 +1,4 @@
+import "../_shared/cors.ts";
 import { SignJWT, importPKCS8 } from "npm:jose@^6.0.0";
 
 const corsHeaders = {
