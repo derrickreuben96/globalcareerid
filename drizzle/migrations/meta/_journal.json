@@ -29,6 +29,13 @@
       "when": 1793258993503,
       "tag": "0003_recruitment_activity_timeline",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793327487831,
+      "tag": "0004_security_hardening_rpc_scope",
+      "breakpoints": true
     }
   ]
 }

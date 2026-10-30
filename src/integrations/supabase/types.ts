@@ -1606,7 +1606,7 @@ export type Database = {
     }
     Functions: {
       approve_promotion: {
-        Args: { approver_id: string; request_id_param: string }
+        Args: { approver_id?: string; request_id_param: string }
         Returns: undefined
       }
       check_rate_limit: {
@@ -1884,13 +1884,10 @@ export type Database = {
           created_at: string
           experience_level: string
           first_name: string
-          id: string
           last_name: string
           location: string
           profile_id: string
           skills: string[]
-          updated_at: string
-          user_id: string
           visibility: string
         }[]
       }
@@ -1981,6 +1978,10 @@ export type Database = {
           user_id_param: string
         }
         Returns: undefined
+      }
+      resolve_career_id_for_employer: {
+        Args: { profile_id_param: string }
+        Returns: string
       }
       search_public_profiles: {
         Args: {
