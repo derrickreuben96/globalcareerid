@@ -183,18 +183,18 @@ export default function EmployerDashboard() {
 
     setIsAddingEmployee(true);
     try {
-      const { data: profileResults, error: profileError } = await supabase.rpc('get_public_profile_by_id', {
+      // Employer-only lookup: resolves a Career ID to its account (works for private profiles too)
+      const { data: targetUserId, error: profileError } = await supabase.rpc('resolve_career_id_for_employer', {
         profile_id_param: normalizedProfileId,
       });
-      const profileData = profileResults && profileResults.length > 0 ? profileResults[0] : null;
 
-      if (profileError || !profileData?.user_id) {
+      if (profileError || !targetUserId) {
         toast.error('Profile ID not found. Please check and try again.');
         return;
       }
 
       const { error } = await supabase.from('employment_records').insert({
-        user_id: profileData.user_id,
+        user_id: targetUserId as string,
         employer_id: employer.id,
         job_title: newEmployee.jobTitle.trim(),
         department: newEmployee.department.trim() ? newEmployee.department.trim() : null,

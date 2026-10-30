@@ -12,8 +12,6 @@ import { Search, Shield, User, Calendar, CheckCircle, Eye, Loader2 } from 'lucid
 import { SEO } from '@/components/SEO';
 
 interface Profile {
-  id: string;
-  user_id: string;
   profile_id: string;
   first_name: string;
   last_name: string;
@@ -64,14 +62,14 @@ export default function Verify() {
     if (profileData) {
       setFoundProfile(profileData);
 
-      // Fetch employment records using the new RPC function that bypasses visibility check
+      // Employment is returned only for public profiles (enforced in the database)
       const { data: recordsData } = await supabase
         .rpc('get_employment_by_profile_id', { profile_id_param: searchValue });
 
       // Transform the RPC result to match our interface
       const transformedRecords = (recordsData || []).map((r: any) => ({
         id: r.id,
-        user_id: profileData.user_id,
+        user_id: '',
         job_title: r.job_title,
         department: r.department,
         employment_type: r.employment_type,
