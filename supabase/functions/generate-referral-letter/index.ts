@@ -1,5 +1,6 @@
 import "../_shared/cors.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// deno-lint-ignore no-explicit-any
+const serve = (handler: any) => Deno.serve(handler);
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
