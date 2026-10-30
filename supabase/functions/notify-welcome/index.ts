@@ -1,6 +1,5 @@
 import "../_shared/cors.ts";
-// deno-lint-ignore no-explicit-any
-const serve = (handler: any) => Deno.serve(handler);
+const serve = (handler: (req: Request) => Response | Promise<Response>) => Deno.serve(handler);
 import { Resend } from "npm:resend@4.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
