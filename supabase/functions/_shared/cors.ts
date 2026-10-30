@@ -2,25 +2,7 @@
 // Imported first by every function; wraps Deno.serve so each response's
 // Access-Control-Allow-Origin is set per request, overriding any local "*".
 
-const EXACT_ORIGINS = new Set([
-  "https://globalcareerid.com",
-  "https://www.globalcareerid.com",
-  "https://globalcareerid.lovable.app",
-]);
-
-const PATTERNS = [
-  /^https:\/\/[a-z0-9-]+\.lovable\.app$/,
-  /^https:\/\/[a-z0-9-]+\.lovableproject\.com$/,
-  /^https:\/\/[a-z0-9-]+\.lovable\.dev$/,
-  /^http:\/\/localhost(:\d+)?$/,
-  /^http:\/\/127\.0\.0\.1(:\d+)?$/,
-];
-
-export function isAllowedOrigin(origin: string | null): boolean {
-  if (!origin) return false;
-  if (EXACT_ORIGINS.has(origin)) return true;
-  return PATTERNS.some((p) => p.test(origin));
-}
+import { isAllowedOrigin } from "./allowedOrigins.ts";
 
 export function applyCors(req: Request, res: Response): Response {
   const origin = req.headers.get("Origin");
