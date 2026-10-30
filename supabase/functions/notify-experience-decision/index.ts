@@ -71,6 +71,22 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Non-admin callers may only notify about requests for an employer they own
+    if (!isAdmin) {
+      const { data: owned } = await supabase
+        .from("employers")
+        .select("id")
+        .eq("id", request.employer_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!owned) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // Fetch employee profile
     const { data: profile } = await supabase
       .from("profiles")
