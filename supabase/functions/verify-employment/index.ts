@@ -27,8 +27,15 @@ Deno.serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   const url = new URL(req.url);
-  const token = url.searchParams.get("token");
-  const action = url.searchParams.get("action");
+  let token = url.searchParams.get("token");
+  let action: string | null = null;
+  // State changes require an explicit POST from the review page, so email
+  // link scanners that prefetch GET URLs cannot confirm or reject.
+  if (req.method === "POST") {
+    const form = await req.formData().catch(() => null);
+    token = (form?.get("token") as string | null) ?? token;
+    action = (form?.get("action") as string | null) ?? null;
+  }
 
   if (!token) {
     return new Response(renderPage("Invalid Link", "This verification link is invalid.", "error"), {
@@ -78,8 +85,27 @@ Deno.serve(async (req) => {
     });
   }
 
+  if (action !== "confirm" && action !== "reject") {
+    return new Response(renderPage("Invalid Action", "Unknown action.", "error"), {
+      headers: { ...corsHeaders, "Content-Type": "text/html" },
+    });
+  }
+
+  // Single-use: atomically claim the pending request before any change.
+  const { data: claimed } = await supabase
+    .from("verification_requests")
+    .update({ status: "completed" })
+    .eq("id", request.id)
+    .eq("status", "pending")
+    .gt("expires_at", new Date().toISOString())
+    .select("id");
+  if (!claimed || claimed.length === 0) {
+    return new Response(renderPage("Already Processed", "This verification request has already been processed.", "info"), {
+      headers: { ...corsHeaders, "Content-Type": "text/html" },
+    });
+  }
+
   if (action === "confirm") {
-    await supabase.from("verification_requests").update({ status: "completed" }).eq("id", request.id);
     await supabase.from("work_history").update({
       verification_status: "employer_verified",
       verification_method: "employer_email",
@@ -90,8 +116,7 @@ Deno.serve(async (req) => {
       `You have confirmed that <strong>${escapeHtml(wh.role)}</strong> at <strong>${escapeHtml(wh.company_name)}</strong> is accurate. Thank you!`, "success"), {
       headers: { ...corsHeaders, "Content-Type": "text/html" },
     });
-  } else if (action === "reject") {
-    await supabase.from("verification_requests").update({ status: "completed" }).eq("id", request.id);
+  } else {
     await supabase.from("work_history").update({
       verification_status: "rejected",
       verification_method: "employer_email",
@@ -143,8 +168,8 @@ td{padding:12px;border:1px solid #e5e7eb;} td:first-child{font-weight:600;backgr
 <tr><td>Period</td><td>${escapeHtml(wh.start_date)} to ${escapeHtml(wh.end_date) || 'Present'}</td></tr>
 </table>
 <div class="actions">
-<a href="?token=${encodeURIComponent(token)}&action=confirm" class="btn btn-confirm">✓ Confirm Employment</a>
-<a href="?token=${encodeURIComponent(token)}&action=reject" class="btn btn-reject">✗ Reject</a>
+<form method="POST" style="flex:1;margin:0"><input type="hidden" name="token" value="${escapeHtml(token)}"><input type="hidden" name="action" value="confirm"><button type="submit" class="btn btn-confirm" style="width:100%">✓ Confirm Employment</button></form>
+<form method="POST" style="flex:1;margin:0"><input type="hidden" name="token" value="${escapeHtml(token)}"><input type="hidden" name="action" value="reject"><button type="submit" class="btn btn-reject" style="width:100%">✗ Reject</button></form>
 </div>
 <p style="color:#999;font-size:12px;margin-top:16px;">No account required. This link is secure and unique to this request.</p>
 </div></body></html>`;

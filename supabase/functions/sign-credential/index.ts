@@ -41,10 +41,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { profileId, employerId, role, startDate, endDate } =
-      await req.json();
+    // Only identifiers are taken from the request. Every signed claim
+    // (role, dates, status) is loaded from the stored employment record.
+    const body = await req.json().catch(() => ({}));
+    const profileId = typeof body?.profileId === "string" ? body.profileId : "";
+    const employerId = typeof body?.employerId === "string" ? body.employerId : "";
+    const employmentRecordId =
+      typeof body?.employmentRecordId === "string" ? body.employmentRecordId : null;
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-    if (!profileId || !employerId || !role || !startDate) {
+    if (!uuidRe.test(profileId) || !uuidRe.test(employerId) ||
+        (employmentRecordId !== null && !uuidRe.test(employmentRecordId))) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -94,13 +101,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: empRecord, error: empRecordError } = await adminClient
+    let recordQuery = adminClient
       .from("employment_records")
-      .select("id")
+      .select("id, job_title, start_date, end_date, status")
       .eq("employer_id", employerId)
       .eq("user_id", profile.user_id)
       .in("status", ["active", "ended"])
-      .single();
+      .order("start_date", { ascending: false })
+      .limit(1);
+    if (employmentRecordId) recordQuery = recordQuery.eq("id", employmentRecordId);
+    const { data: empRows, error: empRecordError } = await recordQuery;
+    const empRecord = empRows?.[0];
 
     if (empRecordError || !empRecord) {
       return new Response(
@@ -132,9 +143,11 @@ Deno.serve(async (req) => {
     const jwt = await new SignJWT({
       profileId,
       employerId,
-      role,
-      startDate,
-      ...(endDate && { endDate }),
+      employmentRecordId: empRecord.id,
+      role: empRecord.job_title,
+      startDate: empRecord.start_date,
+      ...(empRecord.end_date && { endDate: empRecord.end_date }),
+      status: empRecord.status,
       issuedBy: user.id,
     })
       .setProtectedHeader({ alg: "ES256", typ: "JWT" })
@@ -154,7 +167,7 @@ Deno.serve(async (req) => {
       });
 
     if (insertError) {
-      console.error("Insert error:", insertError);
+      console.error("Insert error:", insertError.code);
       return new Response(
         JSON.stringify({ error: "Failed to store credential" }),
         {
