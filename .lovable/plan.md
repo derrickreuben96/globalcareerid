@@ -1,124 +1,174 @@
-# Global Career ID — Read-only Security & Architecture Audit (30 Oct 2026)
+# Global Career ID Product Upgrades: Architecture Assessment and Phased Plan
 
-Scope: this is a review of the live database (privileges, policies, functions) and the repository. No changes were made. This report is not a legal compliance opinion or a security certification. When you approve, the fixes below are built in priority order; nothing ships until then.
+Nothing is built until you approve. Every phase adds new things only: existing records, Career IDs, credentials, visibility settings and current journeys stay as they are. Each phase sits behind its own on/off switch.
 
-Legend: CONFIRMED = shown by a database query or a source read. UNVERIFIED = can't be proven from the repository/database alone, or needs a runtime test.
+## 1. How things work today (confirmed by reading the code and database)
 
-## 1. Findings
+- **People**: `profiles` (one row per `user_id`; `visibility` text, used publicly only when it equals `'public'`; `national_id` and `passport_number` stored in plain text; `skills text[]`). Organization accounts are kept separate in `organization_profiles`. Roles live in `user_roles` (`app_role`: admin, job_seeker, employer).
+- **Employers**: `employers.user_id` points to one owner. There is no membership table, so every employer authorization check (RLS, `get_my_employer`, `is_project_employer`, `resolve_career_id_for_employer`, `approve_promotion`) is written as `e.user_id = auth.uid()`.
+- **Experience**: `employment_records` holds what employers write. Triggers handle auditing (`log_employment_record_changes`), notifications, the first role (`create_initial_role`), update restrictions, and syncing into `work_history` through `employment_record_id`. Other pieces: `role_history` and `promotion_requests`. `work_history` also covers self-reported history, verified through `verification_requests` (hashed token) and `verification_documents`. `projects` covers draft, pending, active, sealed and disputed, with `project_skills` and `project_audit_log`. `referral_letters` includes `verification_number`.
+- **No tables exist yet** for education, certifications, internships, share links, access logs, employer members or interview availability.
+- **Credentials**: `credentials` (ES256 `signed_jwt`, `revoked_at`) with these server functions: `sign-credential`, `check-revocation`, `get-public-key`. The `/verify-credential` page and the hooks `useCredential` and `useRevocationStatus` use them.
+- **Hiring**: `jobs`, `applications` (`interview_at timestamptz`, `interview_notes`, an `employment_snapshot` that cannot be changed) and `recruitment_events` (filled by a trigger, read-only). Supporting functions: `notify-interview` and `score-application`. Screens: `HiringDashboard`, `ViewApplicationsDialog`, `AppliedJobsTracker`.
+- **Public pages**: `/verify/:profileId` uses `get_public_profile_by_id` and `get_employment_by_profile_id`, which return public profiles only. Employers find people through `search_public_profiles` (public profiles only, limit 100, skill filter not applied).
+- **Privacy**: `consent_log`, `data_export_requests` with the `export-user-data` function, `deletion_requests` (no deletion runner found in the code), and the `/settings/privacy` page.
+- **Server functions**: 29 in total. Four have the platform's sign-in check turned off and check access themselves: `admin-ai-assist`, `request-employer-verification`, `verify-employment` and `detect-duplicates`.
 
-### CRITICAL
+## 2. Decisions I made where your brief was open (please correct any)
 
-**C1. Anyone can approve a promotion — CONFIRMED**
-- Evidence: `public.approve_promotion(request_id_param, approver_id)` is SECURITY DEFINER, and the ACL grants EXECUTE to `anon` and `authenticated`. The function body has no `auth.uid()` or employer/admin check, and it trusts the `approver_id` passed in.
-- Exploit: anyone holding the anon key (it ships in the public site code) calls `rpc('approve_promotion', {request_id_param, approver_id: <any uuid>})`.
-- Impact: unauthorised changes to `role_history` and `employment_records.job_title`, a faked approver identity, and corrupted verified history. That breaks the product's core promise.
-- Fix: require `auth.uid()` to be the owner of a verified employer for that record, or an admin. Ignore the `approver_id` parameter and use `auth.uid()`. REVOKE EXECUTE from `anon` and `public`.
+1. **Discoverability vs verification.** The current `profiles.visibility` keeps its meaning. I'll add a separate setting for "discoverable in search" that is off by default, so nobody becomes searchable without opting in. Verification consent is given per share link, not as one global switch.
+2. **Who can issue education and internship records.** Universities become a new organization type, `issuer_kind` on `employers` with default `'employer'`. This reuses the existing employer verification process. No university partner integration yet.
+3. **The person's role in passport records.** People can add their own education and certifications, but these stay marked "self-reported" until an organization verifies them, the same as `work_history` today.
+4. **Existing employer owners.** Each current owner becomes `org_admin` in the new membership table. A copy of each relationship that already exists is not invented data, and `employers.user_id` stays the owner.
+5. **Passport download.** The file is built in the browser from data the person is already allowed to see. Nothing is stored on the server.
+6. **Reminders.** Reminders show inside the app and go out by email through the existing Resend setup, sent by a scheduled check. No outside calendar accounts are connected. Calendar invites are downloadable `.ics` files.
 
-### HIGH
+## 3. Phases (in dependency order)
 
-**H1. Employment history is readable by anyone who knows a Career ID — CONFIRMED**
-- Evidence: `get_employment_by_profile_id(text)` is SECURITY DEFINER and anon-executable. It filters only on `status IN ('active','ended')`. There is no `visibility` check and no sharing-consent check.
-- Exploit: Career IDs follow the pattern `TW-YYYY-XXXXX` (5 hex characters, about 1M per year), so they can be enumerated. Each hit returns that person's employers, titles and dates.
-- Impact: a person's full career history leaks without their consent.
-- Fix: return rows only when the profile is `public`, or when there is a valid share token or consent, or when the caller is the owner or an admin. Revoke `anon` where it isn't needed.
+### Phase 0: Groundwork
+- `feature_flags(key text pk, enabled bool default false)`, read through `is_feature_enabled(key)`.
+- `access_audit_log` (append-only; the browser has no write access; written only through security-definer functions).
+- Add the `has_org_role` helper. Its first version simply checks `employers.user_id` ownership, so behaviour is identical.
 
-**H2. A public profile can be looked up even when it's set to private — CONFIRMED**
-- Evidence: `get_public_profile_by_id(text)` is anon-executable, has no `visibility` filter, and returns internal `user_id`, bio, skills, location and availability. The safer `get_public_profile_limited` already exists (public-only, signed-in only).
-- Impact: private profiles can be read, and internal `user_id`s leak. Those ids feed other functions that take a `target_user_id`.
-- Fix: add `visibility = 'public'` (or a share-consent check), drop `user_id` from the output, and point callers to the limited function.
+### Phase 1: Multi-user employer accounts (F), needed by B, C and E
+- `employer_members(id, employer_id fk, user_id uuid, member_role enum org_admin|recruiter|hiring_manager|verification_officer, status invited|active|removed, invited_by, created_at)`, unique on `(employer_id, user_id)`.
+- `employer_invitations` (hashed token, expiry, single use).
+- Current owners are copied in as `org_admin`, and `ON CONFLICT DO NOTHING` makes re-running safe.
+- **Permissions** (every check runs on the server through `has_org_role(employer_id, roles[])`):
 
-**H3. Broad execute grants on SECURITY DEFINER functions — CONFIRMED**
-- Evidence: almost every SECURITY DEFINER function in `public` grants EXECUTE to `anon`/PUBLIC. Examples: `log_security_event`, `check_rate_limit`, `verify_recovery_code`, `get_notification_preferences`, `get_public_profile_fields`, plus the trigger-only functions.
-  - `log_security_event(type, user_id, metadata)`: anyone can write events for any user id. That pollutes the audit trail and can trip `check_rate_limit`, locking a real user out of recovery codes.
-  - `verify_recovery_code(target_user_id, hash)`: can be called directly from the browser, which skips the rate limit in the `recovery-codes` server function. It also uses up a code as soon as it matches.
-  - `get_notification_preferences(target_user_id)`: anyone can read anyone's preferences (low data value).
-- Fix: REVOKE EXECUTE FROM PUBLIC, anon on all of these. Grant to `authenticated` only for functions meant to be called from the browser, and to `service_role` only for internal ones (logging, recovery-code checks, triggers).
+| Role | What they can do |
+|---|---|
+| recruiter | jobs, applications, interviews |
+| hiring_manager | read applications, give feedback |
+| verification_officer | employment records, promotions, referral letters, credentials |
+| org_admin | everything, plus member management |
 
-**H4. Sharing consent doesn't control who can see career data — CONFIRMED (design gap)**
-- Evidence: `profiles` has a `visibility` field, but there is no table for per-employer or per-link sharing grants. The employment policy "Authenticated users can view verified records for public profil…" lets any signed-in user read verified records of public profiles.
-- Impact: there is no explicit, revocable, logged consent for each viewer.
-- Fix: add short-lived share tokens or consent grants (owner-created, revocable, logged), and require them in the profile and employment lookups.
+- Existing RLS rules and functions get new versions that add the membership check. Owner access is unchanged.
+- Each version is tested on its own before the next one is switched over.
+- **Tenant isolation**: every rule filters by `employer_id`, so a member of one employer can never reach another employer's data.
+- **Audit**: every member change is logged.
+- **Screens**: a new Team tab on `/employer`.
 
-### MEDIUM
+### Phase 2: Privacy centre and consent model (G), needed by A and B
+- New `profile_privacy_settings` table, one row per user, created when first needed:
+  - `discoverable bool default false`
+  - `show_in_search_fields jsonb`
+  - `retention_preference`
+- `/settings/privacy` gets new tabs for "Who viewed my records" (from `access_audit_log`) and active share links.
+- **Deletion**: a scheduled server function runs approved `deletion_requests` after `scheduled_for`. It anonymises profile personal details and keeps employer-owned history where the law allows (needs legal sign-off). Off until the switch is turned on.
+- **Export**: add the new tables to `export-user-data`.
+- National ID and passport numbers never appear in any new function, export view, share view or log.
 
-**M1. CORS allows any website — CONFIRMED**
-- Evidence: 27 of 29 server functions return `Access-Control-Allow-Origin: *`.
-- Impact: low on its own, because the functions use bearer tokens rather than cookies. Still, any website can make a signed-in user's browser call the AI functions and spend credits.
-- Fix: allow only globalcareerid.com, www, the lovable.app domains and localhost.
+### Phase 3: Internship, graduate and education records (D)
+- **Internships and similar.** Add `employment_records.engagement_type text default 'employment'` with these values: employment, internship, attachment, apprenticeship, graduate_trainee, research.
+  - Existing rows automatically read as `'employment'`.
+  - The triggers carry it into `work_history.engagement_type`, which is also new.
+  - The sync function gets a new version that adds this one column.
+- **Education and certifications.** New tables `education_records` and `certifications` with these columns: `user_id`, `issuer_employer_id` (may be empty), `verification_status` (self_reported, pending, verified, rejected), dates (date type), and `credential_url`.
+- **Issuer verification.** The verifying organization confirms through a security-definer function that checks `has_org_role(issuer, verification_officer)`.
+- **Screens**: `WorkHistory`, `EmploymentTimeline`, and the employer add-record form gain a type selector, defaulting to Employment.
 
-**M2. Almost no rate limiting — CONFIRMED**
-- Evidence: `check_rate_limit` is used only in `recovery-codes`. Not covered: anon lead form (`employer_leads` insert), `page_visits` insert, the AI functions, `send-lead-demo-email`, `verify-employment`, the job-application flow, and the public lookups.
-- Note: the backend has no standard rate-limiting tool yet, so any limit would be built case by case, and only with your OK.
-- Fix: short-term, per-user limits on AI and email using the existing `security_events`. Longer-term, a central limiter.
+### Phase 4: Career Passport (A) and Smart Sharing (B)
+- **Share links**: `share_links(id, user_id, token_hash, label, expires_at not null, revoked_at, max_views int null, view_count, viewer_employer_id null, viewer_email_hash null, created_at)`.
+- **Chosen records**: `share_link_items(share_link_id, item_type, item_id)`. Item types are employment, work_history, education, certification, project, referral and credential.
+- **Consent**: creating a link writes a `consent_log` entry with `consent_type='share_link'`.
+- **Viewing**: `get_shared_passport(token text)` is a security-definer function that anyone with the link can call. It:
+  - hashes the token and checks that the link is not expired, not revoked and still has views left
+  - checks the viewer's employer if the link is limited to one
+  - logs the view in `access_audit_log`
+  - returns only the selected items and the minimum fields
+  - adds credential status by checking `credentials.revoked_at`
+- **Rate limiting**: through `check_rate_limit`, called on the server side by a small server function, `view-shared-passport`, which wraps the database function.
+- **Pages**:
+  - `/passport`: the owner's own view, with PDF download
+  - `/share/:token`: what the viewer sees
+  - `/settings/privacy` gets a list of links with a revoke button
+- The current `/verify/:profileId` page is not changed.
 
-**M3. Signed-in checks are uneven across server functions — partly CONFIRMED**
-- `get-public-key`: public by design, which is fine.
-- `check-revocation`: no auth; returns only `revoked` and `revoked_at`. Acceptable.
-- `verify-employment`: protected by a hashed token, which is good. UNVERIFIED: whether the token is single-use and expires, and whether the confirm action is a GET link (email link scanners could trigger it). Recommend a POST confirm step.
-- The `notify-*` trigger functions compare the header to the service key, which is fine. Not yet checked line by line: `notify-profile-update`, `score-application`, `detect-duplicates`, `export-user-data`, `seal-project`.
+### Phase 5: Skills-based talent search (C)
+- A new function, `search_talent(filters jsonb)`, with these rules:
+  - only verified employer members can use it
+  - only `discoverable = true` people appear
+  - filters cover skills (`&&` on `profiles.skills`, plus `project_skills`), verified-only, experience level, industry (via the employer), certifications and project count
+  - fixed sort order with page-by-page results, 50 per page
+  - every search is logged
+- `search_public_profiles` stays as it is for compatibility.
+- A GIN index on `profiles.skills`.
 
-**M4. Credential signing: dates and role may come from the request — UNVERIFIED**
-- Evidence: `sign-credential` reads `role`, `startDate` and `endDate` from the request body (lines 43–46). It checks employer ownership and that an employment record exists. Not yet confirmed: whether the signed role and dates are compared with the stored record.
-- Payload: internal UUIDs, role and dates. No national ID, email or name was seen, which keeps personal data in the payload low.
-- Fix: sign from the stored record values only. Add `jti`, and an expiry or revocation reference.
+### Phase 6: Interview scheduling (E)
+- **Interviews**: `interviews(id, application_id fk, employer_id, scheduled_start timestamptz, scheduled_end timestamptz, timezone text (IANA), location_or_link, status scheduled|rescheduled|cancelled|completed, created_by, created_at)`.
+  - Existing `applications.interview_at` values are kept, and a database trigger keeps them in step with the latest interview so current screens keep working.
+  - The trigger copies data that already exists, so nothing is invented.
+- **Other new tables**:
+  - `interview_feedback(interview_id, reviewer_id, rating 1-5, notes)`, readable by members only, never by the candidate
+  - `candidate_availability(application_id, slot_start, slot_end)`
+  - `interview_reminders(interview_id, send_at, sent_at)`, unique per interview and offset so the same reminder is never sent twice
+- **Calendar invites**: `.ics` files built in the browser from the stored UTC times.
+- **Times**: everything is stored in UTC and shown in the viewer's own timezone, with the interviewer's timezone label next to it.
+- **Reminders**: a scheduled server function, `send-interview-reminders`, sends them. The `recruitment_events` trigger keeps recording changes.
 
-**M5. National ID and passport storage — CONFIRMED stored in plain text; leak paths limited**
-- `profiles.national_id` and `passport_number` are readable only by the owner and admins under the current `profiles` policies. No public lookup returns them.
-- Risk: the admin tools, the duplicate-detection AI and `bulk-upload-employees` use the service role and can send these values to the AI service. That still needs a line-by-line check (UNVERIFIED).
-- Fix: store a hash (or masked value) for deduplication, encrypt the raw value or limit it to admin views, and never send raw IDs to AI prompts.
+### Phase 7: Later-stage assessment only (H, I)
+- A design document for a W3C VC 2.0 adapter: a `vc+jwt` view built on top of the existing ES256 JWT, with no change to existing `credentials` identifiers.
+- The rest is roadmap entries with nothing built: HR integrations, analytics, university partnerships, background-check providers and interview rooms.
 
-**M6. Account deletion and data export — partly CONFIRMED**
-- `deletion_requests` and `data_export_requests` exist. Users can't delete these rows, which is good for the audit trail.
-- UNVERIFIED: whether a scheduled job actually deletes or anonymises the account when `scheduled_for` is reached. No cron job was found in the database functions. Also unverified: whether the export covers every table (applications, credentials, consent_log, disputes, projects, notifications) and whether the private `user-exports` bucket uses short signed links.
-- Fix: a scheduled deletion job with the cascade documented, plus a check that the export is complete.
+## 4. Migration order (additive and forward-only)
 
-**M7. Consent doesn't gate processing — UNVERIFIED / likely**
-- `consent_log` records consent. The check of whether PostHog, Sentry and the AI functions read consent before running was still in progress.
-- Fix: load analytics and error tracking only after consent; check consent on the server before AI processing of personal profile data.
+```text
+M1 feature_flags, access_audit_log, has_org_role (owner-only)
+M2 employer_members, employer_invitations, owner copy-in
+M3 new RLS/function versions using has_org_role (one table group per migration)
+M4 profile_privacy_settings, deletion runner function (switch off)
+M5 engagement_type columns + updated sync trigger; education_records, certifications
+M6 share_links, share_link_items, get_shared_passport
+M7 skills GIN index, search_talent
+M8 interviews, feedback, availability, reminders, interview_at sync trigger
+```
 
-### LOW
+Every table gets its GRANTs, RLS and rules, with no anon access except through security-definer functions with tight checks.
 
-- **L1.** Production source maps are on (`vite.config.ts` `sourcemap: true`, added for the speed report). Original source is public. Use `'hidden'` and upload the maps to Sentry instead.
-- **L2.** Storage: `profile-images` has two duplicate public read policies, and the `public` role is used on the upload policies for logos and verification documents. UNVERIFIED: whether uploads are scoped to the user's own folder (the full policy expression was cut off). Confirm and tighten.
-- **L3.** `duplicate_risk_flags` has an admin-only `ALL` policy on role `public`. That's fine, but switch it to `authenticated` for clarity.
-- **L4.** Career IDs have little randomness (`MD5(random)` cut to 5 characters). Move to 8 or more characters so they're harder to guess. Existing IDs stay as they are.
-- **L5.** `get_public_open_jobs` and `get_public_job_*` are anon-callable by design. They return no personal data. OK.
+**Rollback**: turn the phase's switch off. Old code paths stay untouched, and functions keep their existing names and arguments.
 
-### Verified OK
-- Roles live in `user_roles` and are checked server-side with `has_role()`. `prevent_role_escalation` blocks admin self-assignment, and anon is blocked.
-- `profiles`, `employers` and `employment_records` are fully blocked for anon. Signed-in access is limited to owners and admins, plus a narrow "employed by" rule.
-- Credentials can only be revoked; a trigger guards every other field. Sealed projects can't be changed.
-- Verification tokens are stored as hashes.
+## 5. Lifecycle summary
 
-## 2. Fix order (no changes until you approve)
-1. C1 and H3: lock function grants and add caller checks in a single database change.
-2. H1 and H2: enforce visibility and share consent in the profile and employment lookups. Update the public profile and QR pages to use the limited outputs.
-3. M4: sign credentials only from stored record data.
-4. M1: CORS allow-list in a shared helper for all functions.
-5. M6 and M7: deletion job, export check, analytics only after consent.
-6. M5: hash national ID for deduplication, and keep raw IDs out of AI prompts.
-7. M2 and the Low items.
+| Feature | Create | Read | Update | Delete | Transaction | Idempotency |
+|---|---|---|---|---|---|---|
+| Members | org_admin | members | org_admin | soft remove | one function call | unique key |
+| Share link | owner | token holder, owner | owner revokes | revoke only | function that also writes consent | token hash unique |
+| Education/cert | owner or issuer | owner, share | issuer verifies | owner, if not verified | function | – |
+| Interviews | recruiter | members, candidate | recruiter | cancel status | function + trigger | reminder unique key |
 
-After each step, sign in as the test seeker, employer and admin and re-run the main flows: profile share/QR, apply, interview, promotion approval, credential issue/verify, export.
+## 6. Test matrix
 
-## 3. Workforce/HR product improvements (2026)
+**Existing journeys (regression, with the three test accounts):**
+- registration (person and organization)
+- profile edit and photo
+- employer adds an employment record, which then syncs to the history
+- promotion approval
+- retroactive token verification
+- referral letter creation and checking its verification number
+- `/verify/:id` for a public profile and for a private one
+- issuing, checking and revoking a credential
+- job post, applying with a Career ID, and the pipeline
+- the current interview fields
+- employer verification
+- notifications
+- export and a deletion request
 
-Essential (low friction, builds on what exists):
-1. Share links with an expiry date and a per-employer consent screen, which also fixes H1/H4.
-2. A verified-employment PDF and QR with live revocation status.
-3. Interview scheduling with calendar (.ics) invites and reminder emails.
-4. Bulk offboarding (end dates in one step) and an employer reminder to confirm former staff.
-5. Candidate privacy centre: who viewed or verified my record, consent toggles, export/delete status.
-6. Employer verification SLA dashboard for admins.
+**New journeys:**
+- **Cross-tenant**: a member of employer A tries to read or write employer B's jobs, applications, members, interviews and searches, and is refused.
+- **Role permissions**: a recruiter tries to approve a promotion (refused), a hiring manager tries to edit a job (refused), and a verification officer tries to see applications (refused).
+- **Consent**: links with no consent, expired, revoked, out of views, and opened by the wrong employer all return nothing and are logged.
+- **Duplicates**: copying owners in twice, sending a reminder twice, and accepting an invite twice.
+- **Old records**: rows without `engagement_type` show as Employment, and existing `interview_at` still shows.
+- **Timezones**: an interview around 23:30 UTC, a daylight-saving change, and display in Arabic right-to-left and in other languages.
+- **Discoverability**: private or undiscoverable profiles are left out of `search_talent`.
+- **National ID and passport**: never present in passport, share, search or export view responses.
+- **Function permissions**: tests confirm anon can only reach `get_shared_passport` and the existing public lookups.
 
-Later-stage:
-- Background-check partner APIs and a government ID check (per country).
-- Skills taken from verified projects, plus skills-based matching.
-- Wallet credentials (W3C Verifiable Credentials) for Apple/Google Wallet.
-- Multi-user employer workspaces (HR admin, recruiter, viewer).
-- Payroll/HRIS connectors (Workday, BambooHR, Odoo).
-- Analytics: time-to-hire, source quality, retention.
+## 7. Open questions
+1. Should universities sign up as a new organization type, as I assumed, or be added by an admin?
+2. How long should a deleted account's employer-owned history be kept? This needs legal input.
+3. Default share-link expiry: I propose 30 days with a 365-day maximum.
+4. Should candidates see interview feedback? I assumed no.
 
-## Technical notes
-- Grant evidence comes from `pg_proc.proacl` (`anon=X` present on most SECURITY DEFINER functions). Policy evidence comes from `pg_policies`.
-- Items marked UNVERIFIED still need a line-by-line read (export, deletion, duplicate-detection prompts, storage policy expressions, consent gating). That's done at the start of step 1.
+No deploy or publish.
