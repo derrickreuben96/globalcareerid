@@ -105,7 +105,6 @@ export function PendingPromotions({ employerId }: PendingPromotionsProps) {
       if (actionType === 'approve') {
         const { error } = await supabase.rpc('approve_promotion', {
           request_id_param: actionId,
-          approver_id: user.id,
         });
         if (error) throw error;
         toast.success('Promotion approved');

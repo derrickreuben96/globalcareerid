@@ -1,4 +1,6 @@
 - Resolve candidate career company branding through the record-authorized `get_career_employer_identity` RPC and shared helper, not employer-table embeds; historical/pending relationships must retain names without granting private organization access.
 - Link synchronized work history by unique `employment_record_id`, never company name; updates and employer renames must target the correct source record without collapsing multiple roles.
 - Employer hiring dashboards reuse application actions and record recruitment transitions with a database trigger in read-only, owner-authorized `recruitment_events`; this preserves existing flows and captures changes from every writer without inventing historical transitions.
-- Refresh employer hiring data on actions, window focus, and visible-page polling rather than adding sensitive tables to public realtime publications.
+- Refresh employer hiring data on actions, window focus, and visible-page polling rather than adding sensitive tables to public realtime publications.- Every server function imports `../_shared/cors.ts` first; it wraps `Deno.serve` to enforce the origin allow-list in `_shared/allowedOrigins.ts`, so local `"*"` headers are overridden in one place.
+- Public Career ID lookups return data only for `visibility = 'public'` profiles and never expose internal user ids; employers resolve accounts via the verified-employer-only `resolve_career_id_for_employer` RPC.
+- Signed credentials take only identifiers from the request; every claim comes from the stored employment record.

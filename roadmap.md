@@ -3,4 +3,5 @@
 - [x] Verify Derrick's historical/current records, unrelated-employer denial, private-field exclusion, and regression tests.
 - [x] Add employer hiring pipeline, interview schedule, stats, filters, and recruitment timeline.
 - [x] Preserve existing applicant actions and securely record future recruitment stage changes.
-- [x] Test hiring calculations and verify the signed-in employer dashboard end to end.
+- [x] Test hiring calculations and verify the signed-in employer dashboard end to end.- [x] Security remediation: promotion approval auth, public lookups limited to public profiles, least-privilege function grants, credential claims from stored records, single-use POST employer confirmations, CORS allow-list, regression tests.
+- [ ] Later (not in this pass): per-viewer share links/consent, analytics/Sentry consent gating, scheduled account deletion, AI/email rate limits, ID-number encryption at rest.

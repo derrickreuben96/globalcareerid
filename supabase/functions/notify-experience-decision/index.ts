@@ -1,4 +1,5 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import "../_shared/cors.ts";
+const serve = (handler: (req: Request) => Response | Promise<Response>) => Deno.serve(handler);
 import { Resend } from "resend";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -67,6 +68,22 @@ const handler = async (req: Request): Promise<Response> => {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Non-admin callers may only notify about requests for an employer they own
+    if (!isAdmin) {
+      const { data: owned } = await supabase
+        .from("employers")
+        .select("id")
+        .eq("id", request.employer_id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!owned) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Fetch employee profile
