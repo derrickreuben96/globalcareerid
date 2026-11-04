@@ -7,11 +7,11 @@
 - [ ] Later (not in this pass): per-viewer share links/consent, analytics/Sentry consent gating, scheduled account deletion, AI/email rate limits, ID-number encryption at rest.
 
 ## Product upgrades (phases 0–6, per approved plan + 10 safeguards)
-- [ ] Phase 0 foundation (flags off, access audit log, central org helper) — blocked: needs approval to change the shared live database
-- [ ] Phase 1 employer memberships + hashed email-bound invitations
-- [ ] Phase 2 privacy centre, versioned consent, deletion runner left disabled behind legal gate
-- [ ] Phase 3 engagement_type + education/certifications (self_reported/pending/verified/rejected/revoked)
-- [ ] Phase 4 Career Passport + smart share links (atomic expiry/revoke/view-limit/rate-limit)
-- [ ] Phase 5 discoverable-only deterministic skills search
-- [ ] Phase 6 interviews, availability, feedback, idempotent reminders, safe ICS
+- [ ] Phase 0 foundation (flags off, access audit log, central org helper) — SQL written for review (review/upgrades), not applied
+- [ ] Phase 1 employer memberships + hashed email-bound invitations — SQL written for review, not applied; screens after approval
+- [ ] Phase 2 privacy centre, versioned consent, deletion runner left disabled behind legal gate — SQL written for review, not applied; screens after approval
+- [ ] Phase 3 engagement_type + education/certifications (self_reported/pending/verified/rejected/revoked) — SQL written for review, not applied; screens after approval
+- [ ] Phase 4 Career Passport + smart share links (atomic expiry/revoke/view-limit/rate-limit) — SQL written for review, not applied; screens after approval
+- [ ] Phase 5 discoverable-only deterministic skills search — SQL written for review, not applied; screens after approval
+- [ ] Phase 6 interviews, availability, feedback, idempotent reminders, safe ICS — SQL written for review, not applied; screens after approval
 - [ ] Phase 7 (later only): HR integrations, W3C VC 2.0 adapter, interview rooms, university partnerships, background checks
