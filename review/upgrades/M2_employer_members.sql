@@ -1,4 +1,5 @@
--- REVIEW ONLY — NOT APPLIED. Phase 1: employer team accounts.
+-- REVIEW ONLY — NOT APPLIED (backend paused: out of Cloud credits).
+-- Phase 1: employer team accounts.
 -- Existing RLS on jobs/applications/employment_records is NOT rewritten here;
 -- M3 (per table group, one migration each, after tests) swaps owner checks for has_org_role.
 
@@ -113,3 +114,65 @@ REVOKE ALL ON FUNCTION public.set_employer_member(uuid,uuid,public.org_member_ro
 GRANT EXECUTE ON FUNCTION public.create_employer_invitation(uuid,text,public.org_member_role,text) TO service_role;
 GRANT EXECUTE ON FUNCTION public.accept_employer_invitation(text) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.set_employer_member(uuid,uuid,public.org_member_role,text) TO authenticated;
+
+-- Team screen helpers.
+CREATE OR REPLACE FUNCTION public.get_employer_team(_employer_id uuid)
+RETURNS TABLE(user_id uuid, member_role public.org_member_role, status text, first_name text, last_name text, email text, is_owner boolean, created_at timestamptz)
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NOT public.has_org_role(_employer_id, ARRAY['org_admin']) THEN
+    RAISE EXCEPTION 'Not authorized' USING ERRCODE='42501'; END IF;
+  RETURN QUERY
+  SELECT m.user_id, m.member_role, m.status, p.first_name, p.last_name, u.email::text,
+         (e.user_id = m.user_id), m.created_at
+  FROM employer_members m
+  JOIN employers e ON e.id = m.employer_id
+  LEFT JOIN profiles p ON p.user_id = m.user_id
+  LEFT JOIN auth.users u ON u.id = m.user_id
+  WHERE m.employer_id = _employer_id
+  ORDER BY (e.user_id = m.user_id) DESC, m.created_at;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.revoke_employer_invitation(_invitation_id uuid)
+RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE emp uuid;
+BEGIN
+  SELECT employer_id INTO emp FROM employer_invitations WHERE id = _invitation_id;
+  IF emp IS NULL OR NOT public.has_org_role(emp, ARRAY['org_admin']) THEN
+    RAISE EXCEPTION 'Not authorized' USING ERRCODE='42501'; END IF;
+  UPDATE employer_invitations SET revoked_at = now()
+   WHERE id = _invitation_id AND accepted_at IS NULL AND revoked_at IS NULL;
+  PERFORM write_access_audit(NULL, emp, 'member_invite_revoked', 'employer_invitation', _invitation_id, NULL);
+END $$;
+
+-- Lets the join page show which company invited you, without revealing anything else.
+CREATE OR REPLACE FUNCTION public.preview_employer_invitation(_token_hash text)
+RETURNS TABLE(company_name text, member_role public.org_member_role, email_matches boolean)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT e.company_name, i.member_role,
+         i.email_lower = (SELECT lower(email) FROM auth.users WHERE id = auth.uid())
+  FROM employer_invitations i JOIN employers e ON e.id = i.employer_id
+  WHERE i.token_hash = _token_hash AND i.accepted_at IS NULL AND i.revoked_at IS NULL AND i.expires_at > now()
+$$;
+
+REVOKE ALL ON FUNCTION public.get_employer_team(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.revoke_employer_invitation(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.preview_employer_invitation(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_employer_team(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.revoke_employer_invitation(uuid) TO authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.preview_employer_invitation(text) TO authenticated, service_role;
+
+-- Owners get team rosters automatically for employers created later.
+CREATE OR REPLACE FUNCTION public.add_employer_owner_member()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO employer_members(employer_id,user_id,member_role,invited_by)
+  VALUES (NEW.id, NEW.user_id, 'org_admin', NEW.user_id)
+  ON CONFLICT (employer_id,user_id) DO NOTHING;
+  RETURN NEW;
+END $$;
+REVOKE ALL ON FUNCTION public.add_employer_owner_member() FROM PUBLIC, anon, authenticated;
+CREATE TRIGGER employers_add_owner_member AFTER INSERT ON public.employers
+  FOR EACH ROW EXECUTE FUNCTION public.add_employer_owner_member();
+
+UPDATE public.feature_flags SET enabled = true, updated_at = now() WHERE key = 'employer_members';
